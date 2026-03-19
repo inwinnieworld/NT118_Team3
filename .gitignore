@@ -1,34 +1,100 @@
-# Gradle files
+# .gitignore cho Android Project
+# ============================================
+
+# ===== Gradle Build Files =====
 .gradle/
 build/
-
-# Local configuration file (sdk path, etc)
+*/build/
+app/build/
 local.properties
 
-# Log/OS Files
-*.log
+# ===== Android Studio / IntelliJ IDEA =====
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries/
+.idea/caches/
+.idea/modules.xml
+.idea/.name
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/navEditor.xml
+.idea/deploymentTargetDropDown.xml
+.idea/render.experimental.xml
 
-# Android Studio generated files and folders
+# Giữ lại một số file .idea/ để team có cùng config
+# !.idea/codeStyles/
+# !.idea/inspectionProfiles/
+# !.idea/vcs.xml
+
+# ===== VS Code =====
+.vscode/
+
+# ===== Android Generated Files =====
 captures/
 .externalNativeBuild/
 .cxx/
-*.aab
 *.apk
+*.aab
+*.ap_
+*.dex
 output-metadata.json
+output.json
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
-
-# Keystore files
+# ===== Keystore Files (QUAN TRỌNG - Không push lên GitHub) =====
 *.jks
 *.keystore
+key.properties
 
-# Google Services (e.g. APIs or Firebase)
+# ===== Google Services =====
 google-services.json
+# Nếu cần share config Firebase, comment dòng trên
 
-# Android Profiling
+# ===== Log Files =====
+*.log
+
+# ===== Android Profiling =====
 *.hprof
+
+# ===== OS Files =====
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# ===== Java/Kotlin Compiled Files =====
+*.class
+bin/
+gen/
+out/
+release/
+
+# ===== Backup Files =====
+*.bak
+*.swp
+*.swo
+*~
+
+# ===== Misc =====
+.navigation/
+*.ipr
+*.iws
+.mtj.tmp/
+hs_err_pid*
+replay_pid*
