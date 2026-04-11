@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="cyan_glow">#8CF8FF</color>
+    <color name="cyan_soft">#6FEAF2</color>
+    <color name="cyan_text">#8AF4FF</color>
+    <color name="glass_dark">#80324352</color>
+    <color name="glass_border">#66DDFEFF</color>
+    <color name="input_fill">#33D9F8FF</color>
+    <color name="overlay_dark">#4D08131F</color>
 </resources>
