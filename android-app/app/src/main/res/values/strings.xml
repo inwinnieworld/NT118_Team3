@@ -1,3 +1,34 @@
 <resources>
     <string name="app_name">EmotionDebugging</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Thông tin sinh viên</string>
+    <string name="edit_profile_title">Chỉnh sửa hồ sơ</string>
+    <string name="btn_save">Lưu</string>
+    <string name="btn_edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="btn_change_password">Đổi mật khẩu</string>
+    <string name="btn_logout">Đăng xuất</string>
+
+    <string name="section_academic">THÔNG TIN HỌC TẬP</string>
+    <string name="section_contact">THÔNG TIN LIÊN HỆ</string>
+
+    <string name="label_faculty">KHOA</string>
+    <string name="label_major">NGÀNH</string>
+    <string name="label_school_year">NĂM HỌC</string>
+    <string name="label_email">EMAIL</string>
+    <string name="label_phone">SỐ ĐIỆN THOẠI</string>
+    <string name="label_emergency_phone">SỐ ĐIỆN THOẠI KHẨN CẤP</string>
+
+    <string name="hint_name">Nhập tên sinh viên</string>
+    <string name="hint_faculty">Nhập khoa</string>
+    <string name="hint_major">Nhập ngành</string>
+    <string name="hint_school_year">Nhập năm học</string>
+    <string name="hint_email">Nhập email</string>
+    <string name="hint_phone">Nhập số điện thoại</string>
+    <string name="hint_emergency_phone">Nhập số điện thoại khẩn cấp</string>
+
+    <string name="cd_avatar">Ảnh đại diện</string>
+    <string name="cd_back">Quay lại</string>
+    <string name="cd_edit_name">Chỉnh sửa tên</string>
+    <string name="cd_change_avatar">Thay đổi ảnh đại diện</string>
 </resources>

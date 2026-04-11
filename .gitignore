@@ -98,3 +98,8 @@ release/
 .mtj.tmp/
 hs_err_pid*
 replay_pid*
+
+# ===== Backend (Node.js) =====
+backend/.env
+backend/node_modules/
+backend/uploads/
