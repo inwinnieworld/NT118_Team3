@@ -98,3 +98,11 @@ release/
 .mtj.tmp/
 hs_err_pid*
 replay_pid*
+# Bỏ qua các file cấu hình máy cá nhân của Android Studio
+android-app/.idea/
+android-app/**/*.iml
+android-app/local.properties
+
+# Bỏ qua thư viện và mật khẩu của Backend Node.js
+backend/node_modules/
+backend/.env
