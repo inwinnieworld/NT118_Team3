@@ -1,4 +1,4 @@
-package com.example.emotiondebugging.data.dao;
+package com.example.emotiondebugging.data.local.dao;
 
 import androidx.room.Dao;
 import androidx.room.Query;
