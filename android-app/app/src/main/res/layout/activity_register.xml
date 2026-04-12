@@ -63,6 +63,7 @@
                 android:paddingEnd="20dp"
                 android:paddingBottom="24dp">
 
+
                 <TextView
                     android:id="@+id/tvRegisterTitle"
                     android:layout_width="wrap_content"
@@ -109,6 +110,10 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         android:textAlignment="center" />
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="10dp"
+                        android:visibility="invisible" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -146,6 +151,10 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         android:textAlignment="center" />
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="10dp"
+                        android:visibility="invisible" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -182,6 +191,10 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
                         android:textAlignment="center" />
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="10dp"
+                        android:visibility="invisible" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -201,7 +214,10 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_lock" />
-
+                    <View
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:visibility="invisible" />
                     <EditText
                         android:id="@+id/etPassword"
                         android:layout_width="0dp"
@@ -305,8 +321,8 @@
 
         <ImageView
             android:id="@+id/imgMascot"
-            android:layout_width="88dp"
-            android:layout_height="88dp"
+            android:layout_width="150dp"
+            android:layout_height="108dp"
             android:layout_gravity="center"
             android:adjustViewBounds="false"
             android:scaleType="fitCenter"

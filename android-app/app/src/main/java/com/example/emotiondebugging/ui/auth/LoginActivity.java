@@ -97,6 +97,42 @@ public class LoginActivity extends AppCompatActivity {
     private void handleLoginSuccess(LoginResponse response) {
         String role = response.getUser().getRole() != null ? response.getUser().getRole() : "";
         Toast.makeText(this, "Đăng nhập thành công - " + role, Toast.LENGTH_SHORT).show();
+        // 1. Lưu Token và thông tin User
+        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper =
+                new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
+
+        prefsHelper.saveToken(response.getToken());
+
+        if (response.getUser() != null) {
+            // FIX LỖI: Dùng hàm getUserId() thay vì gọi biến .userId
+            String userIdString = String.valueOf(response.getUser().getUserId());
+
+            prefsHelper.saveUserInfo(
+                    userIdString,
+                    response.getUser().getEmail(),         // Dùng hàm getEmail()
+                    response.getUser().getStudentCode(),   // Dùng hàm getStudentCode()
+                    role
+            );
+        }
+
+        Intent intent;
+        switch (role.toUpperCase()) {
+            case "ADMIN":
+                intent = new Intent(LoginActivity.this, com.example.emotiondebugging.ui.admin.AdminDashboardActivity.class);
+                break;
+            case "STAFF":
+                intent = new Intent(LoginActivity.this, com.example.emotiondebugging.ui.staff.StaffDashboardActivity.class);
+                break;
+            case "STUDENT":
+            default:
+                intent = new Intent(LoginActivity.this, com.example.emotiondebugging.ui.main.MainActivity.class);
+                break;
+        }
+
+        // Xóa lịch sử màn hình
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void togglePassword() {

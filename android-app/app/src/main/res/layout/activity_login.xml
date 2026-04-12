@@ -100,12 +100,14 @@
                         android:gravity="center"
                         android:hint="Email / MSSV"
                         android:inputType="textEmailAddress"
-                        android:paddingStart="16dp"
-                        android:textAlignment="center"
                         android:textColor="#11AFC6"
                         android:textColorHint="#11AFC6"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="10dp"
+                        android:visibility="invisible" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -140,6 +142,10 @@
                         android:textColorHint="#11AFC6"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+                    <View
+                        android:layout_width="15dp"
+                        android:layout_height="10dp"
+                        android:visibility="invisible" />
 
                     <ImageView
                         android:id="@+id/imgTogglePassword"
@@ -237,8 +243,8 @@
 
         <ImageView
             android:id="@+id/imgMascot"
-            android:layout_width="88dp"
-            android:layout_height="88dp"
+            android:layout_width="150dp"
+            android:layout_height="108dp"
             android:layout_gravity="center"
             android:adjustViewBounds="false"
             android:scaleType="fitCenter"
