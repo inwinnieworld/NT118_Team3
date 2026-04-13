@@ -29,7 +29,7 @@ public class SharedPrefsHelper {
         editor.putString(KEY_TOKEN, token);
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
 
-        long durationInMillis = 60 * 60 * 1000;
+        long durationInMillis =  60 * 1000;
         long expireTime = System.currentTimeMillis() + durationInMillis;
         editor.putLong(KEY_EXPIRE_TIME, expireTime);
 

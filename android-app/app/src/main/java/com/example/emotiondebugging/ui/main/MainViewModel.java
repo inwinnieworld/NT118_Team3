@@ -23,7 +23,6 @@ public class MainViewModel extends ViewModel {
      * Khởi tạo dữ liệu ban đầu theo đúng logic cũ
      */
     public void initData(SharedPrefsHelper prefsHelper) {
-        // Giả lập tên lấy từ Database/SharedPrefs
         String realName = prefsHelper.getName();
         _fullName.setValue(realName);
 
