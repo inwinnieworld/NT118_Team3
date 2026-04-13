@@ -19,6 +19,7 @@ public class SharedPrefsHelper {
     private static final String KEY_STUDENT_CODE = "student_code";
     private static final String KEY_ROLE = "role";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
+    private static final String KEY_EXPIRE_TIME = "expire_time";
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
@@ -39,6 +40,13 @@ public class SharedPrefsHelper {
     public void saveToken(String token) {
         editor.putString(KEY_TOKEN, token);
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        // --- THÊM LOGIC TÍNH GIỜ HẾT HẠN ---
+        long durationInMillis = 1L * 60 * 60 * 1000; //thời lượng token 1 giờ
+
+        long expireTime = System.currentTimeMillis() + durationInMillis;
+        editor.putLong(KEY_EXPIRE_TIME, expireTime);
+        // -----------------------------------
+
         editor.apply(); // Dùng apply() thay vì commit() để chạy bất đồng bộ (nhanh hơn)
     }
 
@@ -95,7 +103,20 @@ public class SharedPrefsHelper {
      * @return true nếu đã login, false nếu chưa
      */
     public boolean isLoggedIn() {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+        boolean hasLoggedIn = prefs.getBoolean(KEY_IS_LOGGED_IN, false);
+        if (!hasLoggedIn) {
+            return false;
+        }
+        long expireTime = prefs.getLong(KEY_EXPIRE_TIME, 0);
+        long currentTime = System.currentTimeMillis();
+
+        if (currentTime > expireTime) {
+            // Lỗi lầm đã xảy ra: Đã qua mốc thời gian cho phép!
+            // Tự động dọn dẹp sạch sẽ ổ cứng (Đăng xuất ngầm)
+            logout();
+            return false; // Báo cáo lại là vé đã chết
+        }
+        return true;
     }
 
     /**
