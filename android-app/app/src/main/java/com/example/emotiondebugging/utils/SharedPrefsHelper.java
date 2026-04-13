@@ -3,16 +3,10 @@ package com.example.emotiondebugging.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-/**
- * ✅ Helper class để lưu trữ dữ liệu persistent (token, user info)
- * Sử dụng SharedPreferences - key-value storage của Android
- */
 public class SharedPrefsHelper {
 
-    // Tên của file lưu trữ trong hệ thống Android
     private static final String PREF_NAME = "EmotionDebuggingPrefs";
 
-    // Các "chìa khóa" (keys) để cất và lấy dữ liệu
     private static final String KEY_TOKEN = "token";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_EMAIL = "email";
@@ -20,118 +14,83 @@ public class SharedPrefsHelper {
     private static final String KEY_ROLE = "role";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_EXPIRE_TIME = "expire_time";
+    private static final String KEY_NAME = "user_name";
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
 
-    /**
-     * ✅ Constructor - Khởi tạo SharedPreferences
-     * @param context Application context
-     */
     public SharedPrefsHelper(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = prefs.edit();
     }
 
-    /**
-     * ✅ Lưu token sau khi login thành công
-     * @param token JWT token từ server
-     */
+    // ✅ saveToken: chỉ lo việc của token, không đụng đến name
     public void saveToken(String token) {
         editor.putString(KEY_TOKEN, token);
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
-        // --- THÊM LOGIC TÍNH GIỜ HẾT HẠN ---
-        long durationInMillis = 1L * 60 * 60 * 1000; //thời lượng token 1 giờ
 
+        long durationInMillis = 60 * 60 * 1000;
         long expireTime = System.currentTimeMillis() + durationInMillis;
         editor.putLong(KEY_EXPIRE_TIME, expireTime);
-        // -----------------------------------
 
-        editor.apply(); // Dùng apply() thay vì commit() để chạy bất đồng bộ (nhanh hơn)
+        editor.apply();
     }
 
-    /**
-     * ✅ Lấy token đã lưu
-     * @return Token string hoặc null nếu chưa login
-     */
     public String getToken() {
         return prefs.getString(KEY_TOKEN, null);
     }
 
-    /**
-     * ✅ Lưu thông tin cơ bản của User
-     */
-    public void saveUserInfo(String userId, String email, String studentCode, String role) {
+    // ✅ saveUserInfo: thêm name vào đây — đúng trách nhiệm, đủ thông tin user
+    public void saveUserInfo(String userId, String email, String studentCode, String role, String name) {
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_STUDENT_CODE, studentCode);
         editor.putString(KEY_ROLE, role);
+        editor.putString(KEY_NAME, name); // ✅ name thuộc về đây
         editor.apply();
     }
 
-    /**
-     * ✅ Lấy User ID
-     */
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
     }
 
-    /**
-     * ✅ Lấy Email
-     */
     public String getEmail() {
         return prefs.getString(KEY_EMAIL, null);
     }
 
-    /**
-     * ✅ Lấy Mã Sinh Viên
-     */
     public String getStudentCode() {
         return prefs.getString(KEY_STUDENT_CODE, null);
     }
 
-    /**
-     * ✅ Lấy Role (Quan trọng cho việc phân luồng màn hình chính)
-     * Mặc định nếu không thấy sẽ trả về "STUDENT" để an toàn
-     */
     public String getRole() {
         return prefs.getString(KEY_ROLE, "STUDENT");
     }
 
-    /**
-     * ✅ Kiểm tra user đã login chưa
-     * @return true nếu đã login, false nếu chưa
-     */
+    // ✅ getName: fallback "Người dùng" chỉ là safety net thực sự, không phải giá trị mặc định
+    public String getName() {
+        return prefs.getString(KEY_NAME, "Người dùng");
+    }
+
     public boolean isLoggedIn() {
         boolean hasLoggedIn = prefs.getBoolean(KEY_IS_LOGGED_IN, false);
-        if (!hasLoggedIn) {
-            return false;
-        }
-        long expireTime = prefs.getLong(KEY_EXPIRE_TIME, 0);
-        long currentTime = System.currentTimeMillis();
+        if (!hasLoggedIn) return false;
 
-        if (currentTime > expireTime) {
-            // Lỗi lầm đã xảy ra: Đã qua mốc thời gian cho phép!
-            // Tự động dọn dẹp sạch sẽ ổ cứng (Đăng xuất ngầm)
+        long expireTime = prefs.getLong(KEY_EXPIRE_TIME, 0);
+        if (System.currentTimeMillis() > expireTime) {
             logout();
-            return false; // Báo cáo lại là vé đã chết
+            return false;
         }
         return true;
     }
 
-    /**
-     * ✅ Xóa tất cả dữ liệu (Dùng khi Logout)
-     */
     public void clearAll() {
         editor.clear();
         editor.apply();
     }
 
-    /**
-     * ✅ Tùy chọn Logout nhẹ: Chỉ xóa cờ đăng nhập và token, giữ lại email để lần sau gõ cho nhanh
-     */
     public void logout() {
         editor.remove(KEY_TOKEN);
+        editor.remove(KEY_NAME); // ✅ Xóa name khi logout, tránh hiển thị tên user cũ
         editor.putBoolean(KEY_IS_LOGGED_IN, false);
         editor.apply();
     }

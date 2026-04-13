@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.example.emotiondebugging.R;
+import com.example.emotiondebugging.utils.SharedPrefsHelper;
+
 
 public class MainViewModel extends ViewModel {
 
@@ -20,11 +22,11 @@ public class MainViewModel extends ViewModel {
     /**
      * Khởi tạo dữ liệu ban đầu theo đúng logic cũ
      */
-    public void initData() {
+    public void initData(SharedPrefsHelper prefsHelper) {
         // Giả lập tên lấy từ Database/SharedPrefs
-        _fullName.setValue("Trương Nguyên Đại Thắng");
+        String realName = prefsHelper.getName();
+        _fullName.setValue(realName);
 
-        // Mảng chứa ID của 5 file PNG icon chức năng
         int[] icons = {
                 R.drawable.ic_errorlog,
                 R.drawable.ic_emergencyhotfixes,

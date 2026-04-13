@@ -104,14 +104,13 @@ public class LoginActivity extends AppCompatActivity {
         prefsHelper.saveToken(response.getToken());
 
         if (response.getUser() != null) {
-            // FIX LỖI: Dùng hàm getUserId() thay vì gọi biến .userId
             String userIdString = String.valueOf(response.getUser().getUserId());
-
             prefsHelper.saveUserInfo(
                     userIdString,
-                    response.getUser().getEmail(),         // Dùng hàm getEmail()
-                    response.getUser().getStudentCode(),   // Dùng hàm getStudentCode()
-                    role
+                    response.getUser().getEmail(),
+                    response.getUser().getStudentCode(),
+                    role,
+                    response.getUser().getName()
             );
         }
 

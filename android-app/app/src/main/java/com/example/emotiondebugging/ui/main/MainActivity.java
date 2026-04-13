@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 import com.example.emotiondebugging.R;
+import com.example.emotiondebugging.utils.SharedPrefsHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,9 +52,10 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getIconList().observe(this, icons -> {
             setupIconCarousel(icons);
         });
-
         // Gọi hàm load dữ liệu ban đầu
-        viewModel.initData();
+        SharedPrefsHelper prefsHelper = new SharedPrefsHelper(this);
+        viewModel.initData(prefsHelper);
+
     }
 
     // ================= HÀM XỬ LÝ CHỮ (GIỮ NGUYÊN LOGIC) =================
