@@ -19,11 +19,10 @@ import retrofit2.Response;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private static final String TEST_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwiaWF0IjoxNzc1ODkzNzEwLCJleHAiOjE3NzY0OTg1MTB9.306PpgXm9QdC8XXhy6_5V8mIenBTakIqiEEJCCJvuUY";
-
     private TextView tvName, tvStudentId, tvFaculty, tvMajor, tvSchoolYear;
     private ImageView ivAvatar;
     private SharedPrefsHelper prefsHelper;
+    private String authToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +30,12 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         prefsHelper = new SharedPrefsHelper(this);
+        
+        // Lấy token từ SharedPreferences
+        String token = prefsHelper.getToken();
+        if (token != null) {
+            authToken = "Bearer " + token;
+        }
 
         tvName = findViewById(R.id.tv_name);
         tvStudentId = findViewById(R.id.tv_student_id);
@@ -73,7 +78,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void loadProfile() {
-        RetrofitClient.getProfileApi().getProfile(TEST_TOKEN)
+        RetrofitClient.getProfileApi().getProfile(authToken)
                 .enqueue(new Callback<ProfileResponse>() {
                     @Override
                     public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {

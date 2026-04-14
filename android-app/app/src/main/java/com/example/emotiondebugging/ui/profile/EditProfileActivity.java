@@ -30,12 +30,11 @@ import retrofit2.Response;
 
 public class EditProfileActivity extends AppCompatActivity {
 
-    private static final String TEST_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwiaWF0IjoxNzc1ODkzNzEwLCJleHAiOjE3NzY0OTg1MTB9.306PpgXm9QdC8XXhy6_5V8mIenBTakIqiEEJCCJvuUY";
-
     private TextView tvName, tvStudentId;
     private ImageView ivAvatar;
     private EditText etFaculty, etMajor, etSchoolYear, etEmail, etPhone, etEmergencyPhone;
     private String currentName = "";
+    private String authToken;
 
     private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -51,6 +50,14 @@ public class EditProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
+
+        // Lấy token từ SharedPreferences
+        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper = 
+            new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
+        String token = prefsHelper.getToken();
+        if (token != null) {
+            authToken = "Bearer " + token;
+        }
 
         tvName = findViewById(R.id.tv_name);
         tvStudentId = findViewById(R.id.tv_student_id);
@@ -78,7 +85,7 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     private void loadCurrentProfile() {
-        RetrofitClient.getProfileApi().getProfile(TEST_TOKEN)
+        RetrofitClient.getProfileApi().getProfile(authToken)
                 .enqueue(new Callback<ProfileResponse>() {
                     @Override
                     public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
@@ -140,7 +147,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 etEmergencyPhone.getText().toString().trim()
         );
 
-        RetrofitClient.getProfileApi().updateProfile(TEST_TOKEN, request)
+        RetrofitClient.getProfileApi().updateProfile(authToken, request)
                 .enqueue(new Callback<BaseResponse>() {
                     @Override
                     public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
@@ -168,7 +175,7 @@ public class EditProfileActivity extends AppCompatActivity {
             RequestBody reqBody = RequestBody.create(MediaType.parse("image/*"), file);
             MultipartBody.Part part = MultipartBody.Part.createFormData("avatar", file.getName(), reqBody);
 
-            RetrofitClient.getProfileApi().uploadAvatar(TEST_TOKEN, part)
+            RetrofitClient.getProfileApi().uploadAvatar(authToken, part)
                     .enqueue(new Callback<BaseResponse>() {
                         @Override
                         public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {

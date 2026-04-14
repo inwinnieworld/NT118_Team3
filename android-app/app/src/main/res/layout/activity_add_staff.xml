@@ -200,7 +200,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_lock"
+                    android:src="@drawable/ic_lock_1"
                     android:tint="@color/primary"
                     android:contentDescription="@null" />
 

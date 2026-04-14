@@ -20,15 +20,22 @@ import retrofit2.Response;
 public class EditStaffActivity extends AppCompatActivity {
 
     public static final String EXTRA_STAFF = "extra_staff";
-    private static final String TEST_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc3NTkxNDAwMCwiZXhwIjoxNzc2NTE4ODAwfQ.A5dD-yaFwRejbTVnn3Nuiw_FO7i5o3c5j8N7ee6V6QA";
-
     private EditText etName, etEmail, etPhone, etPosition, etDepartment;
     private StaffItem staff;
+    private String authToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_staff);
+
+        // Lấy token từ SharedPreferences
+        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper = 
+            new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
+        String token = prefsHelper.getToken();
+        if (token != null) {
+            authToken = "Bearer " + token;
+        }
 
         staff = new Gson().fromJson(getIntent().getStringExtra(EXTRA_STAFF), StaffItem.class);
 
@@ -65,7 +72,7 @@ public class EditStaffActivity extends AppCompatActivity {
                 etDepartment.getText().toString().trim()
         );
 
-        RetrofitClient.getAdminApi().updateStaff(TEST_TOKEN, staff.staffId, req)
+        RetrofitClient.getAdminApi().updateStaff(authToken, staff.staffId, req)
                 .enqueue(new Callback<BaseResponse>() {
                     @Override
                     public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {

@@ -107,7 +107,7 @@
                 android:id="@+id/iv_lock_icon"
                 android:layout_width="12dp"
                 android:layout_height="12dp"
-                android:src="@drawable/ic_lock"
+                android:src="@drawable/ic_lock_1"
                 android:tint="@color/logout_text"
                 android:contentDescription="@null" />
 

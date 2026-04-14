@@ -38,6 +38,18 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         tvWelcome = findViewById(R.id.tvWelcomeMessage);
         vpIcons = findViewById(R.id.vpIcons);
+        
+        // Thêm click listener cho icon userinfo
+        ImageView ivUserInfo = findViewById(R.id.ivUserInfo);
+        if (ivUserInfo != null) {
+            ivUserInfo.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(
+                    MainActivity.this, 
+                    com.example.emotiondebugging.ui.profile.ProfileActivity.class
+                );
+                startActivity(intent);
+            });
+        }
     }
 
     private void initViewModel() {

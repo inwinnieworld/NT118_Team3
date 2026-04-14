@@ -32,7 +32,7 @@ import retrofit2.Response;
 
 public class ManageStudentActivity extends AppCompatActivity {
 
-    private static final String TEST_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc3NTkxNDAwMCwiZXhwIjoxNzc2NTE4ODAwfQ.A5dD-yaFwRejbTVnn3Nuiw_FO7i5o3c5j8N7ee6V6QA";
+    private static final String TEST_TOKEN = ""; // Sẽ lấy từ SharedPreferences
     private static final int TAB_STUDENT = 0;
     private static final int TAB_STAFF = 1;
 
@@ -44,6 +44,9 @@ public class ManageStudentActivity extends AppCompatActivity {
     private int currentPage = 1;
     private int totalPages = 1;
     private String currentSearch = "";
+    
+    // Token từ SharedPreferences
+    private String authToken;
 
     private final ActivityResultLauncher<Intent> editLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -54,6 +57,12 @@ public class ManageStudentActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_student);
+        
+        // Lấy token từ SharedPreferences
+        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper = 
+            new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
+        String token = prefsHelper.getToken();
+        authToken = token != null ? "Bearer " + token : "";
 
         listAccounts = findViewById(R.id.list_accounts);
         tvCount = findViewById(R.id.tv_count);
@@ -124,7 +133,7 @@ public class ManageStudentActivity extends AppCompatActivity {
     }
 
     private void loadStudents() {
-        RetrofitClient.getAdminApi().getStudents(TEST_TOKEN, currentPage, currentSearch)
+        RetrofitClient.getAdminApi().getStudents(authToken, currentPage, currentSearch)
                 .enqueue(new Callback<StudentListResponse>() {
                     @Override
                     public void onResponse(Call<StudentListResponse> call, Response<StudentListResponse> response) {
@@ -144,7 +153,7 @@ public class ManageStudentActivity extends AppCompatActivity {
     }
 
     private void loadStaff() {
-        RetrofitClient.getAdminApi().getStaff(TEST_TOKEN, currentPage, currentSearch)
+        RetrofitClient.getAdminApi().getStaff(authToken, currentPage, currentSearch)
                 .enqueue(new Callback<StaffListResponse>() {
                     @Override
                     public void onResponse(Call<StaffListResponse> call, Response<StaffListResponse> response) {
@@ -178,7 +187,7 @@ public class ManageStudentActivity extends AppCompatActivity {
             item.findViewById(R.id.btn_toggle_lock).setOnClickListener(v ->
                     confirmToggleLock(s.name, s.isLocked(), () ->
                             RetrofitClient.getAdminApi()
-                                    .toggleStudentLock(TEST_TOKEN, s.studentId)
+                                    .toggleStudentLock(authToken, s.studentId)
                                     .enqueue(lockCallback())));
 
             listAccounts.addView(item);
@@ -200,7 +209,7 @@ public class ManageStudentActivity extends AppCompatActivity {
             item.findViewById(R.id.btn_toggle_lock).setOnClickListener(v ->
                     confirmToggleLock(s.name, s.isLocked(), () ->
                             RetrofitClient.getAdminApi()
-                                    .toggleStaffLock(TEST_TOKEN, s.staffId)
+                                    .toggleStaffLock(authToken, s.staffId)
                                     .enqueue(lockCallback())));
 
             listAccounts.addView(item);
@@ -219,7 +228,7 @@ public class ManageStudentActivity extends AppCompatActivity {
         lockLabel.setText(isLocked ? "Kích hoạt" : "Vô hiệu");
 
         ImageView ivLock = item.findViewById(R.id.iv_lock_icon);
-        ivLock.setImageResource(isLocked ? R.drawable.ic_person : R.drawable.ic_lock);
+        ivLock.setImageResource(isLocked ? R.drawable.ic_person : R.drawable.ic_lock_1);
 
         ImageView ivAvatar = item.findViewById(R.id.iv_avatar);
         if (avatarUrl != null && !avatarUrl.isEmpty()) {

@@ -17,15 +17,22 @@ import retrofit2.Response;
 
 public class ChangePasswordActivity extends AppCompatActivity {
 
-    private static final String TEST_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwiaWF0IjoxNzc1ODg5MzkxLCJleHAiOjE3NzY0OTQxOTF9.RZ5OFAbQUzcEczfUVsAEOqwqR-yqu-hCdWqxShF_ubI";
-
     private EditText etOldPassword, etNewPassword, etConfirmPassword;
     private boolean showOld = false, showNew = false, showConfirm = false;
+    private String authToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_password);
+
+        // Lấy token từ SharedPreferences
+        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper = 
+            new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
+        String token = prefsHelper.getToken();
+        if (token != null) {
+            authToken = "Bearer " + token;
+        }
 
         etOldPassword = findViewById(R.id.et_old_password);
         etNewPassword = findViewById(R.id.et_new_password);
@@ -81,7 +88,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
         }
 
         RetrofitClient.getProfileApi()
-                .changePassword(TEST_TOKEN, new ChangePasswordRequest(oldPwd, newPwd))
+                .changePassword(authToken, new ChangePasswordRequest(oldPwd, newPwd))
                 .enqueue(new Callback<BaseResponse>() {
                     @Override
                     public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {

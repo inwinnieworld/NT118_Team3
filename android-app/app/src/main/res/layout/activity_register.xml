@@ -213,7 +213,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_lock" />
+                        android:src="@drawable/ic_lock_1" />
                     <View
                         android:layout_width="10dp"
                         android:layout_height="10dp"

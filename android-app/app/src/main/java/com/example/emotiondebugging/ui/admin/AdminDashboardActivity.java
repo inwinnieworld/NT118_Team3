@@ -81,8 +81,13 @@ public class AdminDashboardActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnManageAccount.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Quản lý tài khoản", Toast.LENGTH_SHORT).show());
+        btnManageAccount.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(
+                AdminDashboardActivity.this,
+                ManageStudentActivity.class
+            );
+            startActivity(intent);
+        });
 
         btnSystemReport.setOnClickListener(v ->
                 Toast.makeText(this, "Mở Báo cáo hệ thống", Toast.LENGTH_SHORT).show());
@@ -98,5 +103,33 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
         btnManageDictionary.setOnClickListener(v ->
                 Toast.makeText(this, "Mở Bộ từ điển cảm xúc", Toast.LENGTH_SHORT).show());
+        
+        // THÊM: Logout khi long press vào status bar
+        tvAdminStatus.setOnLongClickListener(v -> {
+            showLogoutDialog();
+            return true;
+        });
+    }
+    
+    private void showLogoutDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Đăng xuất")
+                .setMessage("Bạn có chắc muốn đăng xuất không?")
+                .setPositiveButton("Đăng xuất", (dialog, which) -> logout())
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+    
+    private void logout() {
+        SharedPrefsHelper prefsHelper = new SharedPrefsHelper(this);
+        prefsHelper.clearAll();
+        
+        android.content.Intent intent = new android.content.Intent(
+            this, 
+            com.example.emotiondebugging.ui.auth.LoginActivity.class
+        );
+        intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

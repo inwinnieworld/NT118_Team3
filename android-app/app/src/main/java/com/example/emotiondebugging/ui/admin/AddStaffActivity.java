@@ -14,14 +14,21 @@ import retrofit2.Response;
 
 public class AddStaffActivity extends AppCompatActivity {
 
-    private static final String TEST_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc3NTkxNDAwMCwiZXhwIjoxNzc2NTE4ODAwfQ.A5dD-yaFwRejbTVnn3Nuiw_FO7i5o3c5j8N7ee6V6QA";
-
     private EditText etName, etEmail, etPhone, etPassword, etPosition, etDepartment;
+    private String authToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_staff);
+
+        // Lấy token từ SharedPreferences
+        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper = 
+            new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
+        String token = prefsHelper.getToken();
+        if (token != null) {
+            authToken = "Bearer " + token;
+        }
 
         etName = findViewById(R.id.et_name);
         etEmail = findViewById(R.id.et_email);
@@ -47,7 +54,7 @@ public class AddStaffActivity extends AppCompatActivity {
             return;
         }
 
-        RetrofitClient.getAdminApi().createStaff(TEST_TOKEN,
+        RetrofitClient.getAdminApi().createStaff(authToken,
                 new CreateStaffRequest(name, email, phone, password, position, department))
                 .enqueue(new Callback<BaseResponse>() {
                     @Override

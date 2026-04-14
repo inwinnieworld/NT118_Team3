@@ -40,9 +40,12 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
+            android:id="@+id/ivUserInfo"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_userinfo" />
+            android:src="@drawable/ic_userinfo"
+            android:clickable="true"
+            android:focusable="true" />
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
