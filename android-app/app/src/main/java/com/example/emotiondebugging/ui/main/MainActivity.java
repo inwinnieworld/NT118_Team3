@@ -52,10 +52,10 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getIconList().observe(this, icons -> {
             setupIconCarousel(icons);
         });
+
         // Gọi hàm load dữ liệu ban đầu
         SharedPrefsHelper prefsHelper = new SharedPrefsHelper(this);
         viewModel.initData(prefsHelper);
-
     }
 
     // ================= HÀM XỬ LÝ CHỮ (GIỮ NGUYÊN LOGIC) =================

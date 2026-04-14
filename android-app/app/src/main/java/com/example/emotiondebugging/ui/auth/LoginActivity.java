@@ -97,7 +97,8 @@ public class LoginActivity extends AppCompatActivity {
     private void handleLoginSuccess(LoginResponse response) {
         String role = response.getUser().getRole() != null ? response.getUser().getRole() : "";
         Toast.makeText(this, "Đăng nhập thành công - " + role, Toast.LENGTH_SHORT).show();
-        // 1. Lưu Token và thông tin User
+
+        // Lưu Token và thông tin User
         com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper =
                 new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
 
@@ -114,6 +115,7 @@ public class LoginActivity extends AppCompatActivity {
             );
         }
 
+        // Role-based navigation
         Intent intent;
         switch (role.toUpperCase()) {
             case "ADMIN":
@@ -128,7 +130,7 @@ public class LoginActivity extends AppCompatActivity {
                 break;
         }
 
-        // Xóa lịch sử màn hình
+        // Clear back stack
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

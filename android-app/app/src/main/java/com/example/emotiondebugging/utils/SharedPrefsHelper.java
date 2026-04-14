@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 public class SharedPrefsHelper {
 
     private static final String PREF_NAME = "EmotionDebuggingPrefs";
-
     private static final String KEY_TOKEN = "token";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_EMAIL = "email";
@@ -17,22 +16,21 @@ public class SharedPrefsHelper {
     private static final String KEY_NAME = "user_name";
 
     private final SharedPreferences prefs;
-    private final SharedPreferences.Editor editor;
 
     public SharedPrefsHelper(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        editor = prefs.edit();
     }
 
-    // ✅ saveToken: chỉ lo việc của token, không đụng đến name
+    // Lưu token và set thời gian hết hạn
     public void saveToken(String token) {
+        SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY_TOKEN, token);
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
 
-        long durationInMillis =  60 * 1000;
+        // Token hết hạn sau 7 ngày (giống backend JWT expiry)
+        long durationInMillis = 7L * 24 * 60 * 60 * 1000; // 7 days
         long expireTime = System.currentTimeMillis() + durationInMillis;
         editor.putLong(KEY_EXPIRE_TIME, expireTime);
-
         editor.apply();
     }
 
@@ -40,13 +38,14 @@ public class SharedPrefsHelper {
         return prefs.getString(KEY_TOKEN, null);
     }
 
-    // ✅ saveUserInfo: thêm name vào đây — đúng trách nhiệm, đủ thông tin user
+    // Lưu thông tin user
     public void saveUserInfo(String userId, String email, String studentCode, String role, String name) {
+        SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_STUDENT_CODE, studentCode);
         editor.putString(KEY_ROLE, role);
-        editor.putString(KEY_NAME, name); // ✅ name thuộc về đây
+        editor.putString(KEY_NAME, name);
         editor.apply();
     }
 
@@ -66,11 +65,11 @@ public class SharedPrefsHelper {
         return prefs.getString(KEY_ROLE, "STUDENT");
     }
 
-    // ✅ getName: fallback "Người dùng" chỉ là safety net thực sự, không phải giá trị mặc định
     public String getName() {
         return prefs.getString(KEY_NAME, "Người dùng");
     }
 
+    // Kiểm tra đăng nhập và token còn hạn
     public boolean isLoggedIn() {
         boolean hasLoggedIn = prefs.getBoolean(KEY_IS_LOGGED_IN, false);
         if (!hasLoggedIn) return false;
@@ -83,14 +82,20 @@ public class SharedPrefsHelper {
         return true;
     }
 
+    // Xóa tất cả dữ liệu
     public void clearAll() {
-        editor.clear();
-        editor.apply();
+        prefs.edit().clear().apply();
     }
 
+    // Logout: xóa token và thông tin user
     public void logout() {
+        SharedPreferences.Editor editor = prefs.edit();
         editor.remove(KEY_TOKEN);
-        editor.remove(KEY_NAME); // ✅ Xóa name khi logout, tránh hiển thị tên user cũ
+        editor.remove(KEY_NAME);
+        editor.remove(KEY_USER_ID);
+        editor.remove(KEY_EMAIL);
+        editor.remove(KEY_STUDENT_CODE);
+        editor.remove(KEY_ROLE);
         editor.putBoolean(KEY_IS_LOGGED_IN, false);
         editor.apply();
     }

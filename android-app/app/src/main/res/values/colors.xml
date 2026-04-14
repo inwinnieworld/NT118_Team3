@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
+    <!-- ========== BASIC COLORS ========== -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
 
+    <!-- ========== AUTHENTICATION THEME (Dark/Cyberpunk - Code của Thắng) ========== -->
     <color name="cyan_glow">#8CF8FF</color>
     <color name="cyan_soft">#6FEAF2</color>
     <color name="cyan_text">#8AF4FF</color>
@@ -10,10 +12,36 @@
     <color name="glass_border">#66DDFEFF</color>
     <color name="input_fill">#33D9F8FF</color>
     <color name="overlay_dark">#4D08131F</color>
-
     <color name="start_bg_dark">#0A1929</color>
     <color name="start_bg_teal">#0D2A3F</color>
     <color name="cyan_primary">#00D9FF</color>
     <color name="cyan_bright">#00E5FF</color>
     <color name="progress_bg">#4D1A3A4F</color>
+
+    <!-- ========== PROFILE/ADMIN THEME (Light/Clean - Code của Chính) ========== -->
+    <color name="primary">#4DC8D0</color>
+    <color name="primary_dark">#2A9DA5</color>
+    <color name="primary_light">#E8F8F9</color>
+    <color name="accent_teal">#1B8A92</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_hint">#9CA3AF</color>
+
+    <!-- Background Colors -->
+    <color name="background">#F5FAFA</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="field_background">#EEF7F8</color>
+    <color name="divider">#E5E7EB</color>
+
+    <!-- Logout Button Colors -->
+    <color name="logout_text">#EF4444</color>
+    <color name="logout_border">#FECACA</color>
+    <color name="logout_bg">#FFF5F5</color>
+
+    <!-- Profile/Admin UI Colors -->
+    <color name="avatar_border">#4DC8D0</color>
+    <color name="id_badge_bg">#D1F0F2</color>
+    <color name="id_badge_text">#2A9DA5</color>
 </resources>

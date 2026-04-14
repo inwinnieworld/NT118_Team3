@@ -1,4 +1,4 @@
-# .gitignore cho Android Project
+# .gitignore cho Android + Backend Project
 # ============================================
 
 # ===== Gradle Build Files =====
@@ -55,6 +55,8 @@ google-services.json
 
 # ===== Log Files =====
 *.log
+hs_err_pid*
+replay_pid*
 
 # ===== Android Profiling =====
 *.hprof
@@ -96,13 +98,16 @@ release/
 *.ipr
 *.iws
 .mtj.tmp/
-hs_err_pid*
-replay_pid*
-# Bỏ qua các file cấu hình máy cá nhân của Android Studio
-android-app/.idea/
-android-app/**/*.iml
-android-app/local.properties
 
-# Bỏ qua thư viện và mật khẩu của Backend Node.js
-backend/node_modules/
+# ===== Backend (Node.js) =====
 backend/.env
+backend/node_modules/
+backend/uploads/
+
+# ===== Development Tools =====
+# Không ignore generate-test-token.js - team cần dùng
+# backend/generate-test-token.js
+
+# ===== Database Backups =====
+*.sql.backup
+*.db.backup
