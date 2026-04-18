@@ -2,11 +2,8 @@ package com.example.emotiondebugging.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.method.HideReturnsTransformationMethod;
-import android.text.method.PasswordTransformationMethod;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,27 +12,24 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.model.response.LoginResponse;
+import com.example.emotiondebugging.ui.admin.AdminDashboardActivity;
+import com.example.emotiondebugging.ui.staff.StaffDashboardActivity;
+import com.example.emotiondebugging.ui.main.MainActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
     private EditText etAccount;
     private EditText etPassword;
-    private ImageView imgTogglePassword;
     private Button btnLogin;
     private TextView tvForgotPassword;
     private TextView tvRegister;
 
-    private boolean isPasswordVisible = false;
     private LoginViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().hide();
-        }
 
         initViews();
         initViewModel();
@@ -45,7 +39,6 @@ public class LoginActivity extends AppCompatActivity {
     private void initViews() {
         etAccount = findViewById(R.id.etAccount);
         etPassword = findViewById(R.id.etPassword);
-        imgTogglePassword = findViewById(R.id.imgTogglePassword);
         btnLogin = findViewById(R.id.btnLogin);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
         tvRegister = findViewById(R.id.tvRegister);
@@ -61,10 +54,10 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         viewModel.getLoading().observe(this, isLoading -> {
-            if (isLoading == null) return;
-
-            btnLogin.setEnabled(!isLoading);
-            btnLogin.setText(isLoading ? "Đang đăng nhập..." : "Đăng nhập");
+            if (isLoading != null) {
+                btnLogin.setEnabled(!isLoading);
+                btnLogin.setText(isLoading ? "Đang đăng nhập..." : "Đăng nhập");
+            }
         });
 
         viewModel.getLoginResponse().observe(this, response -> {
@@ -72,25 +65,32 @@ public class LoginActivity extends AppCompatActivity {
                 handleLoginSuccess(response);
             }
         });
+
+        viewModel.getLoginFormState().observe(this, state -> {
+            if (state != null) {
+                etAccount.setError(state.getAccountError());
+                etPassword.setError(state.getPasswordError());
+            }
+        });
     }
 
     private void initActions() {
-        imgTogglePassword.setOnClickListener(v -> togglePassword());
-
         btnLogin.setOnClickListener(v -> {
             String account = etAccount.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
+
+            etAccount.setError(null);
+            etPassword.setError(null);
+
             viewModel.login(account, password);
         });
 
         tvForgotPassword.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
         });
 
         tvRegister.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         });
     }
 
@@ -98,52 +98,22 @@ public class LoginActivity extends AppCompatActivity {
         String role = response.getUser().getRole() != null ? response.getUser().getRole() : "";
         Toast.makeText(this, "Đăng nhập thành công - " + role, Toast.LENGTH_SHORT).show();
 
-        // Lưu Token và thông tin User
-        com.example.emotiondebugging.utils.SharedPrefsHelper prefsHelper =
-                new com.example.emotiondebugging.utils.SharedPrefsHelper(this);
-
-        prefsHelper.saveToken(response.getToken());
-
-        if (response.getUser() != null) {
-            String userIdString = String.valueOf(response.getUser().getUserId());
-            prefsHelper.saveUserInfo(
-                    userIdString,
-                    response.getUser().getEmail(),
-                    response.getUser().getStudentCode(),
-                    role,
-                    response.getUser().getName()
-            );
-        }
-
-        // Role-based navigation
         Intent intent;
         switch (role.toUpperCase()) {
             case "ADMIN":
-                intent = new Intent(LoginActivity.this, com.example.emotiondebugging.ui.admin.AdminDashboardActivity.class);
+                intent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
                 break;
             case "STAFF":
-                intent = new Intent(LoginActivity.this, com.example.emotiondebugging.ui.staff.StaffDashboardActivity.class);
+                intent = new Intent(LoginActivity.this, StaffDashboardActivity.class);
                 break;
             case "STUDENT":
             default:
-                intent = new Intent(LoginActivity.this, com.example.emotiondebugging.ui.main.MainActivity.class);
+                intent = new Intent(LoginActivity.this, MainActivity.class);
                 break;
         }
 
-        // Clear back stack
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
-    }
-
-    private void togglePassword() {
-        if (isPasswordVisible) {
-            etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
-        } else {
-            etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-        }
-
-        isPasswordVisible = !isPasswordVisible;
-        etPassword.setSelection(etPassword.getText().length());
     }
 }
