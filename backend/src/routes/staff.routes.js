@@ -6,6 +6,7 @@ const router = express.Router();
 router.post("/quests", controller.createQuest);
 router.put("/quests/:questId", controller.updateQuest);
 router.get("/quests", controller.getAllQuests);
+router.delete("/quests/:questId", controller.deleteQuest);
 
 router.post("/assignments", controller.assignQuestToStudent);
 router.get("/assignments", controller.getQuestAssignments);

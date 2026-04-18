@@ -123,10 +123,30 @@ async function getQuestReport() {
   return rows;
 }
 
+async function deleteQuest(req, res) {
+  try {
+    const { questId } = req.params;
+
+    if (!questId) {
+      return fail(res, "Thiếu questId", 400);
+    }
+
+    const result = await staffService.deleteQuest(questId);
+
+    if (!result.success) {
+      return fail(res, result.message, result.status);
+    }
+
+    return ok(res, null, result.message, result.status);
+  } catch (error) {
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
 module.exports = {
   createQuest,
   updateQuest,
   getAllQuests,
+  deleteQuest,
   assignQuestToStudent,
   getQuestAssignments,
   getSummaryReport,

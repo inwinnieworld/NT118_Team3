@@ -123,10 +123,48 @@ async function getQuestReport() {
   return rows;
 }
 
+async function deleteQuest(questId) {
+  const [[used]] = await db.execute(
+    `SELECT COUNT(*) AS total
+     FROM USERQUESTS
+     WHERE quest_id = ?`,
+    [questId]
+  );
+
+  if (used.total > 0) {
+    return {
+      success: false,
+      status: 400,
+      message: "Quest đã được gán cho sinh viên, không thể xóa"
+    };
+  }
+
+  const [result] = await db.execute(
+    `DELETE FROM QUESTS
+     WHERE quest_id = ?`,
+    [questId]
+  );
+
+  if (result.affectedRows === 0) {
+    return {
+      success: false,
+      status: 404,
+      message: "Không tìm thấy quest"
+    };
+  }
+
+  return {
+    success: true,
+    status: 200,
+    message: "Xóa quest thành công"
+  };
+}
+
 module.exports = {
   createQuest,
   updateQuest,
   getAllQuests,
+  deleteQuest,
   assignQuestToStudent,
   getQuestAssignments,
   getSummaryReport,

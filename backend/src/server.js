@@ -6,6 +6,8 @@ const path = require("path");
 const authRoutes = require("./routes/auth.routes");
 const profileRoutes = require("./routes/profile.route");
 const adminRoutes = require("./routes/admin.route");
+const emergencyRoutes = require("./routes/emergency.routes");
+const staffRoutes = require("./routes/staff.routes");
 
 const app = express();
 
@@ -27,6 +29,9 @@ app.use("/api/profile", profileRoutes);
 
 // Admin routes (manage students, staff)
 app.use("/api/admin", adminRoutes);
+
+app.use("/api/emergency", emergencyRoutes);
+app.use("/api/staff", staffRoutes);
 
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));

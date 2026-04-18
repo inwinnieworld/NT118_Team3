@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.emotiondebugging.R;
+import com.example.emotiondebugging.model.response.QuestResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,43 +21,48 @@ import java.util.Locale;
 public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHolder> implements Filterable {
 
     public interface OnQuestActionListener {
-        void onEdit(QuestItem item);
-        void onDelete(QuestItem item);
+        void onEdit(QuestResponse item);
+        void onDelete(QuestResponse item);
     }
 
-    private final List<QuestItem> originalList;
-    private final List<QuestItem> filteredList;
+    private final List<QuestResponse> originalList = new ArrayList<>();
+    private final List<QuestResponse> filteredList = new ArrayList<>();
     private final OnQuestActionListener listener;
 
-    public QuestAdapter(List<QuestItem> questList, OnQuestActionListener listener) {
-        this.originalList = new ArrayList<>(questList);
-        this.filteredList = new ArrayList<>(questList);
+    public QuestAdapter(OnQuestActionListener listener) {
         this.listener = listener;
+    }
+
+    public void submitList(List<QuestResponse> list) {
+        originalList.clear();
+        filteredList.clear();
+
+        if (list != null) {
+            originalList.addAll(list);
+            filteredList.addAll(list);
+        }
+
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
     public QuestViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_quest, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_quest, parent, false);
         return new QuestViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull QuestViewHolder holder, int position) {
-        QuestItem item = filteredList.get(position);
-        holder.tvQuestName.setText(item.getQuestName());
+        QuestResponse item = filteredList.get(position);
+        holder.tvQuestName.setText(item.getQuest_title());
 
         holder.btnEdit.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onEdit(item);
-            }
+            if (listener != null) listener.onEdit(item);
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onDelete(item);
-            }
+            if (listener != null) listener.onDelete(item);
         });
     }
 
@@ -70,32 +76,32 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                String keyword = constraint == null
-                        ? ""
-                        : constraint.toString().trim().toLowerCase(Locale.ROOT);
-
-                List<QuestItem> resultList = new ArrayList<>();
+                String keyword = constraint == null ? "" : constraint.toString().trim().toLowerCase(Locale.ROOT);
+                List<QuestResponse> result = new ArrayList<>();
 
                 if (keyword.isEmpty()) {
-                    resultList.addAll(originalList);
+                    result.addAll(originalList);
                 } else {
-                    for (QuestItem item : originalList) {
-                        if (item.getQuestName().toLowerCase(Locale.ROOT).contains(keyword)) {
-                            resultList.add(item);
+                    for (QuestResponse item : originalList) {
+                        String title = item.getQuest_title() == null ? "" : item.getQuest_title().toLowerCase(Locale.ROOT);
+                        String errorName = item.getError_name() == null ? "" : item.getError_name().toLowerCase(Locale.ROOT);
+
+                        if (title.contains(keyword) || errorName.contains(keyword)) {
+                            result.add(item);
                         }
                     }
                 }
 
-                FilterResults results = new FilterResults();
-                results.values = resultList;
-                return results;
+                FilterResults filterResults = new FilterResults();
+                filterResults.values = result;
+                return filterResults;
             }
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 filteredList.clear();
                 if (results.values != null) {
-                    filteredList.addAll((List<QuestItem>) results.values);
+                    filteredList.addAll((List<QuestResponse>) results.values);
                 }
                 notifyDataSetChanged();
             }
