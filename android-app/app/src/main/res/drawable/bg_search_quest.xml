@@ -1,5 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#FFFFFF" />
-    <corners android:radius="28dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Bóng đỏ phía dưới -->
+    <item
+        android:left="8dp"
+        android:top="6dp"
+        android:right="8dp"
+        android:bottom="0dp">
+        <shape>
+            <solid android:color="#22C94B4B" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+    <!-- Bóng tối nhẹ -->
+    <item
+        android:left="6dp"
+        android:top="4dp"
+        android:right="6dp"
+        android:bottom="2dp">
+        <shape>
+            <solid android:color="#18000000" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+    <!-- Viền ngoài -->
+    <item>
+        <shape>
+            <solid android:color="#F8F8F8" />
+            <stroke
+                android:width="1dp"
+                android:color="#E7EEF2" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+    <!-- Lớp sáng phía trong -->
+    <item
+        android:left="1dp"
+        android:top="1dp"
+        android:right="1dp"
+        android:bottom="1dp">
+        <shape>
+            <gradient
+                android:angle="90"
+                android:startColor="#FCFCFC"
+                android:endColor="#F2F2F2" />
+            <corners android:radius="27dp" />
+        </shape>
+    </item>
+
+</layer-list>
