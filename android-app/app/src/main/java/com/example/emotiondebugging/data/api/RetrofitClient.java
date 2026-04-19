@@ -46,4 +46,9 @@ public class RetrofitClient {
     public static AdminApiService getAdminApi() {
         return getInstance().create(AdminApiService.class);
     }
+
+    // Luồng Community (của Chính)
+    public static CommunityApiService getCommunityApi() {
+        return getInstance().create(CommunityApiService.class);
+    }
 }

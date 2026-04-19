@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_post_card"
+    android:orientation="horizontal"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginBottom="10dp"
+    android:padding="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <!-- Avatar -->
+    <ImageView
+        android:id="@+id/iv_avatar"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp"
+        android:layout_gravity="top"
+        android:contentDescription="Avatar" />
+
+    <!-- Vote column -->
+    <LinearLayout
+        android:layout_width="36dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:layout_marginEnd="10dp">
+
+        <ImageButton
+            android:id="@+id/btn_upvote"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_upvote"
+            android:tint="#12B2C1"
+            android:contentDescription="Upvote" />
+
+        <TextView
+            android:id="@+id/tv_vote_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="32"
+            android:textColor="#12B2C1"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <View
+            android:layout_width="16dp"
+            android:layout_height="1dp"
+            android:background="#12B2C1"
+            android:layout_marginVertical="2dp" />
+
+        <TextView
+            android:id="@+id/tv_downvote_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="18"
+            android:textColor="#6B7280"
+            android:textSize="12sp"
+            android:gravity="center" />
+
+        <ImageButton
+            android:id="@+id/btn_downvote"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_downvote"
+            android:tint="#6B7280"
+            android:contentDescription="Downvote" />
+
+    </LinearLayout>
+
+    <!-- Content column -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Title + more button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_author_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="italic" />
+
+            <ImageButton
+                android:id="@+id/btn_more"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_more"
+                android:tint="#6B7280"
+                android:contentDescription="More" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Học DSA khó quá các mom quá :&lt;&lt; Sắp rớt đến nơi rồi"
+            android:textColor="#1A1A2E"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Preview content -->
+        <TextView
+            android:id="@+id/tv_preview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Chuyện là kỳ này mình có đăng ký..."
+            android:textColor="#6B7280"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Tag -->
+        <TextView
+            android:id="@+id/tv_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="#Học tập"
+            android:textColor="#12B2C1"
+            android:textSize="12sp" />
+
+        <!-- Stats row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <!-- Time -->
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_calendar"
+                android:tint="#6B7280"
+                android:contentDescription="@null" />
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:text="3 h. ago"
+                android:textColor="#6B7280"
+                android:textSize="11sp" />
+
+            <!-- Comments -->
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/ic_comment"
+                android:tint="#6B7280"
+                android:contentDescription="@null" />
+            <TextView
+                android:id="@+id/tv_comment_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:text="12"
+                android:textColor="#6B7280"
+                android:textSize="11sp" />
+
+            <!-- Views -->
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/ic_view"
+                android:tint="#6B7280"
+                android:contentDescription="@null" />
+            <TextView
+                android:id="@+id/tv_view_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:text="1,589"
+                android:textColor="#6B7280"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

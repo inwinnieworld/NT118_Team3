@@ -109,6 +109,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 ((ImageView) holder.itemView).setImageResource(iconList[position]);
+                holder.itemView.setOnClickListener(v -> {
+                    if (iconList[position] == R.drawable.ic_debuggingcommunity) {
+                        startActivity(new android.content.Intent(
+                            MainActivity.this,
+                            com.example.emotiondebugging.ui.community.CommunityActivity.class
+                        ));
+                    }
+                });
             }
 
             @Override

@@ -28,6 +28,9 @@ app.use("/api/profile", profileRoutes);
 // Admin routes (manage students, staff)
 app.use("/api/admin", adminRoutes);
 
+// Community routes
+app.use("/api/community", require("./routes/community.route"));
+
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));
 // app.use('/api/community', require('./routes/community.route'));

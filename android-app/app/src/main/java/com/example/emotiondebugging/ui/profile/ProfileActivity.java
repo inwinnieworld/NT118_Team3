@@ -51,24 +51,39 @@ public class ProfileActivity extends AppCompatActivity {
         findViewById(R.id.btn_change_password).setOnClickListener(v ->
                 startActivity(new Intent(this, ChangePasswordActivity.class)));
 
-        findViewById(R.id.btn_logout).setOnClickListener(v -> showLogoutDialog());
+        findViewById(R.id.btn_logout).setOnClickListener(v -> {
+            v.setEnabled(false); // chặn double-tap
+            showLogoutDialog();
+            v.postDelayed(() -> v.setEnabled(true), 1000);
+        });
     }
 
+    private AlertDialog logoutDialog;
+
     private void showLogoutDialog() {
-        new AlertDialog.Builder(this)
+        if (logoutDialog != null && logoutDialog.isShowing()) return;
+        logoutDialog = new AlertDialog.Builder(this)
                 .setTitle("Đăng xuất")
                 .setMessage("Bạn có chắc muốn đăng xuất không?")
-                .setPositiveButton("Đăng xuất", (dialog, which) -> logout())
+                .setPositiveButton("Đăng xuất", (d, which) -> logout())
                 .setNegativeButton("Huỷ", null)
-                .show();
+                .create();
+        logoutDialog.show();
     }
 
     private void logout() {
+        if (logoutDialog != null && logoutDialog.isShowing()) logoutDialog.dismiss();
         prefsHelper.clearAll();
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (logoutDialog != null && logoutDialog.isShowing()) logoutDialog.dismiss();
     }
 
     @Override
@@ -88,7 +103,7 @@ public class ProfileActivity extends AppCompatActivity {
                             tvStudentId.setText("ID: " + data.studentCode);
                             tvFaculty.setText(data.faculty);
                             tvMajor.setText(data.major);
-                            tvSchoolYear.setText(data.yearOfStudy);
+                            tvSchoolYear.setText(String.valueOf(data.yearOfStudy));
 
                             if (data.avatarUrl != null && !data.avatarUrl.isEmpty()) {
                                 Glide.with(ProfileActivity.this)

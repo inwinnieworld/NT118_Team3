@@ -96,7 +96,7 @@ public class EditProfileActivity extends AppCompatActivity {
                             tvStudentId.setText("ID: " + data.studentCode);
                             etFaculty.setText(data.faculty);
                             etMajor.setText(data.major);
-                            etSchoolYear.setText(data.yearOfStudy);
+                            etSchoolYear.setText(String.valueOf(data.yearOfStudy));
                             etEmail.setText(data.email);
                             etPhone.setText(data.phone);
                             etEmergencyPhone.setText(data.emergencyPhone);
@@ -138,6 +138,20 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     private void saveProfile() {
+        String phone = etPhone.getText().toString().trim();
+        String emergencyPhone = etEmergencyPhone.getText().toString().trim();
+
+        if (!phone.isEmpty() && !phone.matches("\\d{10}")) {
+            etPhone.setError("Số điện thoại phải đúng 10 chữ số");
+            etPhone.requestFocus();
+            return;
+        }
+        if (!emergencyPhone.isEmpty() && !emergencyPhone.matches("\\d{10}")) {
+            etEmergencyPhone.setError("Số điện thoại phải đúng 10 chữ số");
+            etEmergencyPhone.requestFocus();
+            return;
+        }
+
         UpdateProfileRequest request = new UpdateProfileRequest(
                 currentName,
                 etPhone.getText().toString().trim(),

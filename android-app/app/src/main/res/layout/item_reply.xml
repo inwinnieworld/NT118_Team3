@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_post_card"
+    android:orientation="horizontal"
+    android:layout_marginBottom="4dp"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/iv_avatar"
+        android:layout_width="26dp"
+        android:layout_height="26dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_avatar_placeholder"
+        android:contentDescription="Avatar" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_author_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#12B2C1"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="#1A1A2E"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#6B7280"
+                android:textSize="10sp" />
+
+            <ImageButton
+                android:id="@+id/btn_upvote"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="10dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_upvote"
+                android:tint="#12B2C1"
+                android:contentDescription="Upvote" />
+
+            <TextView
+                android:id="@+id/tv_upvote_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:text="0"
+                android:textColor="#12B2C1"
+                android:textSize="10sp" />
+
+            <ImageButton
+                android:id="@+id/btn_downvote"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_downvote"
+                android:tint="#6B7280"
+                android:contentDescription="Downvote" />
+
+            <TextView
+                android:id="@+id/tv_downvote_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:text="0"
+                android:textColor="#6B7280"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

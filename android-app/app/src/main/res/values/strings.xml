@@ -14,7 +14,7 @@
 
     <string name="label_faculty">KHOA</string>
     <string name="label_major">NGÀNH</string>
-    <string name="label_school_year">NĂM HỌC</string>
+    <string name="label_school_year">NĂM NHẬP HỌC</string>
     <string name="label_email">EMAIL</string>
     <string name="label_phone">SỐ ĐIỆN THOẠI</string>
     <string name="label_emergency_phone">SỐ ĐIỆN THOẠI KHẨN CẤP</string>

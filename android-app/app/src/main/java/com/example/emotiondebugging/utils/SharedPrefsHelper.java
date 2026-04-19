@@ -28,8 +28,7 @@ public class SharedPrefsHelper {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
 
         // Token hết hạn sau 7 ngày (giống backend JWT expiry)
-        //long durationInMillis = 7L * 24 * 60 * 60 * 1000; // 7 days
-        long durationInMillis = 30 * 1000; // 7 days
+        long durationInMillis = 7L * 24 * 60 * 60 * 1000; // 7 days
         long expireTime = System.currentTimeMillis() + durationInMillis;
         editor.putLong(KEY_EXPIRE_TIME, expireTime);
         editor.apply();
