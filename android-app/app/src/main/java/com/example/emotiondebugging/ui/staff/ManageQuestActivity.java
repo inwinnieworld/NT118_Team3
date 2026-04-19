@@ -1,5 +1,6 @@
 package com.example.emotiondebugging.ui.staff;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -54,24 +55,46 @@ public class ManageQuestActivity extends AppCompatActivity {
     private void initViewModel() {
         viewModel = new ViewModelProvider(this).get(ManageQuestViewModel.class);
 
+        android.util.Log.d("QUEST_DEBUG", "initViewModel called");
+
         viewModel.getMessage().observe(this, message -> {
+            android.util.Log.d("QUEST_DEBUG", "message = " + message);
             if (message != null && !message.isEmpty()) {
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             }
         });
 
         viewModel.getQuests().observe(this, quests -> {
+            android.util.Log.d("QUEST_DEBUG", "quests size = " + (quests == null ? "null" : quests.size()));
             if (adapter != null) {
                 adapter.submitList(quests);
             }
         });
 
         viewModel.getCreateSuccess().observe(this, success -> {
+            android.util.Log.d("QUEST_DEBUG", "createSuccess = " + success);
             if (Boolean.TRUE.equals(success)) {
                 viewModel.loadQuests();
             }
         });
 
+        viewModel.getDeleteSuccess().observe(this, success -> {
+            android.util.Log.d("QUEST_DEBUG", "deleteSuccess = " + success);
+            if (Boolean.TRUE.equals(success)) {
+                Toast.makeText(this, "Xóa quest thành công", Toast.LENGTH_SHORT).show();
+                viewModel.loadQuests();
+            }
+        });
+
+        viewModel.getDeleteSuccess().observe(this, success -> {
+            android.util.Log.d("QUEST_DEBUG", "deleteSuccess = " + success);
+            if (Boolean.TRUE.equals(success)) {
+                Toast.makeText(this, "Xóa quest thành công", Toast.LENGTH_SHORT).show();
+                viewModel.loadQuests();
+            }
+        });
+
+        android.util.Log.d("QUEST_DEBUG", "calling loadQuests()");
         viewModel.loadQuests();
     }
 
@@ -79,12 +102,27 @@ public class ManageQuestActivity extends AppCompatActivity {
         adapter = new QuestAdapter(new QuestAdapter.OnQuestActionListener() {
             @Override
             public void onEdit(QuestResponse item) {
-                Toast.makeText(ManageQuestActivity.this, "Sửa " + item.getQuest_title(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ManageQuestActivity.this, EditQuestActivity.class);
+                intent.putExtra("quest_id", item.getQuest_id());
+                intent.putExtra("quest_name", item.getQuest_title());
+                intent.putExtra("quest_description", item.getQuest_description());
+                intent.putExtra("base_priority", item.getBase_priority());
+                intent.putExtra("tag", item.getTag());
+                intent.putExtra("estimated_duration", item.getEstimated_duration());
+                intent.putExtra("level_severity", item.getLevel_severity());
+                startActivity(intent);
             }
 
             @Override
             public void onDelete(QuestResponse item) {
-                Toast.makeText(ManageQuestActivity.this, "Xoá " + item.getQuest_title(), Toast.LENGTH_SHORT).show();
+                new AlertDialog.Builder(ManageQuestActivity.this)
+                        .setTitle("Xóa quest")
+                        .setMessage("Bạn có chắc muốn xóa \"" + item.getQuest_title() + "\" không?")
+                        .setPositiveButton("Xóa", (dialog, which) -> {
+                            viewModel.deleteQuest(item.getQuest_id());
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
             }
         });
 
@@ -127,9 +165,9 @@ public class ManageQuestActivity extends AppCompatActivity {
                 .setTitle("Thêm quest")
                 .setView(view)
                 .setPositiveButton("Tạo", (dialog, which) -> {
-                    String errorTypeId = etErrorTypeId.getText().toString();
-                    String questTitle = etQuestTitle.getText().toString();
-                    String questDescription = etQuestDescription.getText().toString();
+                    String errorTypeId = etErrorTypeId.getText().toString().trim();
+                    String questTitle = etQuestTitle.getText().toString().trim();
+                    String questDescription = etQuestDescription.getText().toString().trim();
 
                     viewModel.createQuest(errorTypeId, questTitle, questDescription);
                 })

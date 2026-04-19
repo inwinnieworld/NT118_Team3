@@ -7,6 +7,11 @@ public class QuestResponse {
     private String quest_title;
     private String quest_description;
 
+    private int base_priority;
+    private String tag;
+    private int estimated_duration;
+    private int level_severity;
+
     public int getQuest_id() {
         return quest_id;
     }
@@ -25,5 +30,21 @@ public class QuestResponse {
 
     public String getQuest_description() {
         return quest_description;
+    }
+
+    public int getBase_priority() {
+        return base_priority;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public int getEstimated_duration() {
+        return estimated_duration;
+    }
+
+    public int getLevel_severity() {
+        return level_severity;
     }
 }

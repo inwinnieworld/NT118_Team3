@@ -25,12 +25,16 @@ async function updateQuest(questId, { errorTypeId, questTitle, questDescription 
 }
 
 async function getAllQuests() {
+  console.log(">>> service getAllQuests start");
+
   const [rows] = await db.execute(
     `SELECT q.quest_id, q.error_type_id, e.error_name, q.quest_title, q.quest_description
      FROM QUESTS q
      LEFT JOIN ERRORTYPES e ON q.error_type_id = e.error_type_id
      ORDER BY q.quest_id DESC`
   );
+
+  console.log(">>> service getAllQuests done, rows =", rows.length);
   return rows;
 }
 

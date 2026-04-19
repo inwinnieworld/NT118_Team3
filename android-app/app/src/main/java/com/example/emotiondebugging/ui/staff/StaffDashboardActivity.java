@@ -105,4 +105,5 @@ public class StaffDashboardActivity extends AppCompatActivity {
 
         tvStaffStatus.setText(spannable);
     }
+
 }

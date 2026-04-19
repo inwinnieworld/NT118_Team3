@@ -88,6 +88,11 @@
         <activity
             android:name=".ui.admin.AddStaffActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.staff.ManageQuestActivity"
+            android:exported="false" />
+        <activity android:name=".ui.staff.EditQuestActivity"
+            android:exported="false" />
 
     </application>
 

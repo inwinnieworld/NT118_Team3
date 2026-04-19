@@ -23,12 +23,16 @@ public class StaffRepository {
                              MutableLiveData<String> message,
                              MutableLiveData<Boolean> loading) {
         loading.postValue(true);
+        android.util.Log.d("QUEST_DEBUG", "Repository getAllQuests start");
 
         apiService.getAllQuests().enqueue(new Callback<ApiResponse<List<QuestResponse>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<QuestResponse>>> call,
                                    Response<ApiResponse<List<QuestResponse>>> response) {
                 loading.postValue(false);
+
+                android.util.Log.d("QUEST_DEBUG", "HTTP code = " + response.code());
+                android.util.Log.d("QUEST_DEBUG", "body = " + response.body());
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     result.postValue(response.body().getData());
@@ -40,6 +44,7 @@ public class StaffRepository {
             @Override
             public void onFailure(Call<ApiResponse<List<QuestResponse>>> call, Throwable t) {
                 loading.postValue(false);
+                android.util.Log.e("QUEST_DEBUG", "onFailure", t);
                 message.postValue(t.getMessage());
             }
         });
@@ -70,6 +75,41 @@ public class StaffRepository {
             public void onFailure(Call<ApiResponse<QuestResponse>> call, Throwable t) {
                 loading.postValue(false);
                 success.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void deleteQuest(int questId,
+                            MutableLiveData<Boolean> deleteSuccess,
+                            MutableLiveData<String> message,
+                            MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+        android.util.Log.d("QUEST_DEBUG", "Repository deleteQuest start, id = " + questId);
+
+        apiService.deleteQuest(questId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call,
+                                   Response<ApiResponse<Object>> response) {
+                loading.postValue(false);
+
+                android.util.Log.d("QUEST_DEBUG", "delete HTTP code = " + response.code());
+                android.util.Log.d("QUEST_DEBUG", "delete body = " + response.body());
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    deleteSuccess.postValue(true);
+                    message.postValue(response.body().getMessage());
+                } else {
+                    deleteSuccess.postValue(false);
+                    message.postValue("Xóa quest thất bại");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                loading.postValue(false);
+                deleteSuccess.postValue(false);
+                android.util.Log.e("QUEST_DEBUG", "delete onFailure", t);
                 message.postValue(t.getMessage());
             }
         });
