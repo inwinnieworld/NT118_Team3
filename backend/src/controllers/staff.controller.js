@@ -18,6 +18,9 @@ function fail(res, message = "Thất bại", status = 400, errors = null) {
   });
 }
 
+/* =========================
+   QUEST
+========================= */
 async function createQuest(req, res) {
   try {
     const { errorTypeId, questTitle, questDescription } = req.body;
@@ -100,6 +103,9 @@ async function deleteQuest(req, res) {
   }
 }
 
+/* =========================
+   ASSIGNMENT
+========================= */
 async function assignQuestToStudent(req, res) {
   try {
     const { studentId, questId, errorLogId, status } = req.body;
@@ -132,6 +138,9 @@ async function getQuestAssignments(req, res) {
   }
 }
 
+/* =========================
+   REPORT
+========================= */
 async function getSummaryReport(req, res) {
   try {
     const data = await staffService.getSummaryReport();
@@ -162,6 +171,128 @@ async function getQuestReport(req, res) {
   }
 }
 
+async function getQuestTrendReport(req, res) {
+  try {
+    const data = await staffService.getQuestTrendReport();
+    return ok(res, data, "Lấy dữ liệu biểu đồ quest thành công", 200);
+  } catch (error) {
+    console.error("getQuestTrendReport error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
+/* =========================
+   TRACE QUESTIONS
+========================= */
+async function getAllTraceQuestions(req, res) {
+  try {
+    const data = await staffService.getAllTraceQuestions();
+    return ok(res, data, "Lấy danh sách câu hỏi trace thành công", 200);
+  } catch (error) {
+    console.error("getAllTraceQuestions error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
+async function getTraceQuestionDetail(req, res) {
+  try {
+    const { questionId } = req.params;
+
+    if (!questionId) {
+      return fail(res, "Thiếu questionId", 400);
+    }
+
+    const data = await staffService.getTraceQuestionDetail(questionId);
+
+    if (!data) {
+      return fail(res, "Không tìm thấy câu hỏi", 404);
+    }
+
+    return ok(res, data, "Lấy chi tiết câu hỏi thành công", 200);
+  } catch (error) {
+    console.error("getTraceQuestionDetail error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
+async function createTraceQuestion(req, res) {
+  try {
+    const { errorTypeId, questionText, option1, option2, option3, option4 } = req.body;
+
+    if (!errorTypeId || !questionText || !questionText.trim()) {
+      return fail(res, "Thiếu thông tin câu hỏi", 400);
+    }
+
+    const data = await staffService.createTraceQuestion({
+      errorTypeId,
+      questionText: questionText.trim(),
+      option1: option1 ? option1.trim() : "",
+      option2: option2 ? option2.trim() : "",
+      option3: option3 ? option3.trim() : "",
+      option4: option4 ? option4.trim() : ""
+    });
+
+    return ok(res, data, "Tạo câu hỏi thành công", 201);
+  } catch (error) {
+    console.error("createTraceQuestion error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
+async function updateTraceQuestion(req, res) {
+  try {
+    const { questionId } = req.params;
+    const { errorTypeId, questionText, option1, option2, option3, option4 } = req.body;
+
+    if (!questionId) {
+      return fail(res, "Thiếu questionId", 400);
+    }
+
+    if (!errorTypeId || !questionText || !questionText.trim()) {
+      return fail(res, "Thiếu thông tin cập nhật câu hỏi", 400);
+    }
+
+    const updated = await staffService.updateTraceQuestion(questionId, {
+      errorTypeId,
+      questionText: questionText.trim(),
+      option1: option1 ? option1.trim() : "",
+      option2: option2 ? option2.trim() : "",
+      option3: option3 ? option3.trim() : "",
+      option4: option4 ? option4.trim() : ""
+    });
+
+    if (!updated) {
+      return fail(res, "Không tìm thấy câu hỏi", 404);
+    }
+
+    return ok(res, null, "Cập nhật câu hỏi thành công", 200);
+  } catch (error) {
+    console.error("updateTraceQuestion error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
+async function deleteTraceQuestion(req, res) {
+  try {
+    const { questionId } = req.params;
+
+    if (!questionId) {
+      return fail(res, "Thiếu questionId", 400);
+    }
+
+    const deleted = await staffService.deleteTraceQuestion(questionId);
+
+    if (!deleted) {
+      return fail(res, "Không tìm thấy câu hỏi", 404);
+    }
+
+    return ok(res, null, "Xóa câu hỏi thành công", 200);
+  } catch (error) {
+    console.error("deleteTraceQuestion error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
 module.exports = {
   createQuest,
   updateQuest,
@@ -171,5 +302,11 @@ module.exports = {
   getQuestAssignments,
   getSummaryReport,
   getErrorReport,
-  getQuestReport
+  getQuestReport,
+  getQuestTrendReport,
+  getAllTraceQuestions,
+  getTraceQuestionDetail,
+  createTraceQuestion,
+  updateTraceQuestion,
+  deleteTraceQuestion
 };

@@ -68,13 +68,15 @@ public class StaffDashboardActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        btnQuestReport.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Báo cáo quest", Toast.LENGTH_SHORT).show()
-        );
+        btnQuestReport.setOnClickListener(v -> {
+            Intent intent = new Intent(StaffDashboardActivity.this, QuestReportActivity.class);
+            startActivity(intent);
+        });
 
-        btnTraceQuestion.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Quản lý bộ câu hỏi Trace Error", Toast.LENGTH_SHORT).show()
-        );
+        btnTraceQuestion.setOnClickListener(v -> {
+            Intent intent = new Intent(StaffDashboardActivity.this, ManageTraceQuestionActivity.class);
+            startActivity(intent);
+        });
 
         ivProfile.setOnClickListener(v ->
                 Toast.makeText(this, "Trang cá nhân", Toast.LENGTH_SHORT).show()
@@ -105,5 +107,4 @@ public class StaffDashboardActivity extends AppCompatActivity {
 
         tvStaffStatus.setText(spannable);
     }
-
 }

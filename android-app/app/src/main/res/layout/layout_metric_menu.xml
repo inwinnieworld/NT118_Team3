@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="190dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_metric_menu"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <CheckBox
+        android:id="@+id/cbSeverity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="MỨC ĐỘ NGHIÊM TRỌNG TB"
+        android:textColor="#1187A1" />
+
+    <CheckBox
+        android:id="@+id/cbRate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TỶ LỆ NGHIÊM TRỌNG TB"
+        android:textColor="#1187A1" />
+
+    <CheckBox
+        android:id="@+id/cbError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SỐ LỖI TB"
+        android:textColor="#1187A1" />
+
+    <CheckBox
+        android:id="@+id/cbAccept"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="TỶ LỆ CHẤP NHẬN TB"
+        android:textColor="#1187A1" />
+</LinearLayout>

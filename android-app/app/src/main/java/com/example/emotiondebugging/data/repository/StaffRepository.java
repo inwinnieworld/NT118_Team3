@@ -2,11 +2,17 @@ package com.example.emotiondebugging.data.repository;
 
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.emotiondebugging.model.response.QuestTrendReportResponse;
 import com.example.emotiondebugging.data.api.RetrofitClient;
 import com.example.emotiondebugging.data.api.StaffApiService;
 import com.example.emotiondebugging.model.request.CreateQuestRequest;
 import com.example.emotiondebugging.model.response.ApiResponse;
+import com.example.emotiondebugging.model.response.QuestRankingReportResponse;
 import com.example.emotiondebugging.model.response.QuestResponse;
+import com.example.emotiondebugging.model.response.QuestSummaryReportResponse;
+import com.example.emotiondebugging.model.request.CreateTraceQuestionRequest;
+import com.example.emotiondebugging.model.request.UpdateTraceQuestionRequest;
+import com.example.emotiondebugging.model.response.TraceQuestionResponse;
 
 import java.util.List;
 
@@ -23,16 +29,12 @@ public class StaffRepository {
                              MutableLiveData<String> message,
                              MutableLiveData<Boolean> loading) {
         loading.postValue(true);
-        android.util.Log.d("QUEST_DEBUG", "Repository getAllQuests start");
 
         apiService.getAllQuests().enqueue(new Callback<ApiResponse<List<QuestResponse>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<QuestResponse>>> call,
                                    Response<ApiResponse<List<QuestResponse>>> response) {
                 loading.postValue(false);
-
-                android.util.Log.d("QUEST_DEBUG", "HTTP code = " + response.code());
-                android.util.Log.d("QUEST_DEBUG", "body = " + response.body());
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     result.postValue(response.body().getData());
@@ -44,7 +46,6 @@ public class StaffRepository {
             @Override
             public void onFailure(Call<ApiResponse<List<QuestResponse>>> call, Throwable t) {
                 loading.postValue(false);
-                android.util.Log.e("QUEST_DEBUG", "onFailure", t);
                 message.postValue(t.getMessage());
             }
         });
@@ -85,16 +86,12 @@ public class StaffRepository {
                             MutableLiveData<String> message,
                             MutableLiveData<Boolean> loading) {
         loading.postValue(true);
-        android.util.Log.d("QUEST_DEBUG", "Repository deleteQuest start, id = " + questId);
 
         apiService.deleteQuest(questId).enqueue(new Callback<ApiResponse<Object>>() {
             @Override
             public void onResponse(Call<ApiResponse<Object>> call,
                                    Response<ApiResponse<Object>> response) {
                 loading.postValue(false);
-
-                android.util.Log.d("QUEST_DEBUG", "delete HTTP code = " + response.code());
-                android.util.Log.d("QUEST_DEBUG", "delete body = " + response.body());
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     deleteSuccess.postValue(true);
@@ -109,7 +106,228 @@ public class StaffRepository {
             public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 loading.postValue(false);
                 deleteSuccess.postValue(false);
-                android.util.Log.e("QUEST_DEBUG", "delete onFailure", t);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getQuestSummaryReport(MutableLiveData<QuestSummaryReportResponse> result,
+                                      MutableLiveData<String> message,
+                                      MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getQuestSummaryReport().enqueue(new Callback<ApiResponse<QuestSummaryReportResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<QuestSummaryReportResponse>> call,
+                                   Response<ApiResponse<QuestSummaryReportResponse>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được báo cáo tổng quan");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<QuestSummaryReportResponse>> call, Throwable t) {
+                loading.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getQuestRankingReport(MutableLiveData<List<QuestRankingReportResponse>> result,
+                                      MutableLiveData<String> message,
+                                      MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getQuestRankingReport().enqueue(new Callback<ApiResponse<List<QuestRankingReportResponse>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<QuestRankingReportResponse>>> call,
+                                   Response<ApiResponse<List<QuestRankingReportResponse>>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được BXH quest");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<QuestRankingReportResponse>>> call, Throwable t) {
+                loading.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getQuestTrendReport(MutableLiveData<QuestTrendReportResponse> result,
+                                    MutableLiveData<String> message,
+                                    MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getQuestTrendReport().enqueue(new Callback<ApiResponse<QuestTrendReportResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<QuestTrendReportResponse>> call,
+                                   Response<ApiResponse<QuestTrendReportResponse>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được dữ liệu biểu đồ quest");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<QuestTrendReportResponse>> call, Throwable t) {
+                loading.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getAllTraceQuestions(MutableLiveData<List<TraceQuestionResponse>> result,
+                                     MutableLiveData<String> message,
+                                     MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getAllTraceQuestions().enqueue(new Callback<ApiResponse<List<TraceQuestionResponse>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<TraceQuestionResponse>>> call,
+                                   Response<ApiResponse<List<TraceQuestionResponse>>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được danh sách câu hỏi trace");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<TraceQuestionResponse>>> call, Throwable t) {
+                loading.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getTraceQuestionDetail(int questionId,
+                                       MutableLiveData<TraceQuestionResponse> result,
+                                       MutableLiveData<String> message,
+                                       MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getTraceQuestionDetail(questionId).enqueue(new Callback<ApiResponse<TraceQuestionResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<TraceQuestionResponse>> call,
+                                   Response<ApiResponse<TraceQuestionResponse>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được chi tiết câu hỏi");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<TraceQuestionResponse>> call, Throwable t) {
+                loading.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void createTraceQuestion(CreateTraceQuestionRequest request,
+                                    MutableLiveData<Boolean> success,
+                                    MutableLiveData<String> message,
+                                    MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.createTraceQuestion(request).enqueue(new Callback<ApiResponse<TraceQuestionResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<TraceQuestionResponse>> call,
+                                   Response<ApiResponse<TraceQuestionResponse>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    success.postValue(true);
+                    message.postValue(response.body().getMessage());
+                } else {
+                    success.postValue(false);
+                    message.postValue("Tạo câu hỏi thất bại");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<TraceQuestionResponse>> call, Throwable t) {
+                loading.postValue(false);
+                success.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void updateTraceQuestion(int questionId,
+                                    UpdateTraceQuestionRequest request,
+                                    MutableLiveData<Boolean> success,
+                                    MutableLiveData<String> message,
+                                    MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.updateTraceQuestion(questionId, request).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call,
+                                   Response<ApiResponse<Object>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    success.postValue(true);
+                    message.postValue(response.body().getMessage());
+                } else {
+                    success.postValue(false);
+                    message.postValue("Cập nhật câu hỏi thất bại");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                loading.postValue(false);
+                success.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void deleteTraceQuestion(int questionId,
+                                    MutableLiveData<Boolean> success,
+                                    MutableLiveData<String> message,
+                                    MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.deleteTraceQuestion(questionId).enqueue(new Callback<ApiResponse<Object>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Object>> call,
+                                   Response<ApiResponse<Object>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    success.postValue(true);
+                    message.postValue(response.body().getMessage());
+                } else {
+                    success.postValue(false);
+                    message.postValue("Xóa câu hỏi thất bại");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                loading.postValue(false);
+                success.postValue(false);
                 message.postValue(t.getMessage());
             }
         });

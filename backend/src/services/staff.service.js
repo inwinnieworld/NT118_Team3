@@ -1,5 +1,8 @@
 const db = require("../config/db");
 
+/* =========================
+   QUEST
+========================= */
 async function createQuest({ errorTypeId, questTitle, questDescription }) {
   const [result] = await db.execute(
     `INSERT INTO QUESTS (error_type_id, quest_title, quest_description)
@@ -16,17 +19,17 @@ async function createQuest({ errorTypeId, questTitle, questDescription }) {
 }
 
 async function updateQuest(questId, { errorTypeId, questTitle, questDescription }) {
-  await db.execute(
+  const [result] = await db.execute(
     `UPDATE QUESTS
      SET error_type_id = ?, quest_title = ?, quest_description = ?
      WHERE quest_id = ?`,
     [errorTypeId, questTitle, questDescription, questId]
   );
+
+  return result.affectedRows > 0;
 }
 
 async function getAllQuests() {
-  console.log(">>> service getAllQuests start");
-
   const [rows] = await db.execute(
     `SELECT q.quest_id, q.error_type_id, e.error_name, q.quest_title, q.quest_description
      FROM QUESTS q
@@ -34,10 +37,49 @@ async function getAllQuests() {
      ORDER BY q.quest_id DESC`
   );
 
-  console.log(">>> service getAllQuests done, rows =", rows.length);
   return rows;
 }
 
+async function deleteQuest(questId) {
+  const [[used]] = await db.execute(
+    `SELECT COUNT(*) AS total
+     FROM USERQUESTS
+     WHERE quest_id = ?`,
+    [questId]
+  );
+
+  if (used.total > 0) {
+    return {
+      success: false,
+      status: 400,
+      message: "Quest đã được gán cho sinh viên, không thể xóa"
+    };
+  }
+
+  const [result] = await db.execute(
+    `DELETE FROM QUESTS
+     WHERE quest_id = ?`,
+    [questId]
+  );
+
+  if (result.affectedRows === 0) {
+    return {
+      success: false,
+      status: 404,
+      message: "Không tìm thấy quest"
+    };
+  }
+
+  return {
+    success: true,
+    status: 200,
+    message: "Xóa quest thành công"
+  };
+}
+
+/* =========================
+   ASSIGNMENT
+========================= */
 async function assignQuestToStudent({ studentId, questId, errorLogId, status = "pending" }) {
   const [result] = await db.execute(
     `INSERT INTO USERQUESTS (student_id, quest_id, error_log_id, status)
@@ -67,9 +109,13 @@ async function getQuestAssignments() {
      JOIN ERRORTYPES et ON el.error_type_id = et.error_type_id
      ORDER BY uq.assigned_at DESC`
   );
+
   return rows;
 }
 
+/* =========================
+   REPORT
+========================= */
 async function getSummaryReport() {
   const [[errorCount]] = await db.execute(
     `SELECT COUNT(*) AS total_error_logs FROM ERRORLOGS`
@@ -111,6 +157,7 @@ async function getErrorReport() {
      GROUP BY et.error_type_id, et.error_name
      ORDER BY total_logs DESC, et.error_name`
   );
+
   return rows;
 }
 
@@ -124,44 +171,131 @@ async function getQuestReport() {
      GROUP BY q.quest_id, q.quest_title
      ORDER BY total_assigned DESC, q.quest_title`
   );
+
   return rows;
 }
 
-async function deleteQuest(questId) {
-  const [[used]] = await db.execute(
-    `SELECT COUNT(*) AS total
-     FROM USERQUESTS
-     WHERE quest_id = ?`,
-    [questId]
-  );
+async function getQuestTrendReport() {
+  const [assignedRows] = await db.execute(`
+    SELECT 
+      DATE(assigned_at) AS chart_date,
+      COUNT(*) AS total_assigned
+    FROM USERQUESTS
+    GROUP BY DATE(assigned_at)
+    ORDER BY DATE(assigned_at) ASC
+  `);
 
-  if (used.total > 0) {
-    return {
-      success: false,
-      status: 400,
-      message: "Quest đã được gán cho sinh viên, không thể xóa"
-    };
-  }
-
-  const [result] = await db.execute(
-    `DELETE FROM QUESTS
-     WHERE quest_id = ?`,
-    [questId]
-  );
-
-  if (result.affectedRows === 0) {
-    return {
-      success: false,
-      status: 404,
-      message: "Không tìm thấy quest"
-    };
-  }
+  const [completedRows] = await db.execute(`
+    SELECT 
+      DATE(completed_at) AS chart_date,
+      COUNT(*) AS total_completed
+    FROM USERQUESTS
+    WHERE completed_at IS NOT NULL
+    GROUP BY DATE(completed_at)
+    ORDER BY DATE(completed_at) ASC
+  `);
 
   return {
-    success: true,
-    status: 200,
-    message: "Xóa quest thành công"
+    assigned: assignedRows,
+    completed: completedRows
   };
+}
+
+/* =========================
+   TRACE QUESTIONS
+========================= */
+async function getAllTraceQuestions() {
+  const [rows] = await db.execute(`
+    SELECT 
+      dq.question_id,
+      dq.error_type_id,
+      et.error_name,
+      dq.question_text,
+      dq.option_1,
+      dq.option_2,
+      dq.option_3,
+      dq.option_4
+    FROM DEBUGQUESTIONS dq
+    JOIN ERRORTYPES et ON dq.error_type_id = et.error_type_id
+    ORDER BY et.error_name ASC, dq.question_id ASC
+  `);
+
+  return rows;
+}
+
+async function getTraceQuestionDetail(questionId) {
+  const [rows] = await db.execute(`
+    SELECT 
+      dq.question_id,
+      dq.error_type_id,
+      et.error_name,
+      dq.question_text,
+      dq.option_1,
+      dq.option_2,
+      dq.option_3,
+      dq.option_4
+    FROM DEBUGQUESTIONS dq
+    JOIN ERRORTYPES et ON dq.error_type_id = et.error_type_id
+    WHERE dq.question_id = ?
+    LIMIT 1
+  `, [questionId]);
+
+  return rows.length > 0 ? rows[0] : null;
+}
+
+async function createTraceQuestion({
+  errorTypeId,
+  questionText,
+  option1,
+  option2,
+  option3,
+  option4
+}) {
+  const [result] = await db.execute(
+    `INSERT INTO DEBUGQUESTIONS
+      (error_type_id, question_text, option_1, option_2, option_3, option_4)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [errorTypeId, questionText, option1, option2, option3, option4]
+  );
+
+  return {
+    question_id: result.insertId,
+    error_type_id: errorTypeId,
+    question_text: questionText,
+    option_1: option1,
+    option_2: option2,
+    option_3: option3,
+    option_4: option4
+  };
+}
+
+async function updateTraceQuestion(
+  questionId,
+  { errorTypeId, questionText, option1, option2, option3, option4 }
+) {
+  const [result] = await db.execute(
+    `UPDATE DEBUGQUESTIONS
+     SET error_type_id = ?,
+         question_text = ?,
+         option_1 = ?,
+         option_2 = ?,
+         option_3 = ?,
+         option_4 = ?
+     WHERE question_id = ?`,
+    [errorTypeId, questionText, option1, option2, option3, option4, questionId]
+  );
+
+  return result.affectedRows > 0;
+}
+
+async function deleteTraceQuestion(questionId) {
+  const [result] = await db.execute(
+    `DELETE FROM DEBUGQUESTIONS
+     WHERE question_id = ?`,
+    [questionId]
+  );
+
+  return result.affectedRows > 0;
 }
 
 module.exports = {
@@ -173,5 +307,11 @@ module.exports = {
   getQuestAssignments,
   getSummaryReport,
   getErrorReport,
-  getQuestReport
+  getQuestReport,
+  getQuestTrendReport,
+  getAllTraceQuestions,
+  getTraceQuestionDetail,
+  createTraceQuestion,
+  updateTraceQuestion,
+  deleteTraceQuestion
 };

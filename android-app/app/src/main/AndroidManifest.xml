@@ -93,7 +93,15 @@
             android:exported="false" />
         <activity android:name=".ui.staff.EditQuestActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".ui.staff.QuestReportActivity"
+            android:exported="false" />
+        <activity android:name=".ui.staff.ManageTraceQuestionActivity"
+            android:exported="false"/>
+        <activity android:name=".ui.staff.CreateTraceQuestionActivity"
+            android:exported="false"/>
+        <activity android:name=".ui.staff.TraceQuestionDetailActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>

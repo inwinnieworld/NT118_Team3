@@ -14,5 +14,12 @@ router.get("/assignments", controller.getQuestAssignments);
 router.get("/reports/summary", controller.getSummaryReport);
 router.get("/reports/errors", controller.getErrorReport);
 router.get("/reports/quests", controller.getQuestReport);
+router.get("/reports/quest-trend", controller.getQuestTrendReport);
+
+router.get("/trace-questions", controller.getAllTraceQuestions);
+router.post("/trace-questions", controller.createTraceQuestion);
+router.get("/trace-questions/:questionId", controller.getTraceQuestionDetail);
+router.put("/trace-questions/:questionId", controller.updateTraceQuestion);
+router.delete("/trace-questions/:questionId", controller.deleteTraceQuestion);
 
 module.exports = router;

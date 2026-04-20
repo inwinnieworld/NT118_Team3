@@ -58,4 +58,8 @@ dependencies {
 
     // Glide (load ảnh avatar)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    //Chart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("com.google.android.material:material:1.12.0")
 }
