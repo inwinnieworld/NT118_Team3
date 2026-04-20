@@ -30,18 +30,12 @@ public class QuestRankingFragment extends Fragment {
         viewModel = new ViewModelProvider(requireActivity()).get(QuestReportViewModel.class);
 
         rvRanking = view.findViewById(R.id.rvRanking);
-
         adapter = new QuestRankingAdapter();
+
         rvRanking.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvRanking.setAdapter(adapter);
 
-        observeViewModel();
-    }
-
-    private void observeViewModel() {
-        viewModel.getRankingReport().observe(getViewLifecycleOwner(), list -> {
-            adapter.submitList(list);
-        });
+        viewModel.getRankingBoard().observe(getViewLifecycleOwner(), list -> adapter.submitList(list));
 
         viewModel.getMessage().observe(getViewLifecycleOwner(), msg -> {
             if (msg != null && !msg.isEmpty()) {

@@ -293,6 +293,26 @@ async function deleteTraceQuestion(req, res) {
   }
 }
 
+async function getQuestMonthlyMetrics(req, res) {
+  try {
+    const data = await staffService.getQuestMonthlyMetrics();
+    return ok(res, data, "Lấy chỉ số quest theo tháng thành công", 200);
+  } catch (error) {
+    console.error("getQuestMonthlyMetrics error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
+async function getQuestRankingBoard(req, res) {
+  try {
+    const data = await staffService.getQuestRankingBoard();
+    return ok(res, data, "Lấy BXH quest thành công", 200);
+  } catch (error) {
+    console.error("getQuestRankingBoard error:", error);
+    return fail(res, "Lỗi server", 500, error.message);
+  }
+}
+
 module.exports = {
   createQuest,
   updateQuest,
@@ -308,5 +328,7 @@ module.exports = {
   getTraceQuestionDetail,
   createTraceQuestion,
   updateTraceQuestion,
-  deleteTraceQuestion
+  deleteTraceQuestion,
+  getQuestMonthlyMetrics,
+  getQuestRankingBoard
 };

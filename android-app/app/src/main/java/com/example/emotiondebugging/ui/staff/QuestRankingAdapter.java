@@ -9,20 +9,18 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.emotiondebugging.R;
-import com.example.emotiondebugging.model.response.QuestRankingReportResponse;
+import com.example.emotiondebugging.model.response.QuestRankingBoardResponse;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class QuestRankingAdapter extends RecyclerView.Adapter<QuestRankingAdapter.ViewHolder> {
 
-    private final List<QuestRankingReportResponse> items = new ArrayList<>();
+    private final List<QuestRankingBoardResponse> items = new ArrayList<>();
 
-    public void submitList(List<QuestRankingReportResponse> list) {
+    public void submitList(List<QuestRankingBoardResponse> list) {
         items.clear();
-        if (list != null) {
-            items.addAll(list);
-        }
+        if (list != null) items.addAll(list);
         notifyDataSetChanged();
     }
 
@@ -36,7 +34,7 @@ public class QuestRankingAdapter extends RecyclerView.Adapter<QuestRankingAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        QuestRankingReportResponse item = items.get(position);
+        QuestRankingBoardResponse item = items.get(position);
         holder.tvQuestId.setText(String.valueOf(item.getQuest_id()));
         holder.tvQuestTitle.setText(item.getQuest_title());
         holder.tvValue.setText(String.valueOf(item.getTotal_assigned()));

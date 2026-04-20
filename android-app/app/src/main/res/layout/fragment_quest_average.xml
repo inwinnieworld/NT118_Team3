@@ -2,20 +2,21 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="#0B4265">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="14dp">
+        android:padding="12dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:background="#4A9CBC"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp">
+            android:background="#3E93B3"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -49,33 +50,33 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="QUEST ĐƯỢC GIAO"
-                android:textColor="#1197B6"
+                android:text="MỨC ĐỘ NGHIÊM TRỌNG TB"
+                android:textColor="#111111"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
             <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/lineChartAssigned"
+                android:id="@+id/lineChartTop"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginTop="12dp" />
+                android:layout_height="320dp"
+                android:layout_marginTop="10dp" />
 
             <TextView
                 android:id="@+id/tvChartTitle2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="20dp"
-                android:text="QUEST HOÀN THÀNH"
-                android:textColor="#1197B6"
+                android:layout_marginTop="14dp"
+                android:text="TỶ LỆ CHẤP NHẬN TB"
+                android:textColor="#111111"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
             <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/lineChartCompleted"
+                android:id="@+id/lineChartBottom"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginTop="12dp" />
+                android:layout_height="320dp"
+                android:layout_marginTop="10dp" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

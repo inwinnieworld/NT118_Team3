@@ -15,6 +15,9 @@ router.get("/reports/summary", controller.getSummaryReport);
 router.get("/reports/errors", controller.getErrorReport);
 router.get("/reports/quests", controller.getQuestReport);
 router.get("/reports/quest-trend", controller.getQuestTrendReport);
+router.get("/reports/quest-monthly-metrics", controller.getQuestMonthlyMetrics);
+router.get("/reports/quest-ranking-board", controller.getQuestRankingBoard);
+
 
 router.get("/trace-questions", controller.getAllTraceQuestions);
 router.post("/trace-questions", controller.createTraceQuestion);

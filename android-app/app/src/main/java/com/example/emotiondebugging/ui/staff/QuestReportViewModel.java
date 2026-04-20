@@ -5,9 +5,8 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.emotiondebugging.data.repository.StaffRepository;
-import com.example.emotiondebugging.model.response.QuestRankingReportResponse;
-import com.example.emotiondebugging.model.response.QuestSummaryReportResponse;
-import com.example.emotiondebugging.model.response.QuestTrendReportResponse;
+import com.example.emotiondebugging.model.response.QuestMonthlyMetricResponse;
+import com.example.emotiondebugging.model.response.QuestRankingBoardResponse;
 
 import java.util.List;
 
@@ -15,23 +14,18 @@ public class QuestReportViewModel extends ViewModel {
 
     private final StaffRepository repository = new StaffRepository();
 
-    private final MutableLiveData<QuestSummaryReportResponse> summaryReport = new MutableLiveData<>();
-    private final MutableLiveData<List<QuestRankingReportResponse>> rankingReport = new MutableLiveData<>();
-    private final MutableLiveData<QuestTrendReportResponse> trendReport = new MutableLiveData<>();
+    private final MutableLiveData<List<QuestMonthlyMetricResponse>> monthlyMetrics = new MutableLiveData<>();
+    private final MutableLiveData<List<QuestRankingBoardResponse>> rankingBoard = new MutableLiveData<>();
     private final MutableLiveData<String> selectedMetric = new MutableLiveData<>("MỨC ĐỘ NGHIÊM TRỌNG TB");
     private final MutableLiveData<String> message = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
 
-    public LiveData<QuestSummaryReportResponse> getSummaryReport() {
-        return summaryReport;
+    public LiveData<List<QuestMonthlyMetricResponse>> getMonthlyMetrics() {
+        return monthlyMetrics;
     }
 
-    public LiveData<List<QuestRankingReportResponse>> getRankingReport() {
-        return rankingReport;
-    }
-
-    public LiveData<QuestTrendReportResponse> getTrendReport() {
-        return trendReport;
+    public LiveData<List<QuestRankingBoardResponse>> getRankingBoard() {
+        return rankingBoard;
     }
 
     public LiveData<String> getSelectedMetric() {
@@ -50,15 +44,11 @@ public class QuestReportViewModel extends ViewModel {
         selectedMetric.setValue(metric);
     }
 
-    public void loadSummaryReport() {
-        repository.getQuestSummaryReport(summaryReport, message, loading);
+    public void loadMonthlyMetrics() {
+        repository.getQuestMonthlyMetrics(monthlyMetrics, message, loading);
     }
 
-    public void loadRankingReport() {
-        repository.getQuestRankingReport(rankingReport, message, loading);
-    }
-
-    public void loadTrendReport() {
-        repository.getQuestTrendReport(trendReport, message, loading);
+    public void loadRankingBoard() {
+        repository.getQuestRankingBoard(rankingBoard, message, loading);
     }
 }

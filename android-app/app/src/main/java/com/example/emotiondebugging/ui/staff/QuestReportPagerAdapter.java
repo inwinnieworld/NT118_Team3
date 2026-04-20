@@ -14,10 +14,7 @@ public class QuestReportPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        if (position == 0) {
-            return new QuestAverageFragment();
-        }
-        return new QuestRankingFragment();
+        return position == 0 ? new QuestAverageFragment() : new QuestRankingFragment();
     }
 
     @Override

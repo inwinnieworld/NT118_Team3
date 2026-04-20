@@ -19,7 +19,8 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+import com.example.emotiondebugging.model.response.QuestMonthlyMetricResponse;
+import com.example.emotiondebugging.model.response.QuestRankingBoardResponse;
 public class StaffRepository {
 
     private final StaffApiService apiService =
@@ -328,6 +329,58 @@ public class StaffRepository {
             public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
                 loading.postValue(false);
                 success.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getQuestMonthlyMetrics(MutableLiveData<List<QuestMonthlyMetricResponse>> result,
+                                       MutableLiveData<String> message,
+                                       MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getQuestMonthlyMetrics().enqueue(new Callback<ApiResponse<List<QuestMonthlyMetricResponse>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<QuestMonthlyMetricResponse>>> call,
+                                   Response<ApiResponse<List<QuestMonthlyMetricResponse>>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được chỉ số theo tháng");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<QuestMonthlyMetricResponse>>> call, Throwable t) {
+                loading.postValue(false);
+                message.postValue(t.getMessage());
+            }
+        });
+    }
+
+    public void getQuestRankingBoard(MutableLiveData<List<QuestRankingBoardResponse>> result,
+                                     MutableLiveData<String> message,
+                                     MutableLiveData<Boolean> loading) {
+        loading.postValue(true);
+
+        apiService.getQuestRankingBoard().enqueue(new Callback<ApiResponse<List<QuestRankingBoardResponse>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<QuestRankingBoardResponse>>> call,
+                                   Response<ApiResponse<List<QuestRankingBoardResponse>>> response) {
+                loading.postValue(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    result.postValue(response.body().getData());
+                } else {
+                    message.postValue("Không lấy được BXH quest");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<QuestRankingBoardResponse>>> call, Throwable t) {
+                loading.postValue(false);
                 message.postValue(t.getMessage());
             }
         });

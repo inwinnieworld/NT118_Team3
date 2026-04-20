@@ -18,7 +18,7 @@
         android:id="@+id/tvQuestTitle"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1.5"
+        android:layout_weight="1.8"
         android:gravity="center"
         android:textColor="#A8DAFF"
         android:textSize="13sp" />

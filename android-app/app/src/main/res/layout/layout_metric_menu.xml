@@ -14,21 +14,21 @@
         android:textColor="#1187A1" />
 
     <CheckBox
-        android:id="@+id/cbRate"
+        android:id="@+id/cbSeverityRate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="TỶ LỆ NGHIÊM TRỌNG TB"
         android:textColor="#1187A1" />
 
     <CheckBox
-        android:id="@+id/cbError"
+        android:id="@+id/cbTotalErrors"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="SỐ LỖI TB"
         android:textColor="#1187A1" />
 
     <CheckBox
-        android:id="@+id/cbAccept"
+        android:id="@+id/cbAcceptance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="TỶ LỆ CHẤP NHẬN TB"

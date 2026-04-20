@@ -28,25 +28,21 @@ public class QuestReportActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
 
-        viewModel = new ViewModelProvider(this).get(QuestReportViewModel.class);
-
         btnBack = findViewById(R.id.btnBack);
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
 
-        QuestReportPagerAdapter adapter = new QuestReportPagerAdapter(this);
-        viewPager.setAdapter(adapter);
+        viewModel = new ViewModelProvider(this).get(QuestReportViewModel.class);
 
-        new TabLayoutMediator(tabLayout, viewPager, new TabLayoutMediator.TabConfigurationStrategy() {
-            @Override
-            public void onConfigureTab(@NonNull TabLayout.Tab tab, int position) {
-                tab.setText(position == 0 ? "1" : "2");
-            }
+        viewPager.setAdapter(new QuestReportPagerAdapter(this));
+
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            tab.setText(position == 0 ? "1" : "2");
         }).attach();
 
         btnBack.setOnClickListener(v -> finish());
 
-        viewModel.loadSummaryReport();
-        viewModel.loadRankingReport();
+        viewModel.loadMonthlyMetrics();
+        viewModel.loadRankingBoard();
     }
 }

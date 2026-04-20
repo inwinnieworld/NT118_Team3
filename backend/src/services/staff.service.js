@@ -298,6 +298,41 @@ async function deleteTraceQuestion(questionId) {
   return result.affectedRows > 0;
 }
 
+async function getQuestMonthlyMetrics() {
+  const [rows] = await db.execute(`
+    SELECT
+      DATE_FORMAT(el.created_at, '%Y-%m') AS chart_month,
+      ROUND(AVG(el.severity_level), 2) AS avg_severity,
+      ROUND(SUM(CASE WHEN el.severity_level >= 4 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS severity_rate,
+      COUNT(el.error_log_id) AS total_errors,
+      ROUND(
+        SUM(CASE WHEN uq.status = 'completed' THEN 1 ELSE 0 END) * 100.0 /
+        NULLIF(COUNT(uq.user_quest_id), 0), 2
+      ) AS acceptance_rate
+    FROM ERRORLOGS el
+    LEFT JOIN USERQUESTS uq ON uq.error_log_id = el.error_log_id
+    GROUP BY DATE_FORMAT(el.created_at, '%Y-%m')
+    ORDER BY DATE_FORMAT(el.created_at, '%Y-%m') ASC
+  `);
+
+  return rows;
+}
+
+async function getQuestRankingBoard() {
+  const [rows] = await db.execute(`
+    SELECT
+      q.quest_id,
+      q.quest_title,
+      COUNT(uq.user_quest_id) AS total_assigned,
+      SUM(CASE WHEN uq.status = 'completed' THEN 1 ELSE 0 END) AS total_completed
+    FROM QUESTS q
+    LEFT JOIN USERQUESTS uq ON uq.quest_id = q.quest_id
+    GROUP BY q.quest_id, q.quest_title
+    ORDER BY total_assigned DESC, total_completed DESC, q.quest_id ASC
+  `);
+
+  return rows;
+}
 module.exports = {
   createQuest,
   updateQuest,
@@ -313,5 +348,6 @@ module.exports = {
   getTraceQuestionDetail,
   createTraceQuestion,
   updateTraceQuestion,
-  deleteTraceQuestion
+  getQuestMonthlyMetrics,
+  getQuestRankingBoard
 };

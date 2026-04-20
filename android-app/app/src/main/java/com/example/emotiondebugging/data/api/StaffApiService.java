@@ -19,7 +19,8 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
-
+import com.example.emotiondebugging.model.response.QuestMonthlyMetricResponse;
+import com.example.emotiondebugging.model.response.QuestRankingBoardResponse;
 public interface StaffApiService {
 
     @GET("api/staff/quests")
@@ -55,4 +56,10 @@ public interface StaffApiService {
 
     @DELETE("api/staff/trace-questions/{questionId}")
     Call<ApiResponse<Object>> deleteTraceQuestion(@Path("questionId") int questionId);
+
+    @GET("api/staff/reports/quest-monthly-metrics")
+    Call<ApiResponse<List<QuestMonthlyMetricResponse>>> getQuestMonthlyMetrics();
+
+    @GET("api/staff/reports/quest-ranking-board")
+    Call<ApiResponse<List<QuestRankingBoardResponse>>> getQuestRankingBoard();
 }

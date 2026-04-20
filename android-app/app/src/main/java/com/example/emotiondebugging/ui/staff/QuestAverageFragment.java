@@ -1,8 +1,12 @@
 package com.example.emotiondebugging.ui.staff;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -11,7 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.emotiondebugging.R;
-import com.example.emotiondebugging.model.response.QuestTrendReportResponse;
+import com.example.emotiondebugging.model.response.QuestMonthlyMetricResponse;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
@@ -27,8 +31,10 @@ public class QuestAverageFragment extends Fragment {
 
     private QuestReportViewModel viewModel;
     private ImageView btnFilterMetric;
-    private LineChart lineChartAssigned;
-    private LineChart lineChartCompleted;
+    private TextView tvChartTitle1;
+    private TextView tvChartTitle2;
+    private LineChart lineChartTop;
+    private LineChart lineChartBottom;
 
     public QuestAverageFragment() {
         super(R.layout.fragment_quest_average);
@@ -41,18 +47,23 @@ public class QuestAverageFragment extends Fragment {
         viewModel = new ViewModelProvider(requireActivity()).get(QuestReportViewModel.class);
 
         btnFilterMetric = view.findViewById(R.id.btnFilterMetric);
-        lineChartAssigned = view.findViewById(R.id.lineChartAssigned);
-        lineChartCompleted = view.findViewById(R.id.lineChartCompleted);
+        tvChartTitle1 = view.findViewById(R.id.tvChartTitle1);
+        tvChartTitle2 = view.findViewById(R.id.tvChartTitle2);
+        lineChartTop = view.findViewById(R.id.lineChartTop);
+        lineChartBottom = view.findViewById(R.id.lineChartBottom);
 
         observeViewModel();
+
+        btnFilterMetric.setOnClickListener(v -> showMetricDialog());
     }
 
     private void observeViewModel() {
-        viewModel.getTrendReport().observe(getViewLifecycleOwner(), report -> {
-            if (report != null) {
-                drawAssignedChart(report.getAssigned());
-                drawCompletedChart(report.getCompleted());
-            }
+        viewModel.getMonthlyMetrics().observe(getViewLifecycleOwner(), list -> {
+            updateCharts(list, viewModel.getSelectedMetric().getValue());
+        });
+
+        viewModel.getSelectedMetric().observe(getViewLifecycleOwner(), metric -> {
+            updateCharts(viewModel.getMonthlyMetrics().getValue(), metric);
         });
 
         viewModel.getMessage().observe(getViewLifecycleOwner(), msg -> {
@@ -62,63 +73,98 @@ public class QuestAverageFragment extends Fragment {
         });
     }
 
-    private void drawAssignedChart(List<QuestTrendReportResponse.QuestTrendAssignedItem> items) {
-        List<Entry> entries = new ArrayList<>();
-        List<String> labels = new ArrayList<>();
+    private void updateCharts(List<QuestMonthlyMetricResponse> list, String selectedMetric) {
+        if (list == null || list.isEmpty()) return;
 
-        for (int i = 0; i < items.size(); i++) {
-            entries.add(new Entry(i, items.get(i).getTotal_assigned()));
-            labels.add(items.get(i).getChart_date());
-        }
+        String topTitle = selectedMetric;
+        String bottomTitle = "TỶ LỆ CHẤP NHẬN TB";
 
-        LineDataSet dataSet = new LineDataSet(entries, "Assigned");
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawValues(false);
+        tvChartTitle1.setText(topTitle);
+        tvChartTitle2.setText(bottomTitle);
 
-        LineData data = new LineData(dataSet);
-        lineChartAssigned.setData(data);
-
-        XAxis xAxis = lineChartAssigned.getXAxis();
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
-        xAxis.setGranularity(1f);
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setLabelRotationAngle(-30f);
-
-        lineChartAssigned.getAxisRight().setEnabled(false);
-        Description description = new Description();
-        description.setText("");
-        lineChartAssigned.setDescription(description);
-        lineChartAssigned.invalidate();
+        drawChart(lineChartTop, list, selectedMetric);
+        drawChart(lineChartBottom, list, "TỶ LỆ CHẤP NHẬN TB");
     }
 
-    private void drawCompletedChart(List<QuestTrendReportResponse.QuestTrendCompletedItem> items) {
+    private void drawChart(LineChart chart, List<QuestMonthlyMetricResponse> list, String metric) {
         List<Entry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
 
-        for (int i = 0; i < items.size(); i++) {
-            entries.add(new Entry(i, items.get(i).getTotal_completed()));
-            labels.add(items.get(i).getChart_date());
+        for (int i = 0; i < list.size(); i++) {
+            QuestMonthlyMetricResponse item = list.get(i);
+            float value;
+
+            switch (metric) {
+                case "TỶ LỆ NGHIÊM TRỌNG TB":
+                    value = item.getSeverity_rate();
+                    break;
+                case "SỐ LỖI TB":
+                    value = item.getTotal_errors();
+                    break;
+                case "TỶ LỆ CHẤP NHẬN TB":
+                    value = item.getAcceptance_rate();
+                    break;
+                default:
+                    value = item.getAvg_severity();
+                    break;
+            }
+
+            entries.add(new Entry(i, value));
+            labels.add(item.getChart_month());
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, "Completed");
+        LineDataSet dataSet = new LineDataSet(entries, "Month");
         dataSet.setLineWidth(2f);
         dataSet.setCircleRadius(4f);
         dataSet.setDrawValues(false);
 
         LineData data = new LineData(dataSet);
-        lineChartCompleted.setData(data);
+        chart.setData(data);
 
-        XAxis xAxis = lineChartCompleted.getXAxis();
+        XAxis xAxis = chart.getXAxis();
         xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
         xAxis.setGranularity(1f);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setLabelRotationAngle(-30f);
+        xAxis.setLabelRotationAngle(-25f);
 
-        lineChartCompleted.getAxisRight().setEnabled(false);
+        chart.getAxisRight().setEnabled(false);
+
         Description description = new Description();
         description.setText("");
-        lineChartCompleted.setDescription(description);
-        lineChartCompleted.invalidate();
+        chart.setDescription(description);
+        chart.invalidate();
+    }
+
+    private void showMetricDialog() {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.layout_metric_menu, null);
+
+        CheckBox cbSeverity = dialogView.findViewById(R.id.cbSeverity);
+        CheckBox cbSeverityRate = dialogView.findViewById(R.id.cbSeverityRate);
+        CheckBox cbTotalErrors = dialogView.findViewById(R.id.cbTotalErrors);
+        CheckBox cbAcceptance = dialogView.findViewById(R.id.cbAcceptance);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        View.OnClickListener listener = v -> {
+            if (v == cbSeverity) {
+                viewModel.setSelectedMetric("MỨC ĐỘ NGHIÊM TRỌNG TB");
+            } else if (v == cbSeverityRate) {
+                viewModel.setSelectedMetric("TỶ LỆ NGHIÊM TRỌNG TB");
+            } else if (v == cbTotalErrors) {
+                viewModel.setSelectedMetric("SỐ LỖI TB");
+            } else if (v == cbAcceptance) {
+                viewModel.setSelectedMetric("TỶ LỆ CHẤP NHẬN TB");
+            }
+            dialog.dismiss();
+        };
+
+        cbSeverity.setOnClickListener(listener);
+        cbSeverityRate.setOnClickListener(listener);
+        cbTotalErrors.setOnClickListener(listener);
+        cbAcceptance.setOnClickListener(listener);
+
+        dialog.show();
     }
 }

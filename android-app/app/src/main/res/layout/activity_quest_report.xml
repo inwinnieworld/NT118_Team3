@@ -41,7 +41,6 @@
         app:tabIndicatorColor="#FF6A6A"
         app:tabIndicatorHeight="4dp"
         app:tabMode="fixed"
-        app:tabRippleColor="@android:color/transparent"
         app:tabSelectedTextColor="#FFFFFF"
         app:tabTextColor="#DDF9FF" />
 
@@ -50,5 +49,4 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
-
 </LinearLayout>
