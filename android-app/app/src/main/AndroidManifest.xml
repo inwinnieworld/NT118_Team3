@@ -89,7 +89,7 @@
             android:name=".ui.admin.AddStaffActivity"
             android:exported="false" />
 
-        <!-- ========== GIT JOURNAL SCREENS ========== -->
+        <!-- ========== GIT JOURNAL SCREENS (Code của Thắng) ========== -->
         <activity
             android:name=".ui.journal.GitJournalActivity"
             android:exported="false"
@@ -99,6 +99,25 @@
             android:exported="false"
             android:screenOrientation="portrait" />
 
+        <!-- ========== STAFF QUEST MANAGEMENT (Code của AnAn) ========== -->
+        <activity
+            android:name=".ui.staff.ManageQuestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.staff.EditQuestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.staff.QuestReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.staff.ManageTraceQuestionActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".ui.staff.CreateTraceQuestionActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".ui.staff.TraceQuestionDetailActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>

@@ -6,7 +6,12 @@ const path = require("path");
 const authRoutes = require("./routes/auth.routes");
 const profileRoutes = require("./routes/profile.route");
 const adminRoutes = require("./routes/admin.route");
+<<<<<<< HEAD
 const gitJournalRoutes = require("./routes/gitjournal.routes");
+=======
+const emergencyRoutes = require("./routes/emergency.routes");
+const staffRoutes = require("./routes/staff.routes");
+>>>>>>> origin/AnAn
 
 const app = express();
 
@@ -29,8 +34,13 @@ app.use("/api/profile", profileRoutes);
 // Admin routes (manage students, staff)
 app.use("/api/admin", adminRoutes);
 
+<<<<<<< HEAD
 // Git Journal routes (commits, merges, graph)
 app.use("/api/gitjournal", gitJournalRoutes);
+=======
+app.use("/api/emergency", emergencyRoutes);
+app.use("/api/staff", staffRoutes);
+>>>>>>> origin/AnAn
 
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));

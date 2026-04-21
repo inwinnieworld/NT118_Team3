@@ -29,7 +29,8 @@ public class SharedPrefsHelper {
 
         // Token hết hạn sau 7 ngày (giống backend JWT expiry)
         long durationInMillis = 7L * 24 * 60 * 60 * 1000; // 7 days
-        //long durationInMillis = 30 * 1000;
+        //long durationInMillis = 30 * 1000; // 30 seconds for testing
+
         long expireTime = System.currentTimeMillis() + durationInMillis;
         editor.putLong(KEY_EXPIRE_TIME, expireTime);
         editor.apply();
@@ -39,7 +40,7 @@ public class SharedPrefsHelper {
         return prefs.getString(KEY_TOKEN, null);
     }
 
-    // Lưu thông tin user
+    // Lưu toàn bộ thông tin user
     public void saveUserInfo(String userId, String email, String studentCode, String role, String name) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY_USER_ID, userId);
@@ -50,24 +51,67 @@ public class SharedPrefsHelper {
         editor.apply();
     }
 
+    // ===== User ID =====
+    public void saveUserId(String userId) {
+        prefs.edit().putString(KEY_USER_ID, userId).apply();
+    }
+
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
+    }
+
+    // ===== Email =====
+    public void saveEmail(String email) {
+        prefs.edit().putString(KEY_EMAIL, email).apply();
     }
 
     public String getEmail() {
         return prefs.getString(KEY_EMAIL, null);
     }
 
+    // ===== Student code =====
+    public void saveStudentCode(String studentCode) {
+        prefs.edit().putString(KEY_STUDENT_CODE, studentCode).apply();
+    }
+
     public String getStudentCode() {
         return prefs.getString(KEY_STUDENT_CODE, null);
+    }
+
+    // ===== Role =====
+    public void saveRole(String role) {
+        prefs.edit().putString(KEY_ROLE, role).apply();
     }
 
     public String getRole() {
         return prefs.getString(KEY_ROLE, "STUDENT");
     }
 
+    // Wrapper để code mới dùng
+    public void saveUserRole(String role) {
+        saveRole(role);
+    }
+
+    public String getUserRole() {
+        return getRole();
+    }
+
+    // ===== Name =====
+    public void saveName(String name) {
+        prefs.edit().putString(KEY_NAME, name).apply();
+    }
+
     public String getName() {
         return prefs.getString(KEY_NAME, "Người dùng");
+    }
+
+    // Wrapper để StaffDashboardActivity gọi được
+    public void saveUserName(String userName) {
+        saveName(userName);
+    }
+
+    public String getUserName() {
+        return getName();
     }
 
     // Kiểm tra đăng nhập và token còn hạn
@@ -100,7 +144,7 @@ public class SharedPrefsHelper {
         editor.putBoolean(KEY_IS_LOGGED_IN, false);
         editor.apply();
     }
-    
+
     /**
      * Clear Git Journal session data (called on logout)
      */
