@@ -104,7 +104,15 @@ public class LoginActivity extends AppCompatActivity {
                 intent = new Intent(LoginActivity.this, AdminDashboardActivity.class);
                 break;
             case "STAFF":
-                intent = new Intent(LoginActivity.this, StaffDashboardActivity.class);
+                // Check staff position - only "Nhân Viên Tạo Quest" can access Staff Dashboard
+                String staffPosition = response.getUser().getStaffPosition();
+                if ("Nhân Viên Tạo Quest".equals(staffPosition)) {
+                    intent = new Intent(LoginActivity.this, StaffDashboardActivity.class);
+                } else {
+                    // Staff without quest creation permission - show error and stay on login
+                    Toast.makeText(this, "Bạn không có quyền truy cập Staff Dashboard. Chỉ Nhân Viên Tạo Quest mới được phép.", Toast.LENGTH_LONG).show();
+                    return; // Don't navigate, stay on login screen
+                }
                 break;
             case "STUDENT":
             default:

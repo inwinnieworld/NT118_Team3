@@ -89,6 +89,12 @@ public class StaffDashboardActivity extends AppCompatActivity {
         ivSettings.setOnClickListener(v ->
                 Toast.makeText(this, "Cài đặt", Toast.LENGTH_SHORT).show()
         );
+
+        // THÊM: Logout khi long press vào status bar
+        tvStaffStatus.setOnLongClickListener(v -> {
+            showLogoutDialog();
+            return true;
+        });
     }
 
     private void setDynamicStatusText(String staffName) {
@@ -106,5 +112,28 @@ public class StaffDashboardActivity extends AppCompatActivity {
         }
 
         tvStaffStatus.setText(spannable);
+    }
+
+    private void showLogoutDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Đăng xuất")
+                .setMessage("Bạn có chắc muốn đăng xuất không?")
+                .setPositiveButton("Đăng xuất", (dialog, which) -> logout())
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void logout() {
+        SharedPrefsHelper prefsHelper = new SharedPrefsHelper(this);
+        prefsHelper.clearAll();
+        prefsHelper.clearGitJournalSession(this); // Clear Git Journal session
+
+        android.content.Intent intent = new android.content.Intent(
+                this,
+                com.example.emotiondebugging.ui.auth.LoginActivity.class
+        );
+        intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }
