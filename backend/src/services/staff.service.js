@@ -3,27 +3,28 @@ const db = require("../config/db");
 /* =========================
    QUEST
 ========================= */
-async function createQuest({ errorTypeId, questTitle, questDescription }) {
+async function createQuest({ errorTypeId, questTitle, questDescription, questLevel = 3, basePriority = 10, createdByStaffId = null }) {
   const [result] = await db.execute(
-    `INSERT INTO QUESTS (error_type_id, quest_title, quest_description)
-     VALUES (?, ?, ?)`,
-    [errorTypeId, questTitle, questDescription]
+    `INSERT INTO QUESTS (created_by_staff_id, quest_title, quest_description, quest_level, base_priority, is_active)
+     VALUES (?, ?, ?, ?, ?, TRUE)`,
+    [createdByStaffId, questTitle, questDescription, questLevel, basePriority]
   );
 
   return {
     quest_id: result.insertId,
-    error_type_id: errorTypeId,
     quest_title: questTitle,
-    quest_description: questDescription
+    quest_description: questDescription,
+    quest_level: questLevel,
+    base_priority: basePriority
   };
 }
 
-async function updateQuest(questId, { errorTypeId, questTitle, questDescription }) {
+async function updateQuest(questId, { questTitle, questDescription, questLevel, basePriority }) {
   const [result] = await db.execute(
     `UPDATE QUESTS
-     SET error_type_id = ?, quest_title = ?, quest_description = ?
+     SET quest_title = ?, quest_description = ?, quest_level = ?, base_priority = ?
      WHERE quest_id = ?`,
-    [errorTypeId, questTitle, questDescription, questId]
+    [questTitle, questDescription, questLevel, basePriority, questId]
   );
 
   return result.affectedRows > 0;
@@ -31,9 +32,20 @@ async function updateQuest(questId, { errorTypeId, questTitle, questDescription 
 
 async function getAllQuests() {
   const [rows] = await db.execute(
-    `SELECT q.quest_id, q.error_type_id, e.error_name, q.quest_title, q.quest_description
+    `SELECT 
+       q.quest_id,
+       q.quest_title,
+       q.quest_description,
+       q.quest_level,
+       q.base_priority,
+       q.is_active,
+       q.created_at,
+       GROUP_CONCAT(DISTINCT opt.tag_core_name SEPARATOR ', ') AS tags
      FROM QUESTS q
-     LEFT JOIN ERRORTYPES e ON q.error_type_id = e.error_type_id
+     LEFT JOIN QUEST_TAG_MAPPING qtm ON q.quest_id = qtm.quest_id
+     LEFT JOIN TRACE_OPTIONS opt ON qtm.option_id = opt.option_id
+     WHERE q.is_active = TRUE
+     GROUP BY q.quest_id, q.quest_title, q.quest_description, q.quest_level, q.base_priority, q.is_active, q.created_at
      ORDER BY q.quest_id DESC`
   );
 
@@ -43,7 +55,7 @@ async function getAllQuests() {
 async function deleteQuest(questId) {
   const [[used]] = await db.execute(
     `SELECT COUNT(*) AS total
-     FROM USERQUESTS
+     FROM USER_QUESTS
      WHERE quest_id = ?`,
     [questId]
   );
@@ -82,7 +94,7 @@ async function deleteQuest(questId) {
 ========================= */
 async function assignQuestToStudent({ studentId, questId, errorLogId, status = "pending" }) {
   const [result] = await db.execute(
-    `INSERT INTO USERQUESTS (student_id, quest_id, error_log_id, status)
+    `INSERT INTO USER_QUESTS (student_id, quest_id, log_id, status)
      VALUES (?, ?, ?, ?)`,
     [studentId, questId, errorLogId, status]
   );
@@ -91,7 +103,7 @@ async function assignQuestToStudent({ studentId, questId, errorLogId, status = "
     user_quest_id: result.insertId,
     student_id: studentId,
     quest_id: questId,
-    error_log_id: errorLogId,
+    log_id: errorLogId,
     status
   };
 }
@@ -100,13 +112,12 @@ async function getQuestAssignments() {
   const [rows] = await db.execute(
     `SELECT uq.user_quest_id, uq.student_id, s.student_code,
             uq.quest_id, q.quest_title,
-            uq.error_log_id, et.error_name,
+            uq.log_id, el.severity_level,
             uq.status, uq.assigned_at, uq.completed_at
-     FROM USERQUESTS uq
+     FROM USER_QUESTS uq
      JOIN STUDENTS s ON uq.student_id = s.student_id
      JOIN QUESTS q ON uq.quest_id = q.quest_id
-     JOIN ERRORLOGS el ON uq.error_log_id = el.error_log_id
-     JOIN ERRORTYPES et ON el.error_type_id = et.error_type_id
+     JOIN ERROR_LOGS el ON uq.log_id = el.log_id
      ORDER BY uq.assigned_at DESC`
   );
 
@@ -118,26 +129,27 @@ async function getQuestAssignments() {
 ========================= */
 async function getSummaryReport() {
   const [[errorCount]] = await db.execute(
-    `SELECT COUNT(*) AS total_error_logs FROM ERRORLOGS`
+    `SELECT COUNT(*) AS total_error_logs FROM ERROR_LOGS`
   );
 
   const [[questCount]] = await db.execute(
-    `SELECT COUNT(*) AS total_quests FROM QUESTS`
+    `SELECT COUNT(*) AS total_quests FROM QUESTS WHERE is_active = TRUE`
   );
 
   const [[assignmentCount]] = await db.execute(
-    `SELECT COUNT(*) AS total_assignments FROM USERQUESTS`
+    `SELECT COUNT(*) AS total_assignments FROM USER_QUESTS`
   );
 
   const [[completedCount]] = await db.execute(
     `SELECT COUNT(*) AS completed_assignments
-     FROM USERQUESTS
+     FROM USER_QUESTS
      WHERE status = 'completed'`
   );
 
-  const [[avgFeedback]] = await db.execute(
-    `SELECT ROUND(AVG(rating), 2) AS avg_feedback
-     FROM FEEDBACK`
+  const [[avgEffectiveness]] = await db.execute(
+    `SELECT ROUND(AVG(effectiveness_rating), 2) AS avg_effectiveness
+     FROM USER_QUESTS
+     WHERE effectiveness_rating IS NOT NULL`
   );
 
   return {
@@ -145,15 +157,15 @@ async function getSummaryReport() {
     total_quests: questCount.total_quests,
     total_assignments: assignmentCount.total_assignments,
     completed_assignments: completedCount.completed_assignments,
-    avg_feedback: avgFeedback.avg_feedback || 0
+    avg_effectiveness: avgEffectiveness.avg_effectiveness || 0
   };
 }
 
 async function getErrorReport() {
   const [rows] = await db.execute(
-    `SELECT et.error_type_id, et.error_name, COUNT(el.error_log_id) AS total_logs
-     FROM ERRORTYPES et
-     LEFT JOIN ERRORLOGS el ON et.error_type_id = el.error_type_id
+    `SELECT et.error_type_id, et.error_name, COUNT(el.log_id) AS total_logs
+     FROM ERROR_TYPES et
+     LEFT JOIN ERROR_LOGS el ON et.error_type_id = el.error_type_id
      GROUP BY et.error_type_id, et.error_name
      ORDER BY total_logs DESC, et.error_name`
   );
@@ -167,7 +179,8 @@ async function getQuestReport() {
             COUNT(uq.user_quest_id) AS total_assigned,
             SUM(CASE WHEN uq.status = 'completed' THEN 1 ELSE 0 END) AS total_completed
      FROM QUESTS q
-     LEFT JOIN USERQUESTS uq ON q.quest_id = uq.quest_id
+     LEFT JOIN USER_QUESTS uq ON q.quest_id = uq.quest_id
+     WHERE q.is_active = TRUE
      GROUP BY q.quest_id, q.quest_title
      ORDER BY total_assigned DESC, q.quest_title`
   );
@@ -180,7 +193,7 @@ async function getQuestTrendReport() {
     SELECT 
       DATE(assigned_at) AS chart_date,
       COUNT(*) AS total_assigned
-    FROM USERQUESTS
+    FROM USER_QUESTS
     GROUP BY DATE(assigned_at)
     ORDER BY DATE(assigned_at) ASC
   `);
@@ -189,7 +202,7 @@ async function getQuestTrendReport() {
     SELECT 
       DATE(completed_at) AS chart_date,
       COUNT(*) AS total_completed
-    FROM USERQUESTS
+    FROM USER_QUESTS
     WHERE completed_at IS NOT NULL
     GROUP BY DATE(completed_at)
     ORDER BY DATE(completed_at) ASC
@@ -207,17 +220,15 @@ async function getQuestTrendReport() {
 async function getAllTraceQuestions() {
   const [rows] = await db.execute(`
     SELECT 
-      dq.question_id,
-      dq.error_type_id,
+      tq.question_id,
+      tq.error_type_id,
       et.error_name,
-      dq.question_text,
-      dq.option_1,
-      dq.option_2,
-      dq.option_3,
-      dq.option_4
-    FROM DEBUGQUESTIONS dq
-    JOIN ERRORTYPES et ON dq.error_type_id = et.error_type_id
-    ORDER BY et.error_name ASC, dq.question_id ASC
+      tq.question_text,
+      tq.is_active
+    FROM TRACE_QUESTIONS tq
+    JOIN ERROR_TYPES et ON tq.error_type_id = et.error_type_id
+    WHERE tq.is_active = TRUE
+    ORDER BY et.error_name ASC, tq.question_id ASC
   `);
 
   return rows;
@@ -226,17 +237,14 @@ async function getAllTraceQuestions() {
 async function getTraceQuestionDetail(questionId) {
   const [rows] = await db.execute(`
     SELECT 
-      dq.question_id,
-      dq.error_type_id,
+      tq.question_id,
+      tq.error_type_id,
       et.error_name,
-      dq.question_text,
-      dq.option_1,
-      dq.option_2,
-      dq.option_3,
-      dq.option_4
-    FROM DEBUGQUESTIONS dq
-    JOIN ERRORTYPES et ON dq.error_type_id = et.error_type_id
-    WHERE dq.question_id = ?
+      tq.question_text,
+      tq.is_active
+    FROM TRACE_QUESTIONS tq
+    JOIN ERROR_TYPES et ON tq.error_type_id = et.error_type_id
+    WHERE tq.question_id = ?
     LIMIT 1
   `, [questionId]);
 
@@ -245,44 +253,33 @@ async function getTraceQuestionDetail(questionId) {
 
 async function createTraceQuestion({
   errorTypeId,
-  questionText,
-  option1,
-  option2,
-  option3,
-  option4
+  questionText
 }) {
   const [result] = await db.execute(
-    `INSERT INTO DEBUGQUESTIONS
-      (error_type_id, question_text, option_1, option_2, option_3, option_4)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [errorTypeId, questionText, option1, option2, option3, option4]
+    `INSERT INTO TRACE_QUESTIONS
+      (error_type_id, question_text, is_active)
+     VALUES (?, ?, TRUE)`,
+    [errorTypeId, questionText]
   );
 
   return {
     question_id: result.insertId,
     error_type_id: errorTypeId,
     question_text: questionText,
-    option_1: option1,
-    option_2: option2,
-    option_3: option3,
-    option_4: option4
+    is_active: true
   };
 }
 
 async function updateTraceQuestion(
   questionId,
-  { errorTypeId, questionText, option1, option2, option3, option4 }
+  { errorTypeId, questionText }
 ) {
   const [result] = await db.execute(
-    `UPDATE DEBUGQUESTIONS
+    `UPDATE TRACE_QUESTIONS
      SET error_type_id = ?,
-         question_text = ?,
-         option_1 = ?,
-         option_2 = ?,
-         option_3 = ?,
-         option_4 = ?
+         question_text = ?
      WHERE question_id = ?`,
-    [errorTypeId, questionText, option1, option2, option3, option4, questionId]
+    [errorTypeId, questionText, questionId]
   );
 
   return result.affectedRows > 0;
@@ -290,7 +287,7 @@ async function updateTraceQuestion(
 
 async function deleteTraceQuestion(questionId) {
   const [result] = await db.execute(
-    `DELETE FROM DEBUGQUESTIONS
+    `DELETE FROM TRACE_QUESTIONS
      WHERE question_id = ?`,
     [questionId]
   );
@@ -304,13 +301,13 @@ async function getQuestMonthlyMetrics() {
       DATE_FORMAT(el.created_at, '%Y-%m') AS chart_month,
       ROUND(AVG(el.severity_level), 2) AS avg_severity,
       ROUND(SUM(CASE WHEN el.severity_level >= 4 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS severity_rate,
-      COUNT(el.error_log_id) AS total_errors,
+      COUNT(el.log_id) AS total_errors,
       ROUND(
         SUM(CASE WHEN uq.status = 'completed' THEN 1 ELSE 0 END) * 100.0 /
         NULLIF(COUNT(uq.user_quest_id), 0), 2
       ) AS acceptance_rate
-    FROM ERRORLOGS el
-    LEFT JOIN USERQUESTS uq ON uq.error_log_id = el.error_log_id
+    FROM ERROR_LOGS el
+    LEFT JOIN USER_QUESTS uq ON uq.log_id = el.log_id
     GROUP BY DATE_FORMAT(el.created_at, '%Y-%m')
     ORDER BY DATE_FORMAT(el.created_at, '%Y-%m') ASC
   `);
@@ -326,7 +323,8 @@ async function getQuestRankingBoard() {
       COUNT(uq.user_quest_id) AS total_assigned,
       SUM(CASE WHEN uq.status = 'completed' THEN 1 ELSE 0 END) AS total_completed
     FROM QUESTS q
-    LEFT JOIN USERQUESTS uq ON uq.quest_id = q.quest_id
+    LEFT JOIN USER_QUESTS uq ON uq.quest_id = q.quest_id
+    WHERE q.is_active = TRUE
     GROUP BY q.quest_id, q.quest_title
     ORDER BY total_assigned DESC, total_completed DESC, q.quest_id ASC
   `);
