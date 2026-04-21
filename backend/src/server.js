@@ -6,6 +6,7 @@ const path = require("path");
 const authRoutes = require("./routes/auth.routes");
 const profileRoutes = require("./routes/profile.route");
 const adminRoutes = require("./routes/admin.route");
+const gitJournalRoutes = require("./routes/gitjournal.routes");
 
 const app = express();
 
@@ -27,6 +28,9 @@ app.use("/api/profile", profileRoutes);
 
 // Admin routes (manage students, staff)
 app.use("/api/admin", adminRoutes);
+
+// Git Journal routes (commits, merges, graph)
+app.use("/api/gitjournal", gitJournalRoutes);
 
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));

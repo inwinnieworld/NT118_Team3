@@ -46,4 +46,9 @@ public class RetrofitClient {
     public static AdminApiService getAdminApi() {
         return getInstance().create(AdminApiService.class);
     }
+
+    // Luồng Git Journal
+    public static GitJournalApiService getGitJournalApi() {
+        return getInstance().create(GitJournalApiService.class);
+    }
 }

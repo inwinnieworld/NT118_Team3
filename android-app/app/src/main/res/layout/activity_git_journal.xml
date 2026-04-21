@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background Image (Full Screen) -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/bg_gitjournal"
+        android:scaleType="centerCrop" />
+
+    <!-- Overlay Content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:clipChildren="true"
+        android:clipToPadding="true">
+
+        <!-- Cyan Header Section with Title and Git Graph Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="48dp"
+            android:paddingBottom="16dp">
+
+            <!-- Back Button (absolute positioned) -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp">
+
+                <ImageView
+                    android:id="@+id/ivBack"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="start"
+                    android:src="@drawable/ic_arrow_back"
+                    android:tint="@color/white"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Back" />
+            </FrameLayout>
+
+
+            <!-- Git Graph Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGitGraph"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Git Graph"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif-light"
+                android:paddingHorizontal="28dp"
+                app:strokeColor="@color/white"
+                app:strokeWidth="2dp"
+                app:cornerRadius="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        </LinearLayout>
+
+        <!-- Spacer to reach TERMINAL bar position -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="80dp" />
+
+        <!-- TERMINAL bar with labels -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:background="@android:color/transparent">
+
+            <!-- TERMINAL label with underline -->
+            <LinearLayout
+                android:id="@+id/layoutTerminalLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_alignParentStart="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TERMINAL"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif"
+                    android:letterSpacing="0.08"
+                    android:paddingTop="15dp"/>
+
+                <!-- Underline -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="@color/white"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <!-- main label -->
+            <TextView
+                android:id="@+id/tvBranchLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="main"
+                android:textColor="#9CA3AF"
+                android:textSize="13sp"
+                android:fontFamily="monospace" />
+        </RelativeLayout>
+
+        <!-- Terminal Area with Pagination (Strictly constrained to black area in background) -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <ScrollView
+                android:id="@+id/scrollTerminal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="60dp"
+                android:scrollbars="none"
+                android:fillViewport="false"
+                android:overScrollMode="never"
+                android:clipChildren="true"
+                android:clipToPadding="true">
+
+                <LinearLayout
+                    android:id="@+id/layoutTerminalContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Date Header -->
+                    <TextView
+                        android:id="@+id/tvDateHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="[09-04-2026]"
+                        android:textColor="#6B7280"
+                        android:textSize="14sp"
+                        android:fontFamily="monospace"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Initial [+] prompt will be added dynamically -->
+
+                </LinearLayout>
+            </ScrollView>
+
+            <!-- Pagination Controls (Bottom Right Corner) -->
+            <LinearLayout
+                android:id="@+id/layoutScrollControls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal"
+                android:background="#80000000"
+                android:padding="8dp"
+                android:visibility="gone">
+
+                <!-- Previous Page Button (<) -->
+                <ImageView
+                    android:id="@+id/btnPrevPage"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    android:tint="#8CF8FF"
+                    android:padding="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Previous Page" />
+
+                <!-- Page Indicator -->
+                <TextView
+                    android:id="@+id/tvPageIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1/1"
+                    android:textColor="#8CF8FF"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:layout_gravity="center_vertical"
+                    android:paddingHorizontal="12dp" />
+
+                <!-- Next Page Button (>) -->
+                <ImageView
+                    android:id="@+id/btnNextPage"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@android:drawable/ic_media_next"
+                    android:tint="#8CF8FF"
+                    android:padding="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="Next Page" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- Spacer matching bottom 3D machine area in background (prevents text overflow) -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="180dp" />
+    </LinearLayout>
+
+    <!-- Bottom Sheet Container -->
+    <include layout="@layout/bottom_sheet_git_journal" />
+
+</FrameLayout>

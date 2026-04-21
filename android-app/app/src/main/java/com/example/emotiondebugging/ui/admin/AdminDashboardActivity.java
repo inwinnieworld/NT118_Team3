@@ -123,6 +123,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
     private void logout() {
         SharedPrefsHelper prefsHelper = new SharedPrefsHelper(this);
         prefsHelper.clearAll();
+        prefsHelper.clearGitJournalSession(this); // Clear Git Journal session
         
         android.content.Intent intent = new android.content.Intent(
             this, 

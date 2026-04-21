@@ -1,5 +1,6 @@
 package com.example.emotiondebugging.ui.main;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -103,12 +104,18 @@ public class MainActivity extends AppCompatActivity {
                         ViewGroup.LayoutParams.MATCH_PARENT));
                 iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 iv.setPadding(40, 40, 40, 40);
+                iv.setClickable(true);
+                iv.setFocusable(true);
                 return new RecyclerView.ViewHolder(iv) {};
             }
 
             @Override
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-                ((ImageView) holder.itemView).setImageResource(iconList[position]);
+                ImageView imageView = (ImageView) holder.itemView;
+                imageView.setImageResource(iconList[position]);
+                
+                // Add click listener for each icon
+                imageView.setOnClickListener(v -> handleIconClick(position));
             }
 
             @Override
@@ -129,5 +136,47 @@ public class MainActivity extends AppCompatActivity {
         });
 
         vpIcons.setCurrentItem(2, false);
+    }
+
+    /**
+     * Handle icon click navigation
+     * Position mapping:
+     * 0 - Error Log
+     * 1 - Emergency Hotfixes
+     * 2 - Git Commit Journal
+     * 3 - Debugging Community
+     * 4 - Exam Mode
+     */
+    private void handleIconClick(int position) {
+        Intent intent;
+        switch (position) {
+            case 0: // Error Log
+                // TODO: Navigate to ErrorLogActivity
+                android.widget.Toast.makeText(this, "Error Log coming soon", android.widget.Toast.LENGTH_SHORT).show();
+                break;
+
+            case 1: // Emergency Hotfixes
+                // TODO: Navigate to EmergencyActivity
+                android.widget.Toast.makeText(this, "Emergency Hotfixes coming soon", android.widget.Toast.LENGTH_SHORT).show();
+                break;
+
+            case 2: // Git Commit Journal
+                intent = new Intent(MainActivity.this, com.example.emotiondebugging.ui.journal.GitJournalActivity.class);
+                startActivity(intent);
+                break;
+
+            case 3: // Debugging Community
+                // TODO: Navigate to CommunityActivity
+                android.widget.Toast.makeText(this, "Debugging Community coming soon", android.widget.Toast.LENGTH_SHORT).show();
+                break;
+
+            case 4: // Exam Mode
+                // TODO: Navigate to ExamModeActivity
+                android.widget.Toast.makeText(this, "Exam Mode coming soon", android.widget.Toast.LENGTH_SHORT).show();
+                break;
+
+            default:
+                break;
+        }
     }
 }
