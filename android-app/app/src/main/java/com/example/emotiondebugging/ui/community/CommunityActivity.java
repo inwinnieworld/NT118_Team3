@@ -63,12 +63,12 @@ public class CommunityActivity extends AppCompatActivity {
         adapter = new CommunityPostAdapter(new CommunityPostAdapter.OnPostClickListener() {
             @Override
             public void onUpvote(com.example.emotiondebugging.model.response.CommunityPostResponse.PostItem post) {
-                viewModel.votePost(authToken, post.postId, "UPVOTE_FIX");
+                viewModel.votePost(authToken, post.postId, "UPVOTE");
                 viewModel.loadPosts(authToken, currentFilter, 1, etSearch.getText().toString().trim());
             }
             @Override
             public void onDownvote(com.example.emotiondebugging.model.response.CommunityPostResponse.PostItem post) {
-                viewModel.votePost(authToken, post.postId, "REPRODUCE_ERROR");
+                viewModel.votePost(authToken, post.postId, "DOWNVOTE");
                 viewModel.loadPosts(authToken, currentFilter, 1, etSearch.getText().toString().trim());
             }
             @Override

@@ -81,11 +81,11 @@ public class PostDetailActivity extends AppCompatActivity {
             new CommentAdapter.OnCommentVoteListener() {
                 @Override
                 public void onUpvote(PostDetailResponse.CommentItem comment) {
-                    voteComment(comment.commentId, "UPVOTE_FIX");
+                    voteComment(comment.commentId, "UPVOTE");
                 }
                 @Override
                 public void onDownvote(PostDetailResponse.CommentItem comment) {
-                    voteComment(comment.commentId, "REPRODUCE_ERROR");
+                    voteComment(comment.commentId, "DOWNVOTE");
                 }
             },
             comment -> showCommentInput(comment.commentId, comment.authorName)
@@ -93,8 +93,8 @@ public class PostDetailActivity extends AppCompatActivity {
         rvComments.setAdapter(commentAdapter);
 
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
-        btnUpvote.setOnClickListener(v -> votePost("UPVOTE_FIX"));
-        btnDownvote.setOnClickListener(v -> votePost("REPRODUCE_ERROR"));
+        btnUpvote.setOnClickListener(v -> votePost("UPVOTE"));
+        btnDownvote.setOnClickListener(v -> votePost("DOWNVOTE"));
 
         // Bấm "Bình luận" trên bài viết → hiện input
         tvCommentLabel.setOnClickListener(v -> showCommentInput(null, null));

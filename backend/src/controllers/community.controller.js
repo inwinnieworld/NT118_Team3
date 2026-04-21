@@ -44,8 +44,8 @@ const getPosts = async (req, res) => {
                 et.error_name,
                 CASE WHEN cp.is_anonymous = 1 THEN 'Ẩn danh' ELSE u.name END AS author_name,
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
-                COUNT(DISTINCT CASE WHEN v.vote_type = 'UPVOTE_FIX' THEN v.vote_id END) AS upvote_count,
-                COUNT(DISTINCT CASE WHEN v.vote_type != 'UPVOTE_FIX' THEN v.vote_id END) AS downvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'UPVOTE' THEN v.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'DOWNVOTE' THEN v.vote_id END) AS downvote_count,
                 COUNT(DISTINCT c.comment_id) AS comment_count,
                 EXISTS(SELECT 1 FROM SAVED_POSTS sp2 WHERE sp2.post_id = cp.post_id AND sp2.student_id = (SELECT student_id FROM STUDENTS WHERE user_id = ${userId} LIMIT 1)) AS is_saved
             FROM COMMUNITYPOSTS cp
@@ -157,7 +157,7 @@ const votePost = async (req, res) => {
     try {
         const userId = req.user.user_id;
         const { postId } = req.params;
-        const { vote_type } = req.body; // UPVOTE_FIX | REPRODUCE_ERROR
+        const { vote_type } = req.body; // UPVOTE | DOWNVOTE
 
         const [[student]] = await db.query(
             'SELECT student_id FROM STUDENTS WHERE user_id = ?', [userId]
@@ -220,8 +220,8 @@ const getPostDetail = async (req, res) => {
                 cp.view_count, cp.error_type_id, et.error_name,
                 CASE WHEN cp.is_anonymous = 1 THEN 'Ẩn danh' ELSE u.name END AS author_name,
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
-                COUNT(DISTINCT CASE WHEN v.vote_type = 'UPVOTE_FIX' THEN v.vote_id END) AS upvote_count,
-                COUNT(DISTINCT CASE WHEN v.vote_type != 'UPVOTE_FIX' THEN v.vote_id END) AS downvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'UPVOTE' THEN v.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'DOWNVOTE' THEN v.vote_id END) AS downvote_count,
                 COUNT(DISTINCT c.comment_id) AS comment_count
             FROM COMMUNITYPOSTS cp
             LEFT JOIN STUDENTS s ON cp.student_id = s.student_id
@@ -241,8 +241,8 @@ const getPostDetail = async (req, res) => {
                 c.comment_id, c.content, c.created_at, c.view_count, c.parent_comment_id,
                 CASE WHEN c.is_anonymous = 1 THEN 'Ẩn danh' ELSE COALESCE(u.name, 'Người dùng') END AS author_name,
                 u.avatar_url AS author_avatar,
-                COUNT(DISTINCT CASE WHEN cv.vote_type = 'UPVOTE_FIX' THEN cv.vote_id END) AS upvote_count,
-                COUNT(DISTINCT CASE WHEN cv.vote_type != 'UPVOTE_FIX' THEN cv.vote_id END) AS downvote_count
+                COUNT(DISTINCT CASE WHEN cv.vote_type = 'UPVOTE' THEN cv.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN cv.vote_type = 'DOWNVOTE' THEN cv.vote_id END) AS downvote_count
             FROM COMMENTS c
             LEFT JOIN STUDENTS s ON c.student_id = s.student_id
             LEFT JOIN USERS u ON s.user_id = u.user_id
@@ -257,8 +257,8 @@ const getPostDetail = async (req, res) => {
             SELECT 
                 c.comment_id, c.content, c.created_at, c.parent_comment_id,
                 CASE WHEN c.is_anonymous = 1 THEN 'Ẩn danh' ELSE COALESCE(u.name, 'Người dùng') END AS author_name,
-                COUNT(DISTINCT CASE WHEN cv.vote_type = 'UPVOTE_FIX' THEN cv.vote_id END) AS upvote_count,
-                COUNT(DISTINCT CASE WHEN cv.vote_type != 'UPVOTE_FIX' THEN cv.vote_id END) AS downvote_count
+                COUNT(DISTINCT CASE WHEN cv.vote_type = 'UPVOTE' THEN cv.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN cv.vote_type = 'DOWNVOTE' THEN cv.vote_id END) AS downvote_count
             FROM COMMENTS c
             LEFT JOIN STUDENTS s ON c.student_id = s.student_id
             LEFT JOIN USERS u ON s.user_id = u.user_id
@@ -410,8 +410,8 @@ const getSavedPosts = async (req, res) => {
             SELECT cp.post_id, cp.title, cp.content, cp.is_anonymous, cp.created_at,
                 cp.view_count, cp.error_type_id, et.error_name,
                 CASE WHEN cp.is_anonymous = 1 THEN 'Ẩn danh' ELSE u.name END AS author_name,
-                COUNT(DISTINCT CASE WHEN v.vote_type = 'UPVOTE_FIX' THEN v.vote_id END) AS upvote_count,
-                COUNT(DISTINCT CASE WHEN v.vote_type != 'UPVOTE_FIX' THEN v.vote_id END) AS downvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'UPVOTE' THEN v.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'DOWNVOTE' THEN v.vote_id END) AS downvote_count,
                 COUNT(DISTINCT c.comment_id) AS comment_count
             FROM SAVED_POSTS sp
             JOIN COMMUNITYPOSTS cp ON sp.post_id = cp.post_id
