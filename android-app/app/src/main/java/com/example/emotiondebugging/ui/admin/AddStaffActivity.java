@@ -53,9 +53,19 @@ public class AddStaffActivity extends AppCompatActivity {
             Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin bắt buộc", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Email không đúng định dạng");
+            etEmail.requestFocus();
+            return;
+        }
+        if (!phone.isEmpty() && !phone.matches("\\d{10}")) {
+            etPhone.setError("Số điện thoại phải đúng 10 chữ số");
+            etPhone.requestFocus();
+            return;
+        }
 
         RetrofitClient.getAdminApi().createStaff(authToken,
-                new CreateStaffRequest(name, email, phone, password, position, department))
+                new CreateStaffRequest(name, email, password, phone, position, department))
                 .enqueue(new Callback<BaseResponse>() {
                     @Override
                     public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {

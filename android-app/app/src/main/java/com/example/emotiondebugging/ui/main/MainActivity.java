@@ -166,8 +166,8 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             case 3: // Debugging Community
-                // TODO: Navigate to CommunityActivity
-                android.widget.Toast.makeText(this, "Debugging Community coming soon", android.widget.Toast.LENGTH_SHORT).show();
+                intent = new Intent(MainActivity.this, com.example.emotiondebugging.ui.community.CommunityActivity.class);
+                startActivity(intent);
                 break;
 
             case 4: // Exam Mode

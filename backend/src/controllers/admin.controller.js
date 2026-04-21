@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
+const { isValidEmail, isValidPhone } = require('../utils/validate');
 
 // ==================== SINH VIÊN ====================
 
@@ -43,6 +44,12 @@ const updateStudent = async (req, res) => {
             'SELECT user_id FROM STUDENTS WHERE student_id = ?', [studentId]
         );
         if (!student) return res.status(404).json({ message: 'Student not found' });
+
+        if (email && !isValidEmail(email))
+            return res.status(400).json({ message: 'Email không đúng định dạng' });
+
+        if (phone && !isValidPhone(phone))
+            return res.status(400).json({ message: 'Số điện thoại phải đúng 10 chữ số' });
 
         await db.query(
             'UPDATE USERS SET name = ?, email = ?, phone = ? WHERE user_id = ?',
@@ -122,6 +129,12 @@ const createStaff = async (req, res) => {
         if (!name || !email || !password)
             return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin' });
 
+        if (!isValidEmail(email))
+            return res.status(400).json({ message: 'Email không đúng định dạng' });
+
+        if (!isValidPhone(phone))
+            return res.status(400).json({ message: 'Số điện thoại phải đúng 10 chữ số' });
+
         const [existing] = await db.query('SELECT user_id FROM USERS WHERE email = ?', [email]);
         if (existing.length > 0)
             return res.status(400).json({ message: 'Email đã tồn tại' });
@@ -153,6 +166,12 @@ const updateStaff = async (req, res) => {
             'SELECT user_id FROM STAFF WHERE staff_id = ?', [staffId]
         );
         if (!staff) return res.status(404).json({ message: 'Staff not found' });
+
+        if (email && !isValidEmail(email))
+            return res.status(400).json({ message: 'Email không đúng định dạng' });
+
+        if (phone && !isValidPhone(phone))
+            return res.status(400).json({ message: 'Số điện thoại phải đúng 10 chữ số' });
 
         await db.query(
             'UPDATE USERS SET name = ?, email = ?, phone = ? WHERE user_id = ?',

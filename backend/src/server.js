@@ -9,6 +9,7 @@ const adminRoutes = require("./routes/admin.route");
 const gitJournalRoutes = require("./routes/gitjournal.routes");
 const emergencyRoutes = require("./routes/emergency.routes");
 const staffRoutes = require("./routes/staff.routes");
+const communityRoutes = require("./routes/community.route");
 
 const app = express();
 
@@ -38,9 +39,11 @@ app.use("/api/gitjournal", gitJournalRoutes);
 app.use("/api/emergency", emergencyRoutes);
 app.use("/api/staff", staffRoutes);
 
+// Community routes
+app.use("/api/community", communityRoutes);
+
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));
-// app.use('/api/community', require('./routes/community.route'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

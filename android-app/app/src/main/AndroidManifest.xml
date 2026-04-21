@@ -74,6 +74,15 @@
         <activity
             android:name=".ui.profile.ChangePasswordActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.community.CommunityActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.community.CreatePostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.community.PostDetailActivity"
+            android:exported="false" />
 
         <!-- ========== ADMIN SCREENS (Code của Chính) ========== -->
         <activity

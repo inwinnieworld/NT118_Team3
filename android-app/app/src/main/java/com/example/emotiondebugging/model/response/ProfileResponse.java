@@ -18,7 +18,7 @@ public class ProfileResponse {
         @SerializedName("student_code") public String studentCode;
         @SerializedName("major") public String major;
         @SerializedName("faculty") public String faculty;
-        @SerializedName("year_of_study") public String yearOfStudy;
+        @SerializedName("year_of_study") public int yearOfStudy;
         @SerializedName("emergency_phone") public String emergencyPhone;
     }
 }

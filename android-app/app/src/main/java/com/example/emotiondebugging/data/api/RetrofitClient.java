@@ -51,4 +51,9 @@ public class RetrofitClient {
     public static GitJournalApiService getGitJournalApi() {
         return getInstance().create(GitJournalApiService.class);
     }
+
+    // Luồng Community (của Chính)
+    public static CommunityApiService getCommunityApi() {
+        return getInstance().create(CommunityApiService.class);
+    }
 }
