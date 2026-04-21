@@ -15,6 +15,7 @@ import com.example.emotiondebugging.model.response.LoginResponse;
 import com.example.emotiondebugging.ui.admin.AdminDashboardActivity;
 import com.example.emotiondebugging.ui.staff.StaffDashboardActivity;
 import com.example.emotiondebugging.ui.main.MainActivity;
+import com.example.emotiondebugging.utils.SharedPrefsHelper;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -96,6 +97,18 @@ public class LoginActivity extends AppCompatActivity {
 
     private void handleLoginSuccess(LoginResponse response) {
         String role = response.getUser().getRole() != null ? response.getUser().getRole() : "";
+        
+        // ✅ LƯU TOKEN VÀ THÔNG TIN USER
+        SharedPrefsHelper prefs = new SharedPrefsHelper(this);
+        prefs.saveToken(response.getToken());
+        prefs.saveUserInfo(
+            String.valueOf(response.getUser().getUserId()),
+            response.getUser().getEmail(),
+            response.getUser().getStudentCode(),
+            role,
+            response.getUser().getName()
+        );
+        
         Toast.makeText(this, "Đăng nhập thành công - " + role, Toast.LENGTH_SHORT).show();
 
         Intent intent;
