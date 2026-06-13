@@ -2,6 +2,24 @@ const db = require('../config/db');
 
 class GitJournalService {
     
+    // ==================== HELPER ====================
+    
+    /**
+     * Lấy student_id từ user_id
+     */
+    async getStudentIdFromUserId(userId) {
+        const [students] = await db.query(
+            'SELECT student_id FROM students WHERE user_id = ?',
+            [userId]
+        );
+        
+        if (students.length === 0) {
+            throw new Error('Student not found for this user');
+        }
+        
+        return students[0].student_id;
+    }
+    
     // ==================== EMOTIONS ====================
     
     /**

@@ -34,7 +34,7 @@ class GitJournalController {
      */
     async createCommit(req, res) {
         try {
-            const studentId = req.user.user_id; // Từ auth middleware
+            const userId = req.user.user_id; // Từ auth middleware
             const { emotion_id, branch_type, user_quest_id, intensity_level, message } = req.body;
             
             // Validate
@@ -44,6 +44,9 @@ class GitJournalController {
                     message: 'Thiếu thông tin bắt buộc'
                 });
             }
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             const commitData = {
                 student_id: studentId,
@@ -88,8 +91,11 @@ class GitJournalController {
      */
     async getCommits(req, res) {
         try {
-            const studentId = req.user.user_id;
+            const userId = req.user.user_id;
             const { branch_type, start_date, end_date, limit, offset } = req.query;
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             const commits = await gitJournalService.getCommitsByStudent(studentId, {
                 branch_type,
@@ -125,6 +131,8 @@ class GitJournalController {
     async getCommitById(req, res) {
         try {
             const { id } = req.params;
+            const userId = req.user.user_id;
+            
             const commit = await gitJournalService.getCommitById(id);
             
             if (!commit) {
@@ -134,8 +142,11 @@ class GitJournalController {
                 });
             }
             
+            // Convert user_id to student_id for ownership check
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
+            
             // Check ownership
-            if (commit.student_id !== req.user.user_id) {
+            if (commit.student_id !== studentId) {
                 return res.status(403).json({
                     success: false,
                     message: 'Không có quyền truy cập commit này'
@@ -164,8 +175,11 @@ class GitJournalController {
      */
     async getAlerts(req, res) {
         try {
-            const studentId = req.user.user_id;
+            const userId = req.user.user_id;
             const { limit } = req.query;
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             const alerts = await gitJournalService.getAlertsByStudent(studentId, limit || 10);
             
@@ -192,7 +206,7 @@ class GitJournalController {
      */
     async createDailyMerge(req, res) {
         try {
-            const studentId = req.user.user_id;
+            const userId = req.user.user_id;
             const { merge_date, user_retrospective } = req.body;
             
             if (!merge_date) {
@@ -214,6 +228,9 @@ class GitJournalController {
                     message: 'Chỉ có thể merge trong khung giờ 22:00 - 23:59'
                 });
             }
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             const merge = await gitJournalService.createDailyMerge(
                 studentId,
@@ -259,8 +276,11 @@ class GitJournalController {
      */
     async getDailyMerges(req, res) {
         try {
-            const studentId = req.user.user_id;
+            const userId = req.user.user_id;
             const { start_date, end_date, limit, offset } = req.query;
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             const merges = await gitJournalService.getDailyMergesByStudent(studentId, {
                 start_date,
@@ -294,8 +314,11 @@ class GitJournalController {
      */
     async getDailyMergeByDate(req, res) {
         try {
-            const studentId = req.user.user_id;
+            const userId = req.user.user_id;
             const { date } = req.params;
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             const merge = await gitJournalService.getDailyMerge(studentId, date);
             
@@ -329,8 +352,11 @@ class GitJournalController {
      */
     async getGitGraphData(req, res) {
         try {
-            const studentId = req.user.user_id;
+            const userId = req.user.user_id;
             const { start_date, end_date, limit, offset } = req.query;
+            
+            // Convert user_id to student_id
+            const studentId = await gitJournalService.getStudentIdFromUserId(userId);
             
             console.log(`[GET GRAPH] student_id=${studentId}, limit=${limit}`);
             

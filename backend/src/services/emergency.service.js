@@ -13,7 +13,7 @@ async function getResources() {
 async function getContactsByStudentId(studentId) {
   const [rows] = await db.execute(
     `SELECT contact_id, student_id, contact_name, phone, relationship
-     FROM EMERGENCYCONTACTS
+     FROM emergency_contacts
      WHERE student_id = ?
      ORDER BY contact_name`,
     [studentId]
@@ -23,7 +23,7 @@ async function getContactsByStudentId(studentId) {
 
 async function createContact({ studentId, contactName, phone, relationship }) {
   const [result] = await db.execute(
-    `INSERT INTO EMERGENCYCONTACTS (student_id, contact_name, phone, relationship)
+    `INSERT INTO emergency_contacts (student_id, contact_name, phone, relationship)
      VALUES (?, ?, ?, ?)`,
     [studentId, contactName, phone, relationship]
   );
@@ -39,7 +39,7 @@ async function createContact({ studentId, contactName, phone, relationship }) {
 
 async function updateContact(contactId, { contactName, phone, relationship }) {
   await db.execute(
-    `UPDATE EMERGENCYCONTACTS
+    `UPDATE emergency_contacts
      SET contact_name = ?, phone = ?, relationship = ?
      WHERE contact_id = ?`,
     [contactName, phone, relationship, contactId]
@@ -48,7 +48,7 @@ async function updateContact(contactId, { contactName, phone, relationship }) {
 
 async function deleteContact(contactId) {
   await db.execute(
-    `DELETE FROM EMERGENCYCONTACTS WHERE contact_id = ?`,
+    `DELETE FROM emergency_contacts WHERE contact_id = ?`,
     [contactId]
   );
 }
