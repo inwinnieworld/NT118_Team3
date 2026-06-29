@@ -74,14 +74,22 @@
         <activity
             android:name=".ui.profile.ChangePasswordActivity"
             android:exported="false" />
+
+        <!-- ========== COMMUNITY SCREENS ========== -->
         <activity
             android:name=".ui.community.CommunityActivity"
             android:exported="false" />
+
         <activity
             android:name=".ui.community.CreatePostActivity"
             android:exported="false" />
+
         <activity
             android:name=".ui.community.PostDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.community.CommunityProfileActivity"
             android:exported="false" />
 
         <!-- ========== ADMIN SCREENS (Code của Chính) ========== -->
@@ -127,6 +135,13 @@
         <activity
             android:name=".ui.staff.TraceQuestionDetailActivity"
             android:exported="false"/>
+        <activity
+            android:name=".ui.community.ChatActivity"
+            android:exported="false" />
+        <activity android:name=".ui.community.EditProfileActivity" />
+        <activity
+            android:name=".ui.community.ConversationListActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
