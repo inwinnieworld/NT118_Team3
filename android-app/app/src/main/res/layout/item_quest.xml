@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/tvQuestName"
         android:layout_width="0dp"
-        android:layout_height="58dp"
+        android:layout_height="68dp"
         android:layout_weight="1"
         android:background="@drawable/bg_quest_box"
         android:gravity="center"
@@ -41,6 +41,7 @@
                 android:tint="#11B7D6" />
 
             <TextView
+                android:id="@+id/tvQuestOpenAction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"

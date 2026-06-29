@@ -10,27 +10,27 @@
         android:id="@+id/cbSeverity"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="MỨC ĐỘ NGHIÊM TRỌNG TB"
+        android:text="TOTAL RUNS"
         android:textColor="#1187A1" />
 
     <CheckBox
         android:id="@+id/cbSeverityRate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TỶ LỆ NGHIÊM TRỌNG TB"
+        android:text="COMPLETION RATE"
         android:textColor="#1187A1" />
 
     <CheckBox
         android:id="@+id/cbTotalErrors"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="SỐ LỖI TB"
+        android:text="ABANDONMENT RATE"
         android:textColor="#1187A1" />
 
     <CheckBox
         android:id="@+id/cbAcceptance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TỶ LỆ CHẤP NHẬN TB"
+        android:text="AVERAGE DURATION"
         android:textColor="#1187A1" />
 </LinearLayout>

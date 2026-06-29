@@ -24,7 +24,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
     // Khai báo 6 nút bấm
     private Button btnManageAccount, btnSystemReport, btnManageCommunity,
-            btnManageErrorCode, btnManageEmergency, btnManageDictionary;
+            btnManageErrorCode, btnManageEmergency, btnManageDictionary, btnReviewQuest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +43,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
         btnManageAccount = findViewById(R.id.btnManageAccount);
         btnSystemReport = findViewById(R.id.btnSystemReport);
+        btnReviewQuest = findViewById(R.id.btnReviewQuest);
         btnManageCommunity = findViewById(R.id.btnManageCommunity);
         btnManageErrorCode = findViewById(R.id.btnManageErrorCode);
         btnManageEmergency = findViewById(R.id.btnManageEmergency);
@@ -81,6 +82,11 @@ public class AdminDashboardActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
+        findViewById(R.id.ivAdminLogout).setOnClickListener(v -> showLogoutDialog());
+
+        btnReviewQuest.setOnClickListener(v -> startActivity(
+                new android.content.Intent(this, AdminQuestReviewActivity.class)));
+
         btnManageAccount.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(
                 AdminDashboardActivity.this,

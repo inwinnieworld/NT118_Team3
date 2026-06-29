@@ -4,6 +4,7 @@ public class QuestRankingBoardResponse {
     private int quest_id;
     private String quest_title;
     private int total_assigned;
+    private int total_runs;
     private int total_completed;
 
     public int getQuest_id() {
@@ -17,6 +18,8 @@ public class QuestRankingBoardResponse {
     public int getTotal_assigned() {
         return total_assigned;
     }
+
+    public int getTotalRuns() { return total_runs > 0 ? total_runs : total_assigned; }
 
     public int getTotal_completed() {
         return total_completed;

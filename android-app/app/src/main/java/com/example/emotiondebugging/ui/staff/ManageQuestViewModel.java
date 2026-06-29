@@ -4,76 +4,64 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.emotiondebugging.data.repository.StaffRepository;
-import com.example.emotiondebugging.model.request.CreateQuestRequest;
-import com.example.emotiondebugging.model.response.QuestResponse;
+import com.example.emotiondebugging.data.repository.QuestBuilderRepository;
+import com.example.emotiondebugging.model.response.QuestDraftDetail;
+import com.example.emotiondebugging.model.response.QuestDraftSummary;
 
 import java.util.List;
 
 public class ManageQuestViewModel extends ViewModel {
-
-    private final StaffRepository repository = new StaffRepository();
-
-    private final MutableLiveData<List<QuestResponse>> quests = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> createSuccess = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> deleteSuccess = new MutableLiveData<>();
+    private final QuestBuilderRepository repository = new QuestBuilderRepository();
+    private final MutableLiveData<List<QuestDraftSummary>> quests = new MutableLiveData<>();
+    private final MutableLiveData<QuestDraftDetail> preview = new MutableLiveData<>();
     private final MutableLiveData<String> message = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
 
-    public LiveData<List<QuestResponse>> getQuests() {
-        return quests;
+    public LiveData<List<QuestDraftSummary>> getQuests() { return quests; }
+    public LiveData<QuestDraftDetail> getPreview() { return preview; }
+    public LiveData<String> getMessage() { return message; }
+    public LiveData<Boolean> getLoading() { return loading; }
+    public void clearPreview() { preview.setValue(null); }
+
+    public void loadQuests(String token) {
+        loading.setValue(true);
+        repository.getQuestsByStatus(token, null, new QuestBuilderRepository.RepositoryCallback<List<QuestDraftSummary>>() {
+            @Override public void onSuccess(List<QuestDraftSummary> data, String text) {
+                loading.setValue(false);
+                quests.setValue(data);
+            }
+            @Override public void onError(String text) {
+                loading.setValue(false);
+                message.setValue(text);
+            }
+        });
     }
 
-    public LiveData<Boolean> getCreateSuccess() {
-        return createSuccess;
+    public void loadPreview(String token, int versionId) {
+        loading.setValue(true);
+        repository.getDraftVersion(token, versionId, new QuestBuilderRepository.RepositoryCallback<QuestDraftDetail>() {
+            @Override public void onSuccess(QuestDraftDetail data, String text) {
+                loading.setValue(false);
+                preview.setValue(data);
+            }
+            @Override public void onError(String text) {
+                loading.setValue(false);
+                message.setValue(text);
+            }
+        });
     }
 
-    public LiveData<Boolean> getDeleteSuccess() {
-        return deleteSuccess;
-    }
-
-    public LiveData<String> getMessage() {
-        return message;
-    }
-
-    public LiveData<Boolean> getLoading() {
-        return loading;
-    }
-
-    public void loadQuests() {
-        repository.getAllQuests(quests, message, loading);
-    }
-
-    public void createQuest(String errorTypeIdText, String title, String description) {
-        createSuccess.setValue(false);
-
-        if (title == null || title.trim().isEmpty()) {
-            message.setValue("Tên quest không được để trống");
-            return;
-        }
-
-        int errorTypeId;
-        try {
-            errorTypeId = Integer.parseInt(errorTypeIdText.trim());
-        } catch (Exception e) {
-            message.setValue("Error Type ID không hợp lệ");
-            return;
-        }
-
-        repository.createQuest(
-                new CreateQuestRequest(
-                        errorTypeId,
-                        title.trim(),
-                        description == null ? "" : description.trim()
-                ),
-                createSuccess,
-                message,
-                loading
-        );
-    }
-
-    public void deleteQuest(int questId) {
-        deleteSuccess.setValue(false);
-        repository.deleteQuest(questId, deleteSuccess, message, loading);
+    public void deleteDraft(String token, int questId) {
+        loading.setValue(true);
+        repository.deleteDraft(token, questId, new QuestBuilderRepository.RepositoryCallback<Object>() {
+            @Override public void onSuccess(Object data, String text) {
+                message.setValue("Draft deleted");
+                loadQuests(token);
+            }
+            @Override public void onError(String text) {
+                loading.setValue(false);
+                message.setValue(text);
+            }
+        });
     }
 }

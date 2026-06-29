@@ -11,7 +11,7 @@
         android:background="#3E93B3"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
-        android:text="BXH QUEST"
+        android:text="QUEST PERFORMANCE"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="ASSIGNED"
+            android:text="DONE/RUNS"
             android:textColor="#FFFFFF" />
     </LinearLayout>
 

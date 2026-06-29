@@ -42,6 +42,9 @@ app.use("/api/staff", staffRoutes);
 // Community routes
 app.use("/api/community", communityRoutes);
 
+// Quest builder routes (visual flow engine, approval, runtime sessions)
+app.use("/api/quest-builder", require("./routes/questBuilder.route"));
+
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));
 

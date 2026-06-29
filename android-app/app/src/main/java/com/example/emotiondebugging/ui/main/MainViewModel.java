@@ -31,7 +31,8 @@ public class MainViewModel extends ViewModel {
                 R.drawable.ic_emergencyhotfixes,
                 R.drawable.ic_gitcommitjournal,
                 R.drawable.ic_debuggingcommunity,
-                R.drawable.ic_exammode
+                R.drawable.ic_exammode,
+                R.drawable.ic_heart
         };
         _iconList.setValue(icons);
     }

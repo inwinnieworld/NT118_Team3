@@ -14,11 +14,13 @@ public class QuestReportPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        return position == 0 ? new QuestAverageFragment() : new QuestRankingFragment();
+        if (position == 0) return new QuestAverageFragment();
+        if (position == 1) return new QuestRankingFragment();
+        return new QuestEventReportFragment();
     }
 
     @Override
     public int getItemCount() {
-        return 2;
+        return 3;
     }
 }
