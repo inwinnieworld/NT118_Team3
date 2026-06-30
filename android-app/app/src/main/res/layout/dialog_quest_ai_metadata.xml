@@ -13,12 +13,12 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Emotion category"
+            android:text="Cấp 1 · Nhóm vấn đề lớn"
             android:textColor="@color/text_primary"
             android:textStyle="bold" />
 
         <Spinner
-            android:id="@+id/spinnerQuestCategory"
+            android:id="@+id/spinnerProblemLevel1"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="6dp"
@@ -28,66 +28,34 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="Therapeutic goal"
+            android:layout_marginTop="12dp"
+            android:text="Cấp 2 · Nhóm vấn đề"
             android:textColor="@color/text_primary"
             android:textStyle="bold" />
 
         <Spinner
-            android:id="@+id/spinnerTherapeuticGoal"
+            android:id="@+id/spinnerProblemLevel2"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="6dp"
             android:background="@drawable/bg_field_card"
             android:spinnerMode="dialog" />
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="12dp"
+            android:text="Cấp 3 · Vấn đề cụ thể"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
 
-            <EditText
-                android:id="@+id/etIntensityMin"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_field_card"
-                android:hint="Min intensity 1-5"
-                android:inputType="number"
-                android:paddingHorizontal="12dp" />
-
-            <EditText
-                android:id="@+id/etIntensityMax"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_field_card"
-                android:hint="Max intensity 1-5"
-                android:inputType="number"
-                android:paddingHorizontal="12dp" />
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/etAiTags"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_field_card"
-            android:hint="Tags separated by commas"
-            android:inputType="text"
-            android:paddingHorizontal="12dp"
-            android:singleLine="true" />
-
-        <EditText
-            android:id="@+id/etEstimatedDuration"
+        <Spinner
+            android:id="@+id/spinnerProblemLevel3"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:background="@drawable/bg_field_card"
-            android:hint="Estimated duration in seconds"
-            android:inputType="number"
-            android:paddingHorizontal="12dp" />
+            android:spinnerMode="dialog" />
+
     </LinearLayout>
 </ScrollView>

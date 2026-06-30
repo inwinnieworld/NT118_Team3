@@ -8,7 +8,7 @@ public class QuestDraftRequest {
     public String quest_title;
     public String quest_description;
     public int quest_level;
-    public Integer error_type_id;
+    public String problem_id;
     public List<String> ai_tags;
     public int intensity_min;
     public int intensity_max;

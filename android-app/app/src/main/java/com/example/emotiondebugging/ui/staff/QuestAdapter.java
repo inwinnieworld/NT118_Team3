@@ -66,7 +66,7 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.Holder> impl
                 List<QuestDraftSummary> result = new ArrayList<>();
                 for (QuestDraftSummary item : original) {
                     String title = item.quest_title == null ? "" : item.quest_title.toLowerCase(Locale.ROOT);
-                    String category = item.error_name == null ? "" : item.error_name.toLowerCase(Locale.ROOT);
+                    String category = item.problem_path == null ? "" : item.problem_path.toLowerCase(Locale.ROOT);
                     String status = item.approval_status == null ? "" : item.approval_status.toLowerCase(Locale.ROOT);
                     if (query.isEmpty() || title.contains(query) || category.contains(query) || status.contains(query)) result.add(item);
                 }

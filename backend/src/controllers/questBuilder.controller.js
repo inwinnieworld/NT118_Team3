@@ -140,11 +140,14 @@ async function loadQuestVersion(versionId) {
     const [[version]] = await db.query(
         `SELECT qv.version_id, qv.quest_id, qv.version_number, qv.status AS version_status,
                 qv.canvas_config, q.quest_title, q.quest_description, q.quest_level,
-                q.error_type_id, qv.status AS approval_status,
-                et.error_name
+                q.problem_id, qv.status AS approval_status,
+                problem.title AS problem_title,
+                CONCAT_WS(' > ', root_problem.title, parent_problem.title, problem.title) AS problem_path
          FROM quest_versions qv
          JOIN quests q ON qv.quest_id = q.quest_id
-         LEFT JOIN error_types et ON et.error_type_id = q.error_type_id
+         LEFT JOIN problems problem ON problem.id = q.problem_id
+         LEFT JOIN problems parent_problem ON parent_problem.id = problem.parent_id
+         LEFT JOIN problems root_problem ON root_problem.id = parent_problem.parent_id
          WHERE qv.version_id = ?`,
         [versionId]
     );
@@ -301,14 +304,17 @@ const uploadQuestMedia = async (req, res) => {
     }, 'Media uploaded', 201);
 };
 
-const getQuestCategories = async (_req, res) => {
+const getQuestProblems = async (_req, res) => {
     try {
         const [rows] = await db.query(
-            `SELECT error_type_id, error_name
-             FROM error_types
-             ORDER BY error_name ASC`
+            `SELECT id, title, parent_id, tree_level, is_leaf_node
+             FROM problems
+             ORDER BY tree_level ASC, title ASC`
         );
-        return ok(res, rows);
+        return ok(res, rows.map((row) => ({
+            ...row,
+            is_leaf_node: Boolean(row.is_leaf_node)
+        })));
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }
@@ -337,11 +343,15 @@ const listQuests = async (req, res) => {
 
         const [rows] = await db.query(
             `SELECT q.quest_id, q.quest_title, q.quest_description, q.quest_level,
-                    q.error_type_id, et.error_name, qv.status AS approval_status,
+                    q.problem_id, problem.title AS problem_title,
+                    CONCAT_WS(' > ', root_problem.title, parent_problem.title, problem.title) AS problem_path,
+                    qv.status AS approval_status,
                     q.is_active, q.created_at, qv.reviewed_at, qv.review_note,
                     qv.version_id AS latest_version_id, qv.version_number AS latest_version_number
              FROM quests q
-             LEFT JOIN error_types et ON q.error_type_id = et.error_type_id
+             LEFT JOIN problems problem ON problem.id = q.problem_id
+             LEFT JOIN problems parent_problem ON parent_problem.id = problem.parent_id
+             LEFT JOIN problems root_problem ON root_problem.id = parent_problem.parent_id
              LEFT JOIN quest_versions qv ON qv.version_id = (
                 SELECT qv2.version_id
                 FROM quest_versions qv2
@@ -365,21 +375,26 @@ const listQuests = async (req, res) => {
 
 const listApprovedQuestCatalog = async (req, res) => {
     try {
-        const errorTypeId = Number(req.query.error_type_id || 0);
+        const problemId = String(req.query.problem_id || '').trim();
         const params = [];
         let categoryFilter = '';
-        if (Number.isInteger(errorTypeId) && errorTypeId > 0) {
-            categoryFilter = 'AND q.error_type_id = ?';
-            params.push(errorTypeId);
+        if (problemId) {
+            categoryFilter = `AND (q.problem_id = ? OR problem.parent_id = ?
+                                   OR parent_problem.parent_id = ?)`;
+            params.push(problemId, problemId, problemId);
         }
 
         const [rows] = await db.query(
             `SELECT q.quest_id, q.quest_title, q.quest_description, q.quest_level,
-                    q.error_type_id, et.error_name, qv.status AS approval_status,
+                    q.problem_id, problem.title AS problem_title,
+                    CONCAT_WS(' > ', root_problem.title, parent_problem.title, problem.title) AS problem_path,
+                    qv.status AS approval_status,
                     qv.version_id AS latest_version_id,
                     qv.version_number AS latest_version_number
              FROM quests q
-             LEFT JOIN error_types et ON q.error_type_id = et.error_type_id
+             LEFT JOIN problems problem ON problem.id = q.problem_id
+             LEFT JOIN problems parent_problem ON parent_problem.id = problem.parent_id
+             LEFT JOIN problems root_problem ON root_problem.id = parent_problem.parent_id
              JOIN quest_versions qv ON qv.version_id = (
                 SELECT qv2.version_id
                 FROM quest_versions qv2
@@ -437,7 +452,7 @@ const saveQuestDraft = async (req, res) => {
             quest_title,
             quest_description,
             quest_level,
-            error_type_id,
+            problem_id,
             canvas_config,
             flow
         } = req.body;
@@ -446,8 +461,8 @@ const saveQuestDraft = async (req, res) => {
             return fail(res, 'Thiếu quest_title hoặc quest_level', 400);
         }
 
-        if (!error_type_id) {
-            return fail(res, 'Quest must have an error type', 400);
+        if (!problem_id || typeof problem_id !== 'string') {
+            return fail(res, 'Quest must have a level-3 problem', 400);
         }
 
         const validationError = validateFlow(flow);
@@ -455,6 +470,15 @@ const saveQuestDraft = async (req, res) => {
 
         const staffId = await getStaffId(req.user.user_id);
         if (!staffId) return fail(res, 'Staff account not found', 403);
+
+        const normalizedProblemId = problem_id.trim();
+        const [[problem]] = await conn.query(
+            `SELECT id FROM problems
+             WHERE id = ? AND tree_level = 3 AND is_leaf_node = 1`,
+            [normalizedProblemId]
+        );
+        if (!problem) return fail(res, 'problem_id must reference a level-3 leaf problem', 400);
+
         await conn.beginTransaction();
 
         let questId = quest_id || null;
@@ -484,9 +508,9 @@ const saveQuestDraft = async (req, res) => {
             await conn.query(
                 `UPDATE quests
                  SET quest_title = ?, quest_description = ?, quest_level = ?,
-                     error_type_id = ?, is_active = 1
+                      problem_id = ?, error_type_id = NULL, is_active = 1
                  WHERE quest_id = ?`,
-                [quest_title, quest_description || null, quest_level, error_type_id, questId]
+                [quest_title, quest_description || null, quest_level, normalizedProblemId, questId]
             );
             if (ownedQuest.status === 'draft') {
                 versionId = ownedQuest.version_id;
@@ -504,10 +528,10 @@ const saveQuestDraft = async (req, res) => {
         } else {
             const [questResult] = await conn.query(
                 `INSERT INTO quests
-                    (created_by_staff_id, error_type_id, quest_title,
+                    (created_by_staff_id, problem_id, quest_title,
                      quest_description, quest_level, is_active)
                  VALUES (?, ?, ?, ?, ?, 1)`,
-                [staffId, error_type_id, quest_title, quest_description || null, quest_level]
+                [staffId, normalizedProblemId, quest_title, quest_description || null, quest_level]
             );
             questId = questResult.insertId;
         }
@@ -1066,7 +1090,7 @@ const finishQuestRun = async (req, res) => {
 module.exports = {
     getEngineCatalog,
     uploadQuestMedia,
-    getQuestCategories,
+    getQuestProblems,
     listQuests,
     listApprovedQuestCatalog,
     recommendQuests,

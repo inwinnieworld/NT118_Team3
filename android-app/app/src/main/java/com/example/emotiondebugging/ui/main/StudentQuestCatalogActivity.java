@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.model.response.QuestDraftDetail;
 import com.example.emotiondebugging.model.response.QuestDraftSummary;
-import com.example.emotiondebugging.model.domain.QuestCategory;
+import com.example.emotiondebugging.model.domain.QuestProblem;
 import com.example.emotiondebugging.ui.staff.QuestPreviewActivity;
 import com.example.emotiondebugging.ui.staff.QuestPreviewStore;
 import com.example.emotiondebugging.utils.SharedPrefsHelper;
@@ -32,7 +32,7 @@ public class StudentQuestCatalogActivity extends AppCompatActivity implements St
     private StudentQuestCatalogAdapter adapter;
     private String token;
     private LinearLayout categoryTabs;
-    private Integer selectedCategoryId;
+    private String selectedProblemId;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,34 +55,34 @@ public class StudentQuestCatalogActivity extends AppCompatActivity implements St
             adapter.submit(quests);
             empty.setVisibility(quests == null || quests.isEmpty() ? View.VISIBLE : View.GONE);
         });
-        viewModel.getCategories().observe(this, this::renderCategories);
+        viewModel.getProblems().observe(this, this::renderProblems);
         viewModel.getLoading().observe(this, value -> progress.setVisibility(Boolean.TRUE.equals(value) ? View.VISIBLE : View.GONE));
         viewModel.getMessage().observe(this, value -> {
             if (value != null && !value.isEmpty()) Toast.makeText(this, value, Toast.LENGTH_SHORT).show();
         });
         viewModel.getLaunch().observe(this, this::launchRun);
-        viewModel.loadCategories(token);
+        viewModel.loadProblems(token);
         viewModel.loadCatalog(token, null);
     }
 
     @Override public void onStart(QuestDraftSummary quest) { viewModel.startQuest(token, quest.quest_id); }
 
-    private void renderCategories(List<QuestCategory> categories) {
+    private void renderProblems(List<QuestProblem> problems) {
         categoryTabs.removeAllViews();
         addCategoryTab("All", null);
-        if (categories == null) return;
-        for (QuestCategory category : categories) {
-            addCategoryTab(category.getErrorName(), category.getErrorTypeId());
+        if (problems == null) return;
+        for (QuestProblem problem : problems) {
+            if (problem.getTreeLevel() == 1) addCategoryTab(problem.getTitle(), problem.getId());
         }
     }
 
-    private void addCategoryTab(String label, Integer categoryId) {
+    private void addCategoryTab(String label, String problemId) {
         TextView tab = new TextView(this);
         tab.setText(label);
         tab.setGravity(android.view.Gravity.CENTER);
         tab.setPadding(dp(16), 0, dp(16), 0);
-        boolean selected = categoryId == null ? selectedCategoryId == null
-                : categoryId.equals(selectedCategoryId);
+        boolean selected = problemId == null ? selectedProblemId == null
+                : problemId.equals(selectedProblemId);
         tab.setTextColor(Color.parseColor(selected ? "#0F766E" : "#667085"));
         tab.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
         tab.setBackgroundColor(Color.parseColor(selected ? "#E6FFFB" : "#FFFFFF"));
@@ -91,9 +91,9 @@ public class StudentQuestCatalogActivity extends AppCompatActivity implements St
         params.setMargins(dp(2), 0, dp(2), 0);
         tab.setLayoutParams(params);
         tab.setOnClickListener(view -> {
-            selectedCategoryId = categoryId;
-            renderCategories(viewModel.getCategories().getValue());
-            viewModel.loadCatalog(token, categoryId);
+            selectedProblemId = problemId;
+            renderProblems(viewModel.getProblems().getValue());
+            viewModel.loadCatalog(token, problemId);
         });
         categoryTabs.addView(tab);
     }

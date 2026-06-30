@@ -34,7 +34,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.model.domain.QuestEngine;
-import com.example.emotiondebugging.model.domain.QuestCategory;
+import com.example.emotiondebugging.model.domain.QuestProblem;
 import com.example.emotiondebugging.model.request.QuestDraftRequest;
 import com.example.emotiondebugging.model.response.QuestDraftDetail;
 import com.example.emotiondebugging.model.response.QuestDraftSummary;
@@ -99,6 +99,7 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
     private Button btnDesignPosition;
     private Button btnOpenFrame;
     private boolean openDraftRequested;
+    private boolean problemDialogRequested;
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ActivityResultLauncher<String> backgroundSoundPickerLauncher;
     private final ActivityResultLauncher<Intent> sceneDesignerLauncher = registerForActivityResult(
@@ -128,7 +129,7 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
         initObservers();
         initActions();
         viewModel.loadEngines(getAuthToken());
-        viewModel.loadCategories(getAuthToken());
+        viewModel.loadProblems(getAuthToken());
         int versionId = getIntent().getIntExtra(EXTRA_VERSION_ID, 0);
         if (versionId > 0) viewModel.openDraft(getAuthToken(), versionId);
     }
@@ -328,7 +329,13 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
     private void initObservers() {
         viewModel.getEngines().observe(this, this::renderEnginePanel);
         viewModel.getAiMetadataSummary().observe(this, summary ->
-                btnAiMetadata.setText(summary == null ? "AI Meta" : summary));
+                btnAiMetadata.setText(summary == null ? "Chọn vấn đề" : summary));
+        viewModel.getProblems().observe(this, problems -> {
+            if (problemDialogRequested && problems != null && !problems.isEmpty()) {
+                problemDialogRequested = false;
+                showProblemDialog(problems);
+            }
+        });
         viewModel.getDrafts().observe(this, drafts -> {
             if (openDraftRequested) {
                 openDraftRequested = false;
@@ -409,7 +416,7 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
 
     private void initActions() {
         btnConnectMode.setOnClickListener(v -> viewModel.toggleConnectMode());
-        btnAiMetadata.setOnClickListener(v -> showAiMetadataDialog());
+        btnAiMetadata.setOnClickListener(v -> requestProblemDialog());
         btnOpenDraft.setOnClickListener(v -> {
             openDraftRequested = true;
             viewModel.loadDrafts(getAuthToken());
@@ -441,45 +448,127 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
         btnSubmitReview.setOnClickListener(v -> viewModel.submitReview(getAuthToken()));
     }
 
-    private void showAiMetadataDialog() {
-        List<QuestCategory> categories = viewModel.getCategories().getValue();
-        if (categories == null || categories.isEmpty()) {
-            Toast.makeText(this, "Emotion categories are not available", Toast.LENGTH_SHORT).show();
-            viewModel.loadCategories(getAuthToken());
+    private void requestProblemDialog() {
+        List<QuestProblem> problems = viewModel.getProblems().getValue();
+        if (problems == null || problems.isEmpty()) {
+            problemDialogRequested = true;
+            Toast.makeText(this, "Đang tải danh sách vấn đề...", Toast.LENGTH_SHORT).show();
+            viewModel.loadProblems(getAuthToken());
             return;
         }
+        problemDialogRequested = false;
+        showProblemDialog(problems);
+    }
 
-        Spinner categorySpinner = new Spinner(this);
-        int padding = Math.round(20 * getResources().getDisplayMetrics().density);
-        categorySpinner.setPadding(padding, padding / 2, padding, padding / 2);
-        categorySpinner.setAdapter(new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_dropdown_item, categories));
+    private void showProblemDialog(List<QuestProblem> problems) {
+        View content = getLayoutInflater().inflate(R.layout.dialog_quest_ai_metadata, null);
+        Spinner level1Spinner = content.findViewById(R.id.spinnerProblemLevel1);
+        Spinner level2Spinner = content.findViewById(R.id.spinnerProblemLevel2);
+        Spinner level3Spinner = content.findViewById(R.id.spinnerProblemLevel3);
 
-        Integer selectedCategoryId = viewModel.getErrorTypeId();
-        if (selectedCategoryId != null) {
-            for (int index = 0; index < categories.size(); index++) {
-                if (categories.get(index).getErrorTypeId() == selectedCategoryId) {
-                    categorySpinner.setSelection(index);
-                    break;
-                }
+        QuestProblem selectedLeaf = findProblem(problems, viewModel.getProblemId());
+        QuestProblem selectedGroup = selectedLeaf == null
+                ? null : findProblem(problems, selectedLeaf.getParentId());
+        QuestProblem selectedRoot = selectedGroup == null
+                ? null : findProblem(problems, selectedGroup.getParentId());
+
+        List<QuestProblem> roots = problemsAtLevel(problems, 1, null);
+        setProblemSpinner(level1Spinner, roots, selectedRoot == null ? null : selectedRoot.getId());
+        QuestProblem activeRoot = selectedProblem(level1Spinner);
+        List<QuestProblem> groups = problemsAtLevel(
+                problems, 2, activeRoot == null ? null : activeRoot.getId());
+        setProblemSpinner(level2Spinner, groups, selectedGroup == null ? null : selectedGroup.getId());
+        QuestProblem activeGroup = selectedProblem(level2Spinner);
+        setProblemSpinner(level3Spinner,
+                problemsAtLevel(problems, 3, activeGroup == null ? null : activeGroup.getId()),
+                selectedLeaf == null ? null : selectedLeaf.getId());
+
+        final boolean[] initializingSelection = { true };
+        level1Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (initializingSelection[0]) return;
+                QuestProblem root = selectedProblem(level1Spinner);
+                List<QuestProblem> nextGroups = problemsAtLevel(
+                        problems, 2, root == null ? null : root.getId());
+                setProblemSpinner(level2Spinner, nextGroups, null);
+                QuestProblem group = selectedProblem(level2Spinner);
+                setProblemSpinner(level3Spinner,
+                        problemsAtLevel(problems, 3, group == null ? null : group.getId()), null);
             }
-        }
+
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
+        level2Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (initializingSelection[0]) return;
+                QuestProblem group = selectedProblem(level2Spinner);
+                setProblemSpinner(level3Spinner,
+                        problemsAtLevel(problems, 3, group == null ? null : group.getId()), null);
+            }
+
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Quest category")
-                .setView(categorySpinner)
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Apply", null)
+                .setTitle("Chọn vấn đề cho Quest")
+                .setView(content)
+                .setNegativeButton("Hủy", null)
+                .setPositiveButton("Áp dụng", null)
                 .create();
-        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener(view -> {
-                    QuestCategory category = (QuestCategory) categorySpinner.getSelectedItem();
+        dialog.setOnShowListener(ignored -> {
+            level1Spinner.post(() -> initializingSelection[0] = false);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                    QuestProblem problem = selectedProblem(level3Spinner);
+                    if (problem == null || !problem.isLeafNode()) {
+                        Toast.makeText(this, "Hãy chọn vấn đề cụ thể ở cấp 3", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     viewModel.updateAiMetadata(
-                            category,
+                            problem,
                             new ArrayList<>(), 1, 5, "", 0
                     );
                     dialog.dismiss();
-                }));
+                });
+        });
         dialog.show();
+    }
+
+    private List<QuestProblem> problemsAtLevel(List<QuestProblem> problems, int level, String parentId) {
+        List<QuestProblem> result = new ArrayList<>();
+        for (QuestProblem problem : problems) {
+            if (problem.getTreeLevel() != level) continue;
+            String actualParent = problem.getParentId();
+            if (parentId == null ? actualParent == null : parentId.equals(actualParent)) {
+                result.add(problem);
+            }
+        }
+        return result;
+    }
+
+    private QuestProblem findProblem(List<QuestProblem> problems, String id) {
+        if (id == null) return null;
+        for (QuestProblem problem : problems) {
+            if (id.equals(problem.getId())) return problem;
+        }
+        return null;
+    }
+
+    private void setProblemSpinner(Spinner spinner, List<QuestProblem> items, String selectedId) {
+        spinner.setAdapter(new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_dropdown_item, items));
+        if (selectedId == null) return;
+        for (int index = 0; index < items.size(); index++) {
+            if (selectedId.equals(items.get(index).getId())) {
+                spinner.setSelection(index, false);
+                return;
+            }
+        }
+    }
+
+    private QuestProblem selectedProblem(Spinner spinner) {
+        Object item = spinner.getSelectedItem();
+        return item instanceof QuestProblem ? (QuestProblem) item : null;
     }
 
     private List<String> parseAiTags(String rawTags) {

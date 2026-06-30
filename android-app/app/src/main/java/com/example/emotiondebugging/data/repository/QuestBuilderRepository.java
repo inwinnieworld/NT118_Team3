@@ -4,7 +4,7 @@ import android.util.Log;
 import com.example.emotiondebugging.data.api.QuestBuilderApiService;
 import com.example.emotiondebugging.data.api.RetrofitClient;
 import com.example.emotiondebugging.model.domain.QuestEngine;
-import com.example.emotiondebugging.model.domain.QuestCategory;
+import com.example.emotiondebugging.model.domain.QuestProblem;
 import com.example.emotiondebugging.model.request.QuestDraftRequest;
 import com.example.emotiondebugging.model.response.ApiResponse;
 import com.example.emotiondebugging.model.response.QuestDraftDetail;
@@ -80,23 +80,23 @@ public class QuestBuilderRepository {
         });
     }
 
-    public void getCategories(String token, RepositoryCallback<List<QuestCategory>> callback) {
-        api.getCategories(token).enqueue(new Callback<ApiResponse<List<QuestCategory>>>() {
+    public void getProblems(String token, RepositoryCallback<List<QuestProblem>> callback) {
+        api.getProblems(token).enqueue(new Callback<ApiResponse<List<QuestProblem>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<QuestCategory>>> call,
-                                   Response<ApiResponse<List<QuestCategory>>> response) {
+            public void onResponse(Call<ApiResponse<List<QuestProblem>>> call,
+                                   Response<ApiResponse<List<QuestProblem>>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<List<QuestCategory>> body = response.body();
+                    ApiResponse<List<QuestProblem>> body = response.body();
                     if (body.isSuccess()) callback.onSuccess(body.getData(), body.getMessage());
                     else callback.onError(body.getMessage());
                 } else {
-                    callback.onError("Cannot load emotion categories");
+                    callback.onError("Cannot load problem taxonomy");
                 }
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<QuestCategory>>> call, Throwable throwable) {
-                callback.onError("Cannot connect to category service: " + throwable.getMessage());
+            public void onFailure(Call<ApiResponse<List<QuestProblem>>> call, Throwable throwable) {
+                callback.onError("Cannot connect to problem service: " + throwable.getMessage());
             }
         });
     }
@@ -149,9 +149,9 @@ public class QuestBuilderRepository {
         });
     }
 
-    public void getApprovedCatalog(String token, Integer errorTypeId,
+    public void getApprovedCatalog(String token, String problemId,
                                    RepositoryCallback<List<QuestDraftSummary>> callback) {
-        api.getApprovedCatalog(token, errorTypeId).enqueue(new Callback<ApiResponse<List<QuestDraftSummary>>>() {
+        api.getApprovedCatalog(token, problemId).enqueue(new Callback<ApiResponse<List<QuestDraftSummary>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<QuestDraftSummary>>> call,
                                    Response<ApiResponse<List<QuestDraftSummary>>> response) {

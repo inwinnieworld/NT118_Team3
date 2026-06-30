@@ -1,7 +1,7 @@
 package com.example.emotiondebugging.data.api;
 
 import com.example.emotiondebugging.model.domain.QuestEngine;
-import com.example.emotiondebugging.model.domain.QuestCategory;
+import com.example.emotiondebugging.model.domain.QuestProblem;
 import com.example.emotiondebugging.model.request.QuestDraftRequest;
 import com.example.emotiondebugging.model.response.ApiResponse;
 import com.example.emotiondebugging.model.response.QuestDraftDetail;
@@ -39,8 +39,8 @@ public interface QuestBuilderApiService {
             @Part MultipartBody.Part media
     );
 
-    @GET("api/quest-builder/categories")
-    Call<ApiResponse<List<QuestCategory>>> getCategories(
+    @GET("api/quest-builder/problems")
+    Call<ApiResponse<List<QuestProblem>>> getProblems(
             @Header("Authorization") String token
     );
 
@@ -59,7 +59,7 @@ public interface QuestBuilderApiService {
     @GET("api/quest-builder/catalog")
     Call<ApiResponse<List<QuestDraftSummary>>> getApprovedCatalog(
             @Header("Authorization") String token,
-            @Query("error_type_id") Integer errorTypeId
+            @Query("problem_id") String problemId
     );
 
     @GET("api/quest-builder/versions/{versionId}")

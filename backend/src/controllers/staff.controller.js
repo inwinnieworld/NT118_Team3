@@ -23,14 +23,14 @@ function fail(res, message = "Thất bại", status = 400, errors = null) {
 ========================= */
 async function createQuest(req, res) {
   try {
-    const { errorTypeId, questTitle, questDescription } = req.body;
+    const { problemId, questTitle, questDescription } = req.body;
 
-    if (!errorTypeId || !questTitle || !questTitle.trim()) {
+    if (!problemId || !questTitle || !questTitle.trim()) {
       return fail(res, "Thiếu thông tin tạo quest", 400);
     }
 
     const quest = await staffService.createQuest({
-      errorTypeId,
+      problemId,
       questTitle: questTitle.trim(),
       questDescription: questDescription ? questDescription.trim() : ""
     });
@@ -38,25 +38,25 @@ async function createQuest(req, res) {
     return ok(res, quest, "Tạo quest thành công", 201);
   } catch (error) {
     console.error("createQuest error:", error);
-    return fail(res, "Lỗi server", 500, error.message);
+    return fail(res, "Lỗi server", error.status || 500, error.message);
   }
 }
 
 async function updateQuest(req, res) {
   try {
     const { questId } = req.params;
-    const { errorTypeId, questTitle, questDescription } = req.body;
+    const { problemId, questTitle, questDescription } = req.body;
 
     if (!questId) {
       return fail(res, "Thiếu questId", 400);
     }
 
-    if (!errorTypeId || !questTitle || !questTitle.trim()) {
+    if (!problemId || !questTitle || !questTitle.trim()) {
       return fail(res, "Thiếu thông tin cập nhật quest", 400);
     }
 
     const updated = await staffService.updateQuest(questId, {
-      errorTypeId,
+      problemId,
       questTitle: questTitle.trim(),
       questDescription: questDescription ? questDescription.trim() : ""
     });
@@ -68,7 +68,7 @@ async function updateQuest(req, res) {
     return ok(res, null, "Cập nhật quest thành công", 200);
   } catch (error) {
     console.error("updateQuest error:", error);
-    return fail(res, "Lỗi server", 500, error.message);
+    return fail(res, "Lỗi server", error.status || 500, error.message);
   }
 }
 

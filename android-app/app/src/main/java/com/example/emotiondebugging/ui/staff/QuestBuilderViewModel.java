@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.example.emotiondebugging.data.repository.QuestBuilderRepository;
 import com.example.emotiondebugging.model.domain.QuestEngine;
-import com.example.emotiondebugging.model.domain.QuestCategory;
+import com.example.emotiondebugging.model.domain.QuestProblem;
 import com.example.emotiondebugging.model.request.QuestDraftRequest;
 import com.example.emotiondebugging.model.response.QuestDraftDetail;
 import com.example.emotiondebugging.model.response.QuestDraftSummary;
@@ -22,8 +22,8 @@ public class QuestBuilderViewModel extends ViewModel {
     private final QuestBuilderRepository repository = new QuestBuilderRepository();
 
     private final MutableLiveData<List<QuestEngine>> engines = new MutableLiveData<>(new ArrayList<>());
-    private final MutableLiveData<List<QuestCategory>> categories = new MutableLiveData<>(new ArrayList<>());
-    private final MutableLiveData<String> aiMetadataSummary = new MutableLiveData<>("Category");
+    private final MutableLiveData<List<QuestProblem>> problems = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<String> aiMetadataSummary = new MutableLiveData<>("Chọn vấn đề");
     private final MutableLiveData<List<QuestDraftSummary>> drafts = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<QuestDraftDetail> openedDraft = new MutableLiveData<>();
     private final MutableLiveData<List<QuestDraftRequest.QuestFlowNode>> nodes = new MutableLiveData<>(new ArrayList<>());
@@ -45,8 +45,8 @@ public class QuestBuilderViewModel extends ViewModel {
     private String backgroundColor = "#FFFFFF";
     private String backgroundSoundUrl = "";
     private int backgroundSoundVolume = 35;
-    private Integer errorTypeId;
-    private String errorTypeName = "";
+    private String problemId;
+    private String problemTitle = "";
     private List<String> aiTags = new ArrayList<>();
     private int intensityMin = 1;
     private int intensityMax = 5;
@@ -54,7 +54,7 @@ public class QuestBuilderViewModel extends ViewModel {
     private int estimatedDurationSeconds = 120;
 
     public LiveData<List<QuestEngine>> getEngines() { return engines; }
-    public LiveData<List<QuestCategory>> getCategories() { return categories; }
+    public LiveData<List<QuestProblem>> getProblems() { return problems; }
     public LiveData<String> getAiMetadataSummary() { return aiMetadataSummary; }
     public LiveData<List<QuestDraftSummary>> getDrafts() { return drafts; }
     public LiveData<QuestDraftDetail> getOpenedDraft() { return openedDraft; }
@@ -102,7 +102,7 @@ public class QuestBuilderViewModel extends ViewModel {
     public String getBackgroundColor() { return backgroundColor; }
     public String getBackgroundSoundUrl() { return backgroundSoundUrl; }
     public int getBackgroundSoundVolume() { return backgroundSoundVolume; }
-    public Integer getErrorTypeId() { return errorTypeId; }
+    public String getProblemId() { return problemId; }
     public List<String> getAiTags() { return new ArrayList<>(aiTags); }
     public int getIntensityMin() { return intensityMin; }
     public int getIntensityMax() { return intensityMax; }
@@ -128,11 +128,11 @@ public class QuestBuilderViewModel extends ViewModel {
         });
     }
 
-    public void loadCategories(String token) {
-        repository.getCategories(token, new QuestBuilderRepository.RepositoryCallback<List<QuestCategory>>() {
+    public void loadProblems(String token) {
+        repository.getProblems(token, new QuestBuilderRepository.RepositoryCallback<List<QuestProblem>>() {
             @Override
-            public void onSuccess(List<QuestCategory> data, String msg) {
-                categories.postValue(data == null ? new ArrayList<>() : data);
+            public void onSuccess(List<QuestProblem> data, String msg) {
+                problems.postValue(data == null ? new ArrayList<>() : data);
             }
 
             @Override
@@ -142,23 +142,23 @@ public class QuestBuilderViewModel extends ViewModel {
         });
     }
 
-    public void updateAiMetadata(QuestCategory category, List<String> tags, int minimumIntensity,
+    public void updateAiMetadata(QuestProblem problem, List<String> tags, int minimumIntensity,
                                  int maximumIntensity, String goal, int durationSeconds) {
-        if (category == null) {
-            message.setValue("Select an emotion category");
+        if (problem == null || !problem.isLeafNode() || problem.getTreeLevel() != 3) {
+            message.setValue("Hãy chọn một vấn đề cụ thể ở cấp 3");
             return;
         }
-        errorTypeId = category.getErrorTypeId();
-        errorTypeName = category.getErrorName();
+        problemId = problem.getId();
+        problemTitle = problem.getTitle();
         aiTags = tags == null ? new ArrayList<>() : new ArrayList<>(tags);
         intensityMin = Math.max(1, Math.min(5, minimumIntensity));
         intensityMax = Math.max(intensityMin, Math.min(5, maximumIntensity));
         therapeuticGoal = goal == null || goal.trim().isEmpty() ? "grounding" : goal.trim();
         estimatedDurationSeconds = Math.max(10, Math.min(7200, durationSeconds));
-        String shortCategory = errorTypeName.length() > 12
-                ? errorTypeName.substring(0, 12) + "..." : errorTypeName;
-        aiMetadataSummary.setValue("AI: " + shortCategory);
-        message.setValue("AI matching metadata applied");
+        String shortProblem = problemTitle.length() > 18
+                ? problemTitle.substring(0, 18) + "..." : problemTitle;
+        aiMetadataSummary.setValue("Vấn đề: " + shortProblem);
+        message.setValue("Đã chọn vấn đề cho AI mapping");
     }
 
     public void loadDrafts(String token) {
@@ -204,8 +204,8 @@ public class QuestBuilderViewModel extends ViewModel {
 
     private void restoreDraft(QuestDraftDetail data) {
         savedQuestId.postValue(data.quest_id);
-        errorTypeId = data.error_type_id;
-        errorTypeName = data.error_name == null ? "" : data.error_name;
+        problemId = data.problem_id;
+        problemTitle = data.problem_title == null ? "" : data.problem_title;
         aiTags = data.ai_tags == null ? new ArrayList<>() : new ArrayList<>(data.ai_tags);
         intensityMin = data.intensity_min <= 0 ? 1 : data.intensity_min;
         intensityMax = data.intensity_max <= 0 ? 5 : data.intensity_max;
@@ -213,9 +213,9 @@ public class QuestBuilderViewModel extends ViewModel {
                 ? "grounding" : data.therapeutic_goal;
         estimatedDurationSeconds = data.estimated_duration_seconds == null
                 ? 120 : data.estimated_duration_seconds;
-        String shortCategory = errorTypeName.length() > 12
-                ? errorTypeName.substring(0, 12) + "..." : errorTypeName;
-        aiMetadataSummary.postValue(errorTypeName.isEmpty() ? "Category" : "Category: " + shortCategory);
+        String shortProblem = problemTitle.length() > 18
+                ? problemTitle.substring(0, 18) + "..." : problemTitle;
+        aiMetadataSummary.postValue(problemTitle.isEmpty() ? "Chọn vấn đề" : "Vấn đề: " + shortProblem);
 
         Map<String, Object> canvas = data.canvas_config;
         backgroundUrl = mapString(canvas, "background_url", "");
@@ -651,8 +651,8 @@ public class QuestBuilderViewModel extends ViewModel {
             message.setValue("Drag at least one engine onto the white canvas");
             return;
         }
-        if (errorTypeId == null) {
-            message.setValue("Select an emotion category before saving");
+        if (problemId == null || problemId.trim().isEmpty()) {
+            message.setValue("Hãy chọn đủ 3 cấp vấn đề trước khi lưu");
             return;
         }
 
@@ -661,7 +661,7 @@ public class QuestBuilderViewModel extends ViewModel {
         request.quest_title = title.trim();
         request.quest_description = description == null ? "" : description.trim();
         request.quest_level = Math.max(1, Math.min(level, 5));
-        request.error_type_id = errorTypeId;
+        request.problem_id = problemId;
         request.canvas_config = buildCanvasConfig();
         request.flow = new QuestDraftRequest.QuestFlow();
         request.flow.nodes = currentNodes;

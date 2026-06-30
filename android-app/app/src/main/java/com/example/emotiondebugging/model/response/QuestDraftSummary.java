@@ -5,8 +5,9 @@ public class QuestDraftSummary {
     public String quest_title;
     public String quest_description;
     public int quest_level;
-    public Integer error_type_id;
-    public String error_name;
+    public String problem_id;
+    public String problem_title;
+    public String problem_path;
     public String approval_status;
     public boolean is_active;
     public java.util.List<String> ai_tags;

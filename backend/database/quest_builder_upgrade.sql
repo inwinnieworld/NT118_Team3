@@ -7,6 +7,74 @@
 
 USE emotion_debugging;
 
+-- Stable three-level problem taxonomy used by AI -> Quest matching.
+CREATE TABLE IF NOT EXISTS problems (
+    id VARCHAR(50) PRIMARY KEY COMMENT 'Stable problem identifier used by AI mapping',
+    title VARCHAR(255) NOT NULL,
+    parent_id VARCHAR(50) NULL,
+    tree_level INT NOT NULL DEFAULT 1,
+    is_leaf_node BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_problems_parent
+        FOREIGN KEY (parent_id) REFERENCES problems(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_problems_parent (parent_id),
+    INDEX idx_problems_level (tree_level),
+    INDEX idx_problems_leaf (is_leaf_node)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO problems (id, title, parent_id, tree_level, is_leaf_node) VALUES
+('learning', 'Vấn đề học tập', NULL, 1, FALSE),
+('learning_project', 'Vấn đề Đồ án', 'learning', 2, FALSE),
+('learning_knowledge', 'Vấn đề Tiếp thu kiến thức', 'learning', 2, FALSE),
+('learning_assessment', 'Vấn đề Đánh giá & Thi cử', 'learning', 2, FALSE),
+('relationship', 'Vấn đề Tình cảm & Mối quan hệ', NULL, 1, FALSE),
+('relationship_family', 'Vấn đề Gia đình', 'relationship', 2, FALSE),
+('relationship_friends', 'Vấn đề Bạn bè', 'relationship', 2, FALSE),
+('relationship_social', 'Vấn đề Kết nối xã hội', 'relationship', 2, FALSE),
+
+('project_ghost_teammate', 'Đồng đội "ghost" tin nhắn/bỏ việc', 'learning_project', 3, TRUE),
+('project_disagreement', 'Bất đồng ý kiến khi làm việc', 'learning_project', 3, TRUE),
+('project_scope_too_large', 'Nội dung đề tài quá lớn', 'learning_project', 3, TRUE),
+('project_technical_conflict', 'Xung đột về mặt kỹ thuật', 'learning_project', 3, TRUE),
+('project_misunderstood_requirements', 'Hiểu sai yêu cầu của giáo viên', 'learning_project', 3, TRUE),
+('project_report_problem', 'Gặp lỗi trong giai đoạn báo cáo đồ án', 'learning_project', 3, TRUE),
+
+('knowledge_cannot_keep_up', 'Không bắt kịp tiến độ giảng dạy trên trường', 'learning_knowledge', 3, TRUE),
+('knowledge_abstract_content', 'Nội dung môn học khó hiểu, trừu tượng', 'learning_knowledge', 3, TRUE),
+('knowledge_lack_materials', 'Thiếu tài liệu để tự học', 'learning_knowledge', 3, TRUE),
+('knowledge_overload', 'Lượng kiến thức cần phải tiếp thu quá nhiều', 'learning_knowledge', 3, TRUE),
+('knowledge_foundation_gap', 'Hổng kiến thức nền tảng nên khó tiếp thu', 'learning_knowledge', 3, TRUE),
+
+('assessment_scholarship_pressure', 'Áp lực điểm số để lấy học bổng', 'learning_assessment', 3, TRUE),
+('assessment_bad_time_allocation', 'Gặp sai lầm trong việc phân bổ thời gian ôn thi', 'learning_assessment', 3, TRUE),
+('assessment_sleep_deprivation', 'Thức đêm ôn thi liên tục khiến cơ thể kiệt quệ', 'learning_assessment', 3, TRUE),
+('assessment_failure_fear', 'Áp lực rớt môn, nỗi sợ học lại', 'learning_assessment', 3, TRUE),
+('assessment_low_score', 'Điểm số thấp, không đúng mong đợi', 'learning_assessment', 3, TRUE),
+
+('family_high_expectations', 'Áp lực từ kỳ vọng quá cao từ gia đình', 'relationship_family', 3, TRUE),
+('family_homesickness', 'Cảm giác nhớ nhà, nhớ người thân', 'relationship_family', 3, TRUE),
+('family_direction_disagreement', 'Bất đồng quan điểm hoặc định hướng với gia đình', 'relationship_family', 3, TRUE),
+('family_unexpected_crisis', 'Gia đình đột ngột gặp biến cố', 'relationship_family', 3, TRUE),
+('family_toxic_environment', 'Môi trường gia đình độc hại', 'relationship_family', 3, TRUE),
+
+('friends_competition_pressure', 'Áp lực cạnh tranh từ bạn bè', 'relationship_friends', 3, TRUE),
+('friends_no_like_minded_people', 'Không kiếm được bạn bè cùng tần số', 'relationship_friends', 3, TRUE),
+('friends_conflict', 'Gặp vấn đề, tranh cãi với bạn bè', 'relationship_friends', 3, TRUE),
+('friends_exclusion', 'Bị nhóm bạn cô lập, nói xấu', 'relationship_friends', 3, TRUE),
+('friends_bad_influence', 'Bị lôi kéo vào những thói quen xấu', 'relationship_friends', 3, TRUE),
+
+('social_public_insecurity', 'Tự ti, không tham gia các hoạt động trước đám đông', 'relationship_social', 3, TRUE),
+('social_no_community', 'Phân vân, lạc lõng vì không tìm thấy cộng đồng phù hợp', 'relationship_social', 3, TRUE),
+('social_networking_difficulty', 'Không biết cách mở rộng mạng lưới', 'relationship_social', 3, TRUE),
+('social_cultural_difference', 'Cảm thấy khác biệt, nỗi sợ bất đồng văn hóa', 'relationship_social', 3, TRUE)
+ON DUPLICATE KEY UPDATE
+    title = VALUES(title),
+    parent_id = VALUES(parent_id),
+    tree_level = VALUES(tree_level),
+    is_leaf_node = VALUES(is_leaf_node);
+
 CREATE TABLE IF NOT EXISTS engines (
     engine_id INT AUTO_INCREMENT PRIMARY KEY,
     engine_name VARCHAR(120) NOT NULL,
@@ -201,12 +269,44 @@ BEGIN
     END IF;
 END$$
 
+DROP PROCEDURE IF EXISTS quest_make_column_nullable$$
+CREATE PROCEDURE quest_make_column_nullable(
+    IN target_table VARCHAR(64), IN target_column VARCHAR(64)
+)
+BEGIN
+    DECLARE existing_column_type TEXT;
+    SELECT COLUMN_TYPE INTO existing_column_type
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = target_table
+      AND COLUMN_NAME = target_column
+      AND IS_NULLABLE = 'NO'
+    LIMIT 1;
+
+    IF existing_column_type IS NOT NULL THEN
+        SET @ddl = CONCAT('ALTER TABLE `', target_table, '` MODIFY COLUMN `',
+                          target_column, '` ', existing_column_type, ' NULL');
+        PREPARE statement FROM @ddl;
+        EXECUTE statement;
+        DEALLOCATE PREPARE statement;
+    END IF;
+END$$
+
 DELIMITER ;
 
 CALL quest_add_column_if_missing('basic_engine_configs', 'parent_flow_config_id', 'INT NULL');
 CALL quest_add_column_if_missing('flow_engine_configs', 'parent_flow_config_id', 'INT NULL');
 CALL quest_add_column_if_missing('flow_engine_configs', 'terminal_basic_config_id', 'INT NULL');
 CALL quest_add_column_if_missing('flow_engine_configs', 'terminal_flow_config_id', 'INT NULL');
+CALL quest_add_column_if_missing('quests', 'problem_id', 'VARCHAR(50) NULL');
+CALL quest_add_column_if_missing('quests', 'base_priority', 'INT NOT NULL DEFAULT 10');
+-- Quest Builder no longer writes error_type_id. Keep the legacy FK/column nullable
+-- so old Error Log and Trace Question data remain compatible.
+CALL quest_make_column_nullable('quests', 'error_type_id');
+CALL quest_add_fk_if_missing(
+    'fk_quests_problem',
+    'ALTER TABLE quests ADD CONSTRAINT fk_quests_problem FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE SET NULL ON UPDATE CASCADE'
+);
 CALL quest_add_fk_if_missing(
     'fk_basic_parent_flow',
     'ALTER TABLE basic_engine_configs ADD CONSTRAINT fk_basic_parent_flow FOREIGN KEY (parent_flow_config_id) REFERENCES flow_engine_configs(flow_config_id) ON DELETE SET NULL'
@@ -233,3 +333,4 @@ ALTER TABLE quest_run_events
 
 DROP PROCEDURE quest_add_column_if_missing;
 DROP PROCEDURE quest_add_fk_if_missing;
+DROP PROCEDURE quest_make_column_nullable;

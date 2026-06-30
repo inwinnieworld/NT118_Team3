@@ -43,7 +43,7 @@ public class AdminQuestReviewAdapter extends RecyclerView.Adapter<AdminQuestRevi
     @Override public void onBindViewHolder(@NonNull Holder holder, int position) {
         QuestDraftSummary item = items.get(position);
         holder.title.setText(text(item.quest_title, "Untitled quest"));
-        holder.meta.setText(text(item.error_name, "Uncategorized") + "  |  Level " + Math.max(1, item.quest_level)
+        holder.meta.setText(text(item.problem_path, "Chưa chọn vấn đề") + "  |  Level " + Math.max(1, item.quest_level)
                 + "  |  " + status(item));
         holder.goal.setText(text(item.quest_description, "No description"));
         holder.preview.setOnClickListener(v -> listener.onPreview(item));

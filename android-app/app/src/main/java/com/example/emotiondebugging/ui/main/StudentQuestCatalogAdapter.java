@@ -36,7 +36,7 @@ public class StudentQuestCatalogAdapter extends RecyclerView.Adapter<StudentQues
     @Override public void onBindViewHolder(@NonNull Holder holder, int position) {
         QuestDraftSummary item = items.get(position);
         holder.title.setText(text(item.quest_title, "Healing quest"));
-        holder.category.setText(text(item.error_name, "Emotional wellbeing"));
+        holder.category.setText(text(item.problem_path, "Vấn đề chưa phân loại"));
         holder.description.setText(text(item.quest_description, "A guided moment for you"));
         holder.meta.setText("Level " + Math.max(1, item.quest_level));
         holder.start.setOnClickListener(v -> listener.onStart(item));
