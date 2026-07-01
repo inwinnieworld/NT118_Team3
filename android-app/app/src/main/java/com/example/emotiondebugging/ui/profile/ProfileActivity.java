@@ -12,6 +12,7 @@ import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.data.api.RetrofitClient;
 import com.example.emotiondebugging.model.response.ProfileResponse;
 import com.example.emotiondebugging.ui.auth.LoginActivity;
+import com.example.emotiondebugging.utils.ApiConstants;
 import com.example.emotiondebugging.utils.SharedPrefsHelper;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -107,8 +108,9 @@ public class ProfileActivity extends AppCompatActivity {
                             tvSchoolYear.setText(String.valueOf(data.yearOfStudy));
 
                             if (data.avatarUrl != null && !data.avatarUrl.isEmpty()) {
+                                // ⚠️ CHỈNH SỬA: Sử dụng ApiConstants.getFullUrl()
                                 Glide.with(ProfileActivity.this)
-                                        .load("http://10.0.2.2:3000" + data.avatarUrl)
+                                        .load(ApiConstants.getFullUrl(data.avatarUrl))
                                         .circleCrop()
                                         .placeholder(R.drawable.bg_avatar_circle)
                                         .into(ivAvatar);

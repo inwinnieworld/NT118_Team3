@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Handle icon click navigation
      * Position mapping:
-     * 0 - Error Log
+     * 0 - AI Chat
      * 1 - Emergency Hotfixes
      * 2 - Git Commit Journal
      * 3 - Debugging Community
@@ -150,9 +150,9 @@ public class MainActivity extends AppCompatActivity {
     private void handleIconClick(int position) {
         Intent intent;
         switch (position) {
-            case 0: // Error Log
-                // TODO: Navigate to ErrorLogActivity
-                android.widget.Toast.makeText(this, "Error Log coming soon", android.widget.Toast.LENGTH_SHORT).show();
+            case 0: // AI Chat
+                intent = new Intent(MainActivity.this, com.example.emotiondebugging.ui.aichat.AiChatActivity.class);
+                startActivity(intent);
                 break;
 
             case 1: // Emergency Hotfixes

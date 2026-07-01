@@ -18,6 +18,8 @@ import com.bumptech.glide.Glide;
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.data.api.RetrofitClient;
 import com.example.emotiondebugging.model.request.UpdateProfileRequest;
+import com.example.emotiondebugging.utils.ApiConstants;
+import com.example.emotiondebugging.utils.ApiConstants;
 import com.example.emotiondebugging.model.response.BaseResponse;
 import com.example.emotiondebugging.model.response.ProfileResponse;
 import java.io.File;
@@ -102,8 +104,9 @@ public class EditProfileActivity extends AppCompatActivity {
                             etEmergencyPhone.setText(data.emergencyPhone);
 
                             if (data.avatarUrl != null && !data.avatarUrl.isEmpty()) {
+                                // ⚠️ CHỈNH SỬA: Sử dụng ApiConstants.getFullUrl()
                                 Glide.with(EditProfileActivity.this)
-                                        .load("http://10.0.2.2:3000" + data.avatarUrl)
+                                        .load(ApiConstants.getFullUrl(data.avatarUrl))
                                         .circleCrop()
                                         .into(ivAvatar);
                             }
@@ -182,11 +185,16 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void uploadAvatar(Uri uri) {
         try {
-            String path = getRealPathFromUri(uri);
-            if (path == null) return;
+            File file = copyUriToCache(uri);
+            if (file == null) {
+                Toast.makeText(this, "Không đọc được ảnh đã chọn", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            File file = new File(path);
-            RequestBody reqBody = RequestBody.create(MediaType.parse("image/*"), file);
+            String mime = getContentResolver().getType(uri);
+            if (mime == null || !mime.startsWith("image/")) mime = "image/jpeg";
+
+            RequestBody reqBody = RequestBody.create(MediaType.parse(mime), file);
             MultipartBody.Part part = MultipartBody.Part.createFormData("avatar", file.getName(), reqBody);
 
             RetrofitClient.getProfileApi().uploadAvatar(authToken, part)
@@ -196,6 +204,8 @@ public class EditProfileActivity extends AppCompatActivity {
                             if (response.isSuccessful()) {
                                 Glide.with(EditProfileActivity.this).load(uri).circleCrop().into(ivAvatar);
                                 Toast.makeText(EditProfileActivity.this, "Cập nhật ảnh thành công", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(EditProfileActivity.this, "Upload thất bại (mã " + response.code() + ")", Toast.LENGTH_SHORT).show();
                             }
                         }
 
@@ -209,14 +219,25 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
-    private String getRealPathFromUri(Uri uri) {
-        String[] proj = {MediaStore.Images.Media.DATA};
-        try (android.database.Cursor cursor = getContentResolver().query(uri, proj, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int idx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                return cursor.getString(idx);
-            }
+    private File copyUriToCache(Uri uri) {
+        String mime = getContentResolver().getType(uri);
+        String ext = "jpg";
+        if (mime != null) {
+            if (mime.contains("png")) ext = "png";
+            else if (mime.contains("webp")) ext = "webp";
         }
-        return null;
+        File outFile = new File(getCacheDir(), "avatar_upload_" + System.currentTimeMillis() + "." + ext);
+        try (java.io.InputStream in = getContentResolver().openInputStream(uri);
+             java.io.OutputStream out = new java.io.FileOutputStream(outFile)) {
+            if (in == null) return null;
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+            return outFile;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

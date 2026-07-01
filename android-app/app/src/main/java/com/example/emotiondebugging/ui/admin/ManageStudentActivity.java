@@ -23,6 +23,8 @@ import com.example.emotiondebugging.model.response.BaseResponse;
 import com.example.emotiondebugging.model.response.StaffListResponse;
 import com.example.emotiondebugging.model.response.StaffListResponse.StaffItem;
 import com.example.emotiondebugging.model.response.StudentListResponse;
+import com.example.emotiondebugging.utils.ApiConstants;
+import com.example.emotiondebugging.utils.ApiConstants;
 import com.example.emotiondebugging.model.response.StudentListResponse.StudentItem;
 import com.google.gson.Gson;
 import java.util.List;
@@ -232,7 +234,8 @@ public class ManageStudentActivity extends AppCompatActivity {
 
         ImageView ivAvatar = item.findViewById(R.id.iv_avatar);
         if (avatarUrl != null && !avatarUrl.isEmpty()) {
-            Glide.with(this).load("http://10.0.2.2:3000" + avatarUrl)
+            // ⚠️ CHỈNH SỬA: Sử dụng ApiConstants.getFullUrl()
+            Glide.with(this).load(ApiConstants.getFullUrl(avatarUrl))
                     .circleCrop().into(ivAvatar);
         }
     }

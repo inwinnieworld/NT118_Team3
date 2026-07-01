@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Một session trong danh sách. Pill trắng bo tròn, chữ tối. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tvSessionTitle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="14dp"
+    android:background="@drawable/bg_session_card"
+    android:foreground="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:minHeight="52dp"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="14dp"
+    android:textColor="@color/text_primary"
+    android:textSize="15sp"
+    android:textStyle="bold"
+    android:maxLines="1"
+    android:ellipsize="end"
+    tools:text="Session [001]: Trò chuyện về vấn đề đồ án" />

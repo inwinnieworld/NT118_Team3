@@ -64,6 +64,16 @@
             android:name=".ui.admin.AdminDashboardActivity"
             android:exported="false" />
 
+        <!-- ========== AI CHAT (Dr.Bug's chat room) ========== -->
+        <activity
+            android:name=".ui.aichat.AiChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.aichat.SessionListActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- ========== PROFILE SCREENS (Code của Chính) ========== -->
         <activity
             android:name=".ui.profile.ProfileActivity"

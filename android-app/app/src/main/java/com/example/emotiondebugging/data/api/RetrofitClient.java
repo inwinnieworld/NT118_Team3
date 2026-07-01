@@ -1,5 +1,7 @@
 package com.example.emotiondebugging.data.api;
 
+import com.example.emotiondebugging.utils.ApiConstants;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -7,8 +9,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    // Dùng 10.0.2.2 khi chạy trên Android Emulator (trỏ về localhost máy tính)
-    private static final String BASE_URL = "http://10.0.2.2:3000/";
+    // ⚠️ CHỈNH SỬA: BASE_URL được quản lý tập trung tại ApiConstants.java
+    private static final String BASE_URL = ApiConstants.BASE_URL;
 
     private static Retrofit instance;
 
@@ -55,5 +57,10 @@ public class RetrofitClient {
     // Luồng Community (của Chính)
     public static CommunityApiService getCommunityApi() {
         return getInstance().create(CommunityApiService.class);
+    }
+
+    // Luồng AI Chat (Dr.Bug)
+    public static AiChatApiService getAiChatApi() {
+        return getInstance().create(AiChatApiService.class);
     }
 }

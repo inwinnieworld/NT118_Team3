@@ -22,8 +22,9 @@ public class AvatarHelper {
             android.graphics.drawable.BitmapDrawable placeholder =
                     new android.graphics.drawable.BitmapDrawable(
                             view.getResources(), generateBitmap(name, size));
+            // ⚠️ CHỈNH SỬA: Sử dụng ApiConstants.getFullUrl()
             com.bumptech.glide.Glide.with(view.getContext())
-                    .load("http://10.0.2.2:3000" + avatarUrl)
+                    .load(ApiConstants.getFullUrl(avatarUrl))
                     .circleCrop()
                     .placeholder(placeholder)
                     .into(view);

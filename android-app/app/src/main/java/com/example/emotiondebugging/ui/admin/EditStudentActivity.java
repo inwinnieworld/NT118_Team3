@@ -12,6 +12,7 @@ import com.example.emotiondebugging.data.api.RetrofitClient;
 import com.example.emotiondebugging.model.request.UpdateStudentRequest;
 import com.example.emotiondebugging.model.response.BaseResponse;
 import com.example.emotiondebugging.model.response.StudentListResponse.StudentItem;
+import com.example.emotiondebugging.utils.ApiConstants;
 import com.google.gson.Gson;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -56,7 +57,8 @@ public class EditStudentActivity extends AppCompatActivity {
         tvName.setText(student.name);
         tvCode.setText(student.studentCode);
         if (student.avatarUrl != null && !student.avatarUrl.isEmpty()) {
-            Glide.with(this).load("http://10.0.2.2:3000" + student.avatarUrl)
+            // ⚠️ CHỈNH SỬA: Sử dụng ApiConstants.getFullUrl()
+            Glide.with(this).load(ApiConstants.getFullUrl(student.avatarUrl))
                     .circleCrop().into(ivAvatar);
         }
 

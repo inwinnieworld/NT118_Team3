@@ -10,6 +10,9 @@ const gitJournalRoutes = require("./routes/gitjournal.routes");
 const emergencyRoutes = require("./routes/emergency.routes");
 const staffRoutes = require("./routes/staff.routes");
 const communityRoutes = require("./routes/community.route");
+const aichatRoutes = require("./routes/aichat.routes");
+
+const ragService = require("./services/rag.service");
 
 const app = express();
 
@@ -42,10 +45,19 @@ app.use("/api/staff", staffRoutes);
 // Community routes
 app.use("/api/community", communityRoutes);
 
+// AI Chat routes (Dr.Bug)
+app.use("/api/aichat", aichatRoutes);
+
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // Khởi động RAG nền: tải model embedding + tính vector cho cây problems.
+  // Chạy bất đồng bộ để không chặn server; lần chat đầu sẽ chờ init xong nếu chưa kịp.
+  ragService.init().catch((err) => {
+    console.error('[RAG] Khởi tạo thất bại (chat sẽ thử lại khi có request):', err.message);
+  });
 });

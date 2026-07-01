@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Một dòng gợi ý vấn đề (Tầng 2). Adapter inflate nhiều dòng tùy số lượng backend trả về. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="6dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingVertical="2dp"
+    android:textColor="#E8FBFF"
+    android:textSize="14sp"
+    android:textStyle="italic"
+    tools:text="Mình gặp vấn đề về đồ án..."
+    xmlns:tools="http://schemas.android.com/tools" />

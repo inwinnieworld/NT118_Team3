@@ -12,6 +12,7 @@ import com.example.emotiondebugging.data.api.RetrofitClient;
 import com.example.emotiondebugging.model.request.UpdateStaffRequest;
 import com.example.emotiondebugging.model.response.BaseResponse;
 import com.example.emotiondebugging.model.response.StaffListResponse.StaffItem;
+import com.example.emotiondebugging.utils.ApiConstants;
 import com.google.gson.Gson;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -50,7 +51,8 @@ public class EditStaffActivity extends AppCompatActivity {
 
         tvName.setText(staff.name);
         if (staff.avatarUrl != null && !staff.avatarUrl.isEmpty()) {
-            Glide.with(this).load("http://10.0.2.2:3000" + staff.avatarUrl).circleCrop().into(ivAvatar);
+            // ⚠️ CHỈNH SỬA: Sử dụng ApiConstants.getFullUrl()
+            Glide.with(this).load(ApiConstants.getFullUrl(staff.avatarUrl)).circleCrop().into(ivAvatar);
         }
 
         etName.setText(staff.name);

@@ -1,4 +1,4 @@
 package com.example.emotiondebugging.model.request;
 
-public class ErrorLogRequest {
+public class ChatMessageRequest {
 }

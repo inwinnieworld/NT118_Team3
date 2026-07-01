@@ -1,4 +1,4 @@
 package com.example.emotiondebugging.ui.admin;
 
-public class ManageErrorCodeFragment {
+public class ManageProblemFragment {
 }
