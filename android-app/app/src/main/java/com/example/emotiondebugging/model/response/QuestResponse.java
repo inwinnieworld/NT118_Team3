@@ -2,8 +2,9 @@ package com.example.emotiondebugging.model.response;
 
 public class QuestResponse {
     private int quest_id;
-    private int error_type_id;
-    private String error_name;
+    private String problem_id;
+    private String problem_title;
+    private String problem_path;
     private String quest_title;
     private String quest_description;
 
@@ -16,12 +17,16 @@ public class QuestResponse {
         return quest_id;
     }
 
-    public int getError_type_id() {
-        return error_type_id;
+    public String getProblem_id() {
+        return problem_id;
     }
 
-    public String getError_name() {
-        return error_name;
+    public String getProblem_title() {
+        return problem_title;
+    }
+
+    public String getProblem_path() {
+        return problem_path;
     }
 
     public String getQuest_title() {

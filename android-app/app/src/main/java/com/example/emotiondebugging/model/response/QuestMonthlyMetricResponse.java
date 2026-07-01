@@ -2,28 +2,17 @@ package com.example.emotiondebugging.model.response;
 
 public class QuestMonthlyMetricResponse {
     private String chart_month;
-    private float avg_severity;
-    private float severity_rate;
-    private int total_errors;
-    private float acceptance_rate;
+    private int total_runs;
+    private float completion_rate;
+    private float abandonment_rate;
+    private float avg_duration_minutes;
 
     public String getChart_month() {
         return chart_month;
     }
 
-    public float getAvg_severity() {
-        return avg_severity;
-    }
-
-    public float getSeverity_rate() {
-        return severity_rate;
-    }
-
-    public int getTotal_errors() {
-        return total_errors;
-    }
-
-    public float getAcceptance_rate() {
-        return acceptance_rate;
-    }
+    public int getTotalRuns() { return total_runs; }
+    public float getCompletionRate() { return completion_rate; }
+    public float getAbandonmentRate() { return abandonment_rate; }
+    public float getAverageDurationMinutes() { return avg_duration_minutes; }
 }

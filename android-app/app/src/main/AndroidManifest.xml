@@ -4,6 +4,7 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -58,10 +59,28 @@
             android:name=".ui.main.MainActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.main.StudentQuestCatalogActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.staff.StaffDashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.staff.QuestBuilderActivity"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
+            android:name=".ui.staff.QuestSceneDesignerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.staff.QuestPreviewActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.admin.AdminDashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.admin.AdminQuestReviewActivity"
             android:exported="false" />
 
         <!-- ========== AI CHAT (Dr.Bug's chat room) ========== -->

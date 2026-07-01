@@ -28,143 +28,95 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuestAverageFragment extends Fragment {
-
     private QuestReportViewModel viewModel;
-    private ImageView btnFilterMetric;
-    private TextView tvChartTitle1;
-    private TextView tvChartTitle2;
-    private LineChart lineChartTop;
-    private LineChart lineChartBottom;
+    private TextView topTitle;
+    private TextView bottomTitle;
+    private LineChart topChart;
+    private LineChart bottomChart;
 
-    public QuestAverageFragment() {
-        super(R.layout.fragment_quest_average);
-    }
+    public QuestAverageFragment() { super(R.layout.fragment_quest_average); }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
+    @Override public void onViewCreated(@NonNull View view, @Nullable Bundle state) {
+        super.onViewCreated(view, state);
         viewModel = new ViewModelProvider(requireActivity()).get(QuestReportViewModel.class);
+        ImageView filter = view.findViewById(R.id.btnFilterMetric);
+        topTitle = view.findViewById(R.id.tvChartTitle1);
+        bottomTitle = view.findViewById(R.id.tvChartTitle2);
+        topChart = view.findViewById(R.id.lineChartTop);
+        bottomChart = view.findViewById(R.id.lineChartBottom);
 
-        btnFilterMetric = view.findViewById(R.id.btnFilterMetric);
-        tvChartTitle1 = view.findViewById(R.id.tvChartTitle1);
-        tvChartTitle2 = view.findViewById(R.id.tvChartTitle2);
-        lineChartTop = view.findViewById(R.id.lineChartTop);
-        lineChartBottom = view.findViewById(R.id.lineChartBottom);
-
-        observeViewModel();
-
-        btnFilterMetric.setOnClickListener(v -> showMetricDialog());
+        viewModel.getMonthlyMetrics().observe(getViewLifecycleOwner(), value -> updateCharts());
+        viewModel.getSelectedMetric().observe(getViewLifecycleOwner(), value -> updateCharts());
+        viewModel.getMessage().observe(getViewLifecycleOwner(), value -> {
+            if (value != null && !value.isEmpty()) Toast.makeText(requireContext(), value, Toast.LENGTH_SHORT).show();
+        });
+        filter.setOnClickListener(v -> showMetricDialog());
     }
 
-    private void observeViewModel() {
-        viewModel.getMonthlyMetrics().observe(getViewLifecycleOwner(), list -> {
-            updateCharts(list, viewModel.getSelectedMetric().getValue());
-        });
-
-        viewModel.getSelectedMetric().observe(getViewLifecycleOwner(), metric -> {
-            updateCharts(viewModel.getMonthlyMetrics().getValue(), metric);
-        });
-
-        viewModel.getMessage().observe(getViewLifecycleOwner(), msg -> {
-            if (msg != null && !msg.isEmpty()) {
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void updateCharts() {
+        List<QuestMonthlyMetricResponse> rows = viewModel.getMonthlyMetrics().getValue();
+        String metric = viewModel.getSelectedMetric().getValue();
+        topTitle.setText(metric);
+        bottomTitle.setText(QuestReportViewModel.METRIC_COMPLETION);
+        drawChart(topChart, rows, metric);
+        drawChart(bottomChart, rows, QuestReportViewModel.METRIC_COMPLETION);
     }
 
-    private void updateCharts(List<QuestMonthlyMetricResponse> list, String selectedMetric) {
-        if (list == null || list.isEmpty()) return;
-
-        String topTitle = selectedMetric;
-        String bottomTitle = "TỶ LỆ CHẤP NHẬN TB";
-
-        tvChartTitle1.setText(topTitle);
-        tvChartTitle2.setText(bottomTitle);
-
-        drawChart(lineChartTop, list, selectedMetric);
-        drawChart(lineChartBottom, list, "TỶ LỆ CHẤP NHẬN TB");
-    }
-
-    private void drawChart(LineChart chart, List<QuestMonthlyMetricResponse> list, String metric) {
+    private void drawChart(LineChart chart, List<QuestMonthlyMetricResponse> rows, String metric) {
+        if (rows == null || rows.isEmpty()) {
+            chart.clear();
+            chart.setNoDataText("No student runs yet");
+            chart.invalidate();
+            return;
+        }
         List<Entry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-
-        for (int i = 0; i < list.size(); i++) {
-            QuestMonthlyMetricResponse item = list.get(i);
-            float value;
-
-            switch (metric) {
-                case "TỶ LỆ NGHIÊM TRỌNG TB":
-                    value = item.getSeverity_rate();
-                    break;
-                case "SỐ LỖI TB":
-                    value = item.getTotal_errors();
-                    break;
-                case "TỶ LỆ CHẤP NHẬN TB":
-                    value = item.getAcceptance_rate();
-                    break;
-                default:
-                    value = item.getAvg_severity();
-                    break;
-            }
-
-            entries.add(new Entry(i, value));
-            labels.add(item.getChart_month());
+        for (int index = 0; index < rows.size(); index++) {
+            QuestMonthlyMetricResponse row = rows.get(index);
+            entries.add(new Entry(index, metricValue(row, metric)));
+            labels.add(row.getChart_month());
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, "Month");
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(4f);
-        dataSet.setDrawValues(false);
-
-        LineData data = new LineData(dataSet);
-        chart.setData(data);
-
+        LineDataSet set = new LineDataSet(entries, metric);
+        set.setLineWidth(2f);
+        set.setCircleRadius(4f);
+        set.setDrawValues(false);
+        chart.setData(new LineData(set));
         XAxis xAxis = chart.getXAxis();
         xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
         xAxis.setGranularity(1f);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setLabelRotationAngle(-25f);
-
         chart.getAxisRight().setEnabled(false);
-
         Description description = new Description();
         description.setText("");
         chart.setDescription(description);
         chart.invalidate();
     }
 
+    private float metricValue(QuestMonthlyMetricResponse row, String metric) {
+        if (QuestReportViewModel.METRIC_COMPLETION.equals(metric)) return row.getCompletionRate();
+        if (QuestReportViewModel.METRIC_ABANDONMENT.equals(metric)) return row.getAbandonmentRate();
+        if (QuestReportViewModel.METRIC_DURATION.equals(metric)) return row.getAverageDurationMinutes();
+        return row.getTotalRuns();
+    }
+
     private void showMetricDialog() {
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.layout_metric_menu, null);
-
-        CheckBox cbSeverity = dialogView.findViewById(R.id.cbSeverity);
-        CheckBox cbSeverityRate = dialogView.findViewById(R.id.cbSeverityRate);
-        CheckBox cbTotalErrors = dialogView.findViewById(R.id.cbTotalErrors);
-        CheckBox cbAcceptance = dialogView.findViewById(R.id.cbAcceptance);
-
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .create();
-
-        View.OnClickListener listener = v -> {
-            if (v == cbSeverity) {
-                viewModel.setSelectedMetric("MỨC ĐỘ NGHIÊM TRỌNG TB");
-            } else if (v == cbSeverityRate) {
-                viewModel.setSelectedMetric("TỶ LỆ NGHIÊM TRỌNG TB");
-            } else if (v == cbTotalErrors) {
-                viewModel.setSelectedMetric("SỐ LỖI TB");
-            } else if (v == cbAcceptance) {
-                viewModel.setSelectedMetric("TỶ LỆ CHẤP NHẬN TB");
-            }
-            dialog.dismiss();
-        };
-
-        cbSeverity.setOnClickListener(listener);
-        cbSeverityRate.setOnClickListener(listener);
-        cbTotalErrors.setOnClickListener(listener);
-        cbAcceptance.setOnClickListener(listener);
-
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.layout_metric_menu, null);
+        CheckBox runs = content.findViewById(R.id.cbSeverity);
+        CheckBox completion = content.findViewById(R.id.cbSeverityRate);
+        CheckBox abandonment = content.findViewById(R.id.cbTotalErrors);
+        CheckBox duration = content.findViewById(R.id.cbAcceptance);
+        AlertDialog dialog = new AlertDialog.Builder(requireContext()).setView(content).create();
+        runs.setOnClickListener(v -> select(dialog, QuestReportViewModel.METRIC_RUNS));
+        completion.setOnClickListener(v -> select(dialog, QuestReportViewModel.METRIC_COMPLETION));
+        abandonment.setOnClickListener(v -> select(dialog, QuestReportViewModel.METRIC_ABANDONMENT));
+        duration.setOnClickListener(v -> select(dialog, QuestReportViewModel.METRIC_DURATION));
         dialog.show();
+    }
+
+    private void select(AlertDialog dialog, String metric) {
+        viewModel.setSelectedMetric(metric);
+        dialog.dismiss();
     }
 }

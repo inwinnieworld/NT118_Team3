@@ -1,45 +1,60 @@
 package com.example.emotiondebugging.utils;
 
+import android.os.Build;
+
 /**
  * API Configuration - Quản lý BASE_URL tập trung
- * 
- * HƯỚNG DẪN SỬ DỤNG:
- * - Chạy trên Emulator: Đổi IS_EMULATOR = true
- * - Chạy trên điện thoại thật: Đổi IS_EMULATOR = false (và cập nhật IP_ADDRESS nếu cần)
+ *
+ * BASE_URL được TỰ ĐỘNG chọn theo môi trường chạy (không cần đổi cờ tay):
+ * - Emulator  → http://10.0.2.2:{PORT}   (10.0.2.2 = localhost của máy tính)
+ * - Máy thật  → http://{IP_ADDRESS}:{PORT}
+ *
+ * ⚠️ CHỈ cần cập nhật IP_ADDRESS cho khớp IPv4 của máy chạy backend khi dùng máy thật
+ * (máy thật + backend phải chung mạng WiFi). Xem IP bằng: ipconfig (Windows) / ifconfig.
  */
 public class ApiConstants {
 
     // ==================== CẤU HÌNH ====================
-    
+
     /**
-     * ⚠️ THAY ĐỔI Ở ĐÂY:
-     * - true: Chạy trên Android Emulator
-     * - false: Chạy trên điện thoại thật (Real Device)
-     */
-    private static final boolean IS_EMULATOR = false;
-    
-    /**
-     * Địa chỉ IP của máy tính (chạy backend)
-     * Kiểm tra bằng lệnh: ipconfig (Windows) hoặc ifconfig (Mac/Linux)
-     * Tìm dòng IPv4 Address
+     * Địa chỉ IP LAN của máy tính chạy backend (chỉ dùng khi chạy trên máy thật).
+     * Kiểm tra bằng: ipconfig (Windows) hoặc ifconfig (Mac/Linux) → dòng IPv4 Address.
      */
     private static final String IP_ADDRESS = "192.168.31.192";
-    
+
     /**
      * Port của backend server
      */
     private static final String PORT = "3000";
-    
+
     // ==================== BASE URL ====================
-    
+
     /**
-     * BASE_URL được tự động chọn dựa trên IS_EMULATOR
-     * - Emulator: http://10.0.2.2:3000 (localhost mapping)
-     * - Real Device: http://{IP_ADDRESS}:3000
+     * BASE_URL tự động: emulator dùng 10.0.2.2, máy thật dùng IP LAN.
+     * Có dấu "/" cuối để Retrofit ghép path đúng chuẩn.
      */
-    public static final String BASE_URL = IS_EMULATOR 
-            ? "http://10.0.2.2:" + PORT
-            : "http://" + IP_ADDRESS + ":" + PORT;
+    public static final String BASE_URL = isEmulator()
+            ? "http://10.0.2.2:" + PORT + "/"
+            : "http://" + IP_ADDRESS + ":" + PORT + "/";
+
+    /**
+     * Nhận diện đang chạy trên Android Emulator hay máy thật (dựa trên Build fingerprint).
+     * Bao trùm các emulator phổ biến: AVD chính chủ, Genymotion, BlueStacks...
+     */
+    private static boolean isEmulator() {
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.FINGERPRINT.contains("emulator")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.BRAND.startsWith("generic")
+                || Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT.contains("sdk")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu");
+    }
     
     /**
      * Get full URL for avatar/uploads
@@ -50,7 +65,7 @@ public class ApiConstants {
         if (relativePath == null || relativePath.isEmpty()) {
             return "";
         }
-        // Đảm bảo không bị duplicate slash
-        return BASE_URL + (relativePath.startsWith("/") ? relativePath : "/" + relativePath);
+        // BASE_URL đã có "/" cuối → bỏ "/" đầu của relativePath để tránh double slash.
+        return BASE_URL + (relativePath.startsWith("/") ? relativePath.substring(1) : relativePath);
     }
 }

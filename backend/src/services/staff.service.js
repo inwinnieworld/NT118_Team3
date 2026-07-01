@@ -3,15 +3,32 @@ const db = require("../config/db");
 /* =========================
    QUEST
 ========================= */
-async function createQuest({ errorTypeId, questTitle, questDescription, questLevel = 3, basePriority = 10, createdByStaffId = null }) {
+async function assertLeafProblem(problemId) {
+  const [[problem]] = await db.execute(
+    `SELECT id FROM PROBLEMS
+     WHERE id = ? AND tree_level = 3 AND is_leaf_node = TRUE`,
+    [problemId]
+  );
+  if (!problem) {
+    const error = new Error("problemId must reference a level-3 leaf problem");
+    error.status = 400;
+    throw error;
+  }
+}
+
+async function createQuest({ problemId, questTitle, questDescription, questLevel = 3, basePriority = 10, createdByStaffId = null }) {
+  await assertLeafProblem(problemId);
   const [result] = await db.execute(
-    `INSERT INTO QUESTS (created_by_staff_id, quest_title, quest_description, quest_level, base_priority, is_active)
-     VALUES (?, ?, ?, ?, ?, TRUE)`,
-    [createdByStaffId, questTitle, questDescription, questLevel, basePriority]
+    `INSERT INTO QUESTS
+       (created_by_staff_id, problem_id, quest_title, quest_description,
+        quest_level, base_priority, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, TRUE)`,
+    [createdByStaffId, problemId, questTitle, questDescription, questLevel, basePriority]
   );
 
   return {
     quest_id: result.insertId,
+    problem_id: problemId,
     quest_title: questTitle,
     quest_description: questDescription,
     quest_level: questLevel,
@@ -19,12 +36,15 @@ async function createQuest({ errorTypeId, questTitle, questDescription, questLev
   };
 }
 
-async function updateQuest(questId, { questTitle, questDescription, questLevel, basePriority }) {
+async function updateQuest(questId, { problemId, questTitle, questDescription, questLevel, basePriority }) {
+  await assertLeafProblem(problemId);
   const [result] = await db.execute(
-    `UPDATE QUESTS
-     SET quest_title = ?, quest_description = ?, quest_level = ?, base_priority = ?
+     `UPDATE QUESTS
+     SET problem_id = ?, error_type_id = NULL, quest_title = ?,
+         quest_description = ?, quest_level = COALESCE(?, quest_level),
+         base_priority = COALESCE(?, base_priority)
      WHERE quest_id = ?`,
-    [questTitle, questDescription, questLevel, basePriority, questId]
+    [problemId, questTitle, questDescription, questLevel, basePriority, questId]
   );
 
   return result.affectedRows > 0;
@@ -34,6 +54,9 @@ async function getAllQuests() {
   const [rows] = await db.execute(
     `SELECT 
        q.quest_id,
+       q.problem_id,
+       p.title AS problem_title,
+       CONCAT_WS(' > ', root_problem.title, parent_problem.title, p.title) AS problem_path,
        q.quest_title,
        q.quest_description,
        q.quest_level,
@@ -42,10 +65,15 @@ async function getAllQuests() {
        q.created_at,
        GROUP_CONCAT(DISTINCT opt.tag_core_name SEPARATOR ', ') AS tags
      FROM QUESTS q
+     LEFT JOIN PROBLEMS p ON p.id = q.problem_id
+     LEFT JOIN PROBLEMS parent_problem ON parent_problem.id = p.parent_id
+     LEFT JOIN PROBLEMS root_problem ON root_problem.id = parent_problem.parent_id
      LEFT JOIN QUEST_TAG_MAPPING qtm ON q.quest_id = qtm.quest_id
      LEFT JOIN TRACE_OPTIONS opt ON qtm.option_id = opt.option_id
      WHERE q.is_active = TRUE
-     GROUP BY q.quest_id, q.quest_title, q.quest_description, q.quest_level, q.base_priority, q.is_active, q.created_at
+     GROUP BY q.quest_id, q.problem_id, p.title, root_problem.title, parent_problem.title,
+              q.quest_title, q.quest_description, q.quest_level, q.base_priority,
+              q.is_active, q.created_at
      ORDER BY q.quest_id DESC`
   );
 

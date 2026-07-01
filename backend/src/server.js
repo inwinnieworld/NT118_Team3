@@ -48,6 +48,9 @@ app.use("/api/community", communityRoutes);
 // AI Chat routes (Dr.Bug)
 app.use("/api/aichat", aichatRoutes);
 
+// Quest builder routes (visual flow engine, approval, runtime sessions)
+app.use("/api/quest-builder", require("./routes/questBuilder.route"));
+
 // Placeholder for future routes
 // app.use('/api/errorlog', require('./routes/errorlog.route'));
 

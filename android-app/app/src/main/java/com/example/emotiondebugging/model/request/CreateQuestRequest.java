@@ -1,18 +1,18 @@
 package com.example.emotiondebugging.model.request;
 
 public class CreateQuestRequest {
-    private int errorTypeId;
+    private String problemId;
     private String questTitle;
     private String questDescription;
 
-    public CreateQuestRequest(int errorTypeId, String questTitle, String questDescription) {
-        this.errorTypeId = errorTypeId;
+    public CreateQuestRequest(String problemId, String questTitle, String questDescription) {
+        this.problemId = problemId;
         this.questTitle = questTitle;
         this.questDescription = questDescription;
     }
 
-    public int getErrorTypeId() {
-        return errorTypeId;
+    public String getProblemId() {
+        return problemId;
     }
 
     public String getQuestTitle() {

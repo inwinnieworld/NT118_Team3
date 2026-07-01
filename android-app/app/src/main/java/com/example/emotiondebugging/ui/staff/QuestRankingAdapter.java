@@ -37,7 +37,7 @@ public class QuestRankingAdapter extends RecyclerView.Adapter<QuestRankingAdapte
         QuestRankingBoardResponse item = items.get(position);
         holder.tvQuestId.setText(String.valueOf(item.getQuest_id()));
         holder.tvQuestTitle.setText(item.getQuest_title());
-        holder.tvValue.setText(String.valueOf(item.getTotal_assigned()));
+        holder.tvValue.setText(item.getTotal_completed() + "/" + item.getTotalRuns());
     }
 
     @Override

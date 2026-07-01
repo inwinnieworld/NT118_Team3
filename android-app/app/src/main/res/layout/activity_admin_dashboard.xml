@@ -49,6 +49,15 @@
             android:layout_width="24dp" android:layout_height="24dp"
             android:layout_marginStart="16dp"
             android:src="@drawable/ic_setting" />
+        <ImageView
+            android:id="@+id/ivAdminLogout"
+            android:layout_width="24dp" android:layout_height="24dp"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_logout"
+            android:contentDescription="Log out"
+            android:tooltipText="Log out"
+            android:clickable="true"
+            android:focusable="true" />
     </LinearLayout>
 
     <LinearLayout
@@ -96,7 +105,15 @@
             android:id="@+id/btnManageCommunity"
             android:layout_width="match_parent" android:layout_height="48dp"
             android:background="@drawable/bg_admin_button"
-            android:text="Quản lý cộng đồng" android:textAllCaps="false"
+            android:text="Community management" android:textAllCaps="false"
+            android:textColor="#000000" android:textStyle="bold"
+            android:layout_marginBottom="12dp" android:elevation="4dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnReviewQuest"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:background="@drawable/bg_admin_button"
+            android:text="Quest review" android:textAllCaps="false"
             android:textColor="#000000" android:textStyle="bold"
             android:layout_marginBottom="12dp" android:elevation="4dp"/>
 

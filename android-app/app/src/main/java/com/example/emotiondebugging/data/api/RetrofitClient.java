@@ -9,8 +9,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
 
-    // ⚠️ CHỈNH SỬA: BASE_URL được quản lý tập trung tại ApiConstants.java
-    private static final String BASE_URL = ApiConstants.BASE_URL;
+    // BASE_URL đọc từ ApiConstants (auto-detect emulator/máy thật), chuẩn hóa qua normalizeBaseUrl.
+    private static final String BASE_URL = normalizeBaseUrl(ApiConstants.BASE_URL);
 
     private static Retrofit instance;
 
@@ -30,6 +30,20 @@ public class RetrofitClient {
                     .build();
         }
         return instance;
+    }
+
+    public static String resolveMediaUrl(String value) {
+        if (value == null || value.trim().isEmpty()) return "";
+        String url = value.trim();
+        if (url.startsWith("http://") || url.startsWith("https://")
+                || url.startsWith("file://") || url.startsWith("content://")) return url;
+        return BASE_URL + (url.startsWith("/") ? url.substring(1) : url);
+    }
+
+    private static String normalizeBaseUrl(String value) {
+        String url = value == null ? "" : value.trim();
+        if (url.isEmpty()) url = "http://10.0.2.2:3000/";
+        return url.endsWith("/") ? url : url + "/";
     }
 
     // --- CÁC HÀM GỌI API ĐÃ ĐƯỢC GỘP CHUNG ---
@@ -62,5 +76,9 @@ public class RetrofitClient {
     // Luồng AI Chat (Dr.Bug)
     public static AiChatApiService getAiChatApi() {
         return getInstance().create(AiChatApiService.class);
+    }
+
+    public static QuestBuilderApiService getQuestBuilderApi() {
+        return getInstance().create(QuestBuilderApiService.class);
     }
 }

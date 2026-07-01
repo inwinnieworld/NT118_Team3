@@ -21,11 +21,13 @@ public class StaffDashboardActivity extends AppCompatActivity {
 
     private TextView tvStaffStatus;
     private TextView btnManageQuest;
+    private TextView btnQuestBuilder;
     private TextView btnQuestReport;
     private TextView btnTraceQuestion;
     private ImageView ivProfile;
     private ImageView ivMessage;
     private ImageView ivSettings;
+    private ImageView ivLogout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +46,13 @@ public class StaffDashboardActivity extends AppCompatActivity {
     private void initViews() {
         tvStaffStatus = findViewById(R.id.tvStaffStatus);
         btnManageQuest = findViewById(R.id.btnManageQuest);
+        btnQuestBuilder = findViewById(R.id.btnQuestBuilder);
         btnQuestReport = findViewById(R.id.btnQuestReport);
         btnTraceQuestion = findViewById(R.id.btnTraceQuestion);
         ivProfile = findViewById(R.id.ivProfile);
         ivMessage = findViewById(R.id.ivMessage);
         ivSettings = findViewById(R.id.ivSettings);
+        ivLogout = findViewById(R.id.ivLogout);
     }
 
     private void initData() {
@@ -65,6 +69,11 @@ public class StaffDashboardActivity extends AppCompatActivity {
     private void initActions() {
         btnManageQuest.setOnClickListener(v -> {
             Intent intent = new Intent(StaffDashboardActivity.this, ManageQuestActivity.class);
+            startActivity(intent);
+        });
+
+        btnQuestBuilder.setOnClickListener(v -> {
+            Intent intent = new Intent(StaffDashboardActivity.this, QuestBuilderActivity.class);
             startActivity(intent);
         });
 
@@ -90,7 +99,8 @@ public class StaffDashboardActivity extends AppCompatActivity {
                 Toast.makeText(this, "Cài đặt", Toast.LENGTH_SHORT).show()
         );
 
-        // THÊM: Logout khi long press vào status bar
+        ivLogout.setOnClickListener(v -> showLogoutDialog());
+
         tvStaffStatus.setOnLongClickListener(v -> {
             showLogoutDialog();
             return true;
@@ -126,13 +136,13 @@ public class StaffDashboardActivity extends AppCompatActivity {
     private void logout() {
         SharedPrefsHelper prefsHelper = new SharedPrefsHelper(this);
         prefsHelper.clearAll();
-        prefsHelper.clearGitJournalSession(this); // Clear Git Journal session
+        prefsHelper.clearGitJournalSession(this);
 
-        android.content.Intent intent = new android.content.Intent(
+        Intent intent = new Intent(
                 this,
                 com.example.emotiondebugging.ui.auth.LoginActivity.class
         );
-        intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }

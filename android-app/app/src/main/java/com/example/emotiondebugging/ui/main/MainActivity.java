@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
+
     }
 
     private void initViewModel() {
@@ -113,6 +114,10 @@ public class MainActivity extends AppCompatActivity {
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 ImageView imageView = (ImageView) holder.itemView;
                 imageView.setImageResource(iconList[position]);
+                if (position == 5) {
+                    imageView.setContentDescription("Healing quests");
+                    imageView.setTooltipText("Healing quests");
+                }
                 
                 // Add click listener for each icon
                 imageView.setOnClickListener(v -> handleIconClick(position));
@@ -135,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
             page.setAlpha(1.0f - (absPos * 0.5f));
         });
 
-        vpIcons.setCurrentItem(2, false);
+        vpIcons.setCurrentItem(iconList.length - 1, false);
     }
 
     /**
@@ -146,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
      * 2 - Git Commit Journal
      * 3 - Debugging Community
      * 4 - Exam Mode
+     * 5 - Healing Quests
      */
     private void handleIconClick(int position) {
         Intent intent;
@@ -173,6 +179,11 @@ public class MainActivity extends AppCompatActivity {
             case 4: // Exam Mode
                 // TODO: Navigate to ExamModeActivity
                 android.widget.Toast.makeText(this, "Exam Mode coming soon", android.widget.Toast.LENGTH_SHORT).show();
+                break;
+
+            case 5: // Healing Quests
+                intent = new Intent(MainActivity.this, StudentQuestCatalogActivity.class);
+                startActivity(intent);
                 break;
 
             default:

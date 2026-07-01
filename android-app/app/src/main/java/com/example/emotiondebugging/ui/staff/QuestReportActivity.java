@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.emotiondebugging.R;
+import com.example.emotiondebugging.utils.SharedPrefsHelper;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -37,12 +38,13 @@ public class QuestReportActivity extends AppCompatActivity {
         viewPager.setAdapter(new QuestReportPagerAdapter(this));
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            tab.setText(position == 0 ? "1" : "2");
+            tab.setText(position == 0 ? "MONTHLY" : position == 1 ? "QUESTS" : "NODES");
         }).attach();
 
         btnBack.setOnClickListener(v -> finish());
 
-        viewModel.loadMonthlyMetrics();
-        viewModel.loadRankingBoard();
+        String rawToken = new SharedPrefsHelper(this).getToken();
+        String token = rawToken != null && rawToken.startsWith("Bearer ") ? rawToken : "Bearer " + rawToken;
+        viewModel.loadReports(token);
     }
 }

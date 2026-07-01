@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:strokeColor="#D9E1EA"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+        <TextView android:id="@+id/tvReviewQuestTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textColor="#172033" android:textSize="18sp" android:textStyle="bold" />
+        <TextView android:id="@+id/tvReviewQuestMeta" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="5dp" android:textColor="#137D8B" android:textSize="13sp" />
+        <TextView android:id="@+id/tvReviewQuestGoal" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="9dp" android:maxLines="2" android:textColor="#475467" android:textSize="14sp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="44dp" android:layout_marginTop="14dp" android:orientation="horizontal">
+            <Button android:id="@+id/btnReviewPreview" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:text="Preview" android:textAllCaps="false" android:textColor="#243B53" android:backgroundTint="#E8EEF5" />
+            <Button android:id="@+id/btnReviewReject" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:text="Reject" android:textAllCaps="false" android:textColor="#9B1C1C" android:backgroundTint="#FCE8E8" />
+            <Button android:id="@+id/btnReviewApprove" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:layout_marginStart="8dp" android:text="Approve" android:textAllCaps="false" android:textColor="#FFFFFF" android:backgroundTint="#13877A" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
