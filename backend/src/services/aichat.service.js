@@ -147,14 +147,32 @@ async function createSession(studentId) {
     };
 }
 
-// ===================== QUEST (placeholder) =====================
+// ===================== QUEST =====================
 
 /**
- * TODO(quest): query bảng `quests` theo problem_id, sort theo rating/lượt tham gia, lấy Top-3.
- * Giai đoạn này Quest Engine chưa build → trả mảng rỗng + cờ placeholder để UI hiện "đang cập nhật".
+ * Lấy Top-3 quest ĐÃ DUYỆT gắn vào đúng 1 lá Tầng 3 (problemId).
+ *  - Chỉ approved: JOIN quest_versions với version approved MỚI NHẤT (draft/pending/rejected bị loại).
+ *  - Đúng lá: q.problem_id = ? (KHÔNG nới lên parent như catalog của Quest Builder).
+ *  - Rank: base_priority DESC (cột ưu tiên của Quest Builder), reviewed_at DESC làm tie-break.
+ *  - Fallback: lá chưa có quest approved → rows rỗng → placeholder=true (UI hiện "đang cập nhật").
  */
-async function getTopQuests(/* problemId */) {
-    return { quests: [], placeholder: true };
+async function getTopQuests(problemId) {
+    if (!problemId) return { quests: [], placeholder: true };
+    const [rows] = await db.query(
+        `SELECT q.quest_id, q.quest_title, q.quest_description,
+                q.quest_level, q.base_priority, qv.version_id
+         FROM quests q
+         JOIN quest_versions qv ON qv.version_id = (
+            SELECT qv2.version_id FROM quest_versions qv2
+            WHERE qv2.quest_id = q.quest_id AND qv2.status = 'approved'
+            ORDER BY qv2.version_number DESC LIMIT 1
+         )
+         WHERE q.is_active = 1 AND q.problem_id = ?
+         ORDER BY q.base_priority DESC, qv.reviewed_at DESC
+         LIMIT 3`,
+        [problemId]
+    );
+    return { quests: rows, placeholder: rows.length === 0 };
 }
 
 // ===================== SUGGESTIONS (waterfall, không dùng LLM) =====================

@@ -508,7 +508,7 @@ const saveQuestDraft = async (req, res) => {
             await conn.query(
                 `UPDATE quests
                  SET quest_title = ?, quest_description = ?, quest_level = ?,
-                      problem_id = ?, error_type_id = NULL, is_active = 1
+                      problem_id = ?, is_active = 1
                  WHERE quest_id = ?`,
                 [quest_title, quest_description || null, quest_level, normalizedProblemId, questId]
             );
