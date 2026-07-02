@@ -801,6 +801,7 @@ public class QuestPreviewActivity extends AppCompatActivity {
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
                 params.topMargin = branchIndex == 0 ? -dp(70) : dp(70);
                 parallelLayer.addView(textView, params);
+                applyParallelScene(textView, config);
                 if (!renderParallelAttached(config, textView, completeBranch)) completeBranch.run();
                 break;
             }
@@ -812,6 +813,7 @@ public class QuestPreviewActivity extends AppCompatActivity {
                 FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(width, height,
                         gravityForPosition(stringValue(config, "position", "center")));
                 parallelLayer.addView(imageView, params);
+                applyParallelScene(imageView, config);
                 Glide.with(this).load(RetrofitClient.resolveMediaUrl(
                         stringValue(config, "asset_url", ""))).into(imageView);
                 if (!renderParallelAttached(config, imageView, completeBranch)) completeBranch.run();
@@ -830,6 +832,7 @@ public class QuestPreviewActivity extends AppCompatActivity {
                 VideoView video = new VideoView(this);
                 FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(dp(420), dp(260), Gravity.CENTER);
                 parallelLayer.addView(video, params);
+                applyParallelScene(video, config);
                 String assetUrl = stringValue(config, "asset_url", "");
                 if (assetUrl.isEmpty()) {
                     recordError(node.client_node_id, "missing_parallel_video_url");
@@ -868,6 +871,7 @@ public class QuestPreviewActivity extends AppCompatActivity {
                         dp(220), dp(56), Gravity.CENTER);
                 params.topMargin = branchIndex == 0 ? -dp(70) : dp(70);
                 parallelLayer.addView(gestureTarget, params);
+                applyParallelScene(gestureTarget, config);
                 configureGestureCallback(gestureType, config, gestureTarget, completeBranch);
                 break;
             }
@@ -979,6 +983,26 @@ public class QuestPreviewActivity extends AppCompatActivity {
             }
             if (done[0]) target.postDelayed(onComplete, "hold".equals(type) ? 160L : 220L);
             return true;
+        });
+    }
+
+    /**
+     * Đặt view trong parallelLayer theo toạ độ "Design position" (scene_x/scene_y) giống luồng
+     * thường. Nếu node chưa có scene_x (quest cũ) thì giữ nguyên gravity/margin đã set lúc addView.
+     * Phải post vì lúc render parallelLayer chưa đo xong (getWidth/getHeight = 0).
+     */
+    private void applyParallelScene(View target, Map<String, Object> config) {
+        if (config == null || config.get("scene_x") == null) return;
+        parallelLayer.post(() -> {
+            float scaleX = parallelLayer.getWidth() / QuestSceneCanvasView.SCENE_WIDTH;
+            float scaleY = parallelLayer.getHeight() / QuestSceneCanvasView.SCENE_HEIGHT;
+            if (scaleX <= 0 || scaleY <= 0) return;
+            ViewGroup.LayoutParams params = target.getLayoutParams();
+            params.width = Math.max(dp(40), Math.round(floatValue(config, "scene_width", 280f) * scaleX));
+            params.height = Math.max(dp(32), Math.round(floatValue(config, "scene_height", 72f) * scaleY));
+            target.setLayoutParams(params);
+            target.setX(floatValue(config, "scene_x", 40f) * scaleX);
+            target.setY(floatValue(config, "scene_y", 284f) * scaleY);
         });
     }
 
