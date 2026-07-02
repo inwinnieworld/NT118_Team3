@@ -113,14 +113,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
                 ImageView imageView = (ImageView) holder.itemView;
-                imageView.setImageResource(iconList[position]);
+                int iconResId = iconList[position];
+                imageView.setImageResource(iconResId);
                 if (position == 5) {
                     imageView.setContentDescription("Healing quests");
                     imageView.setTooltipText("Healing quests");
                 }
-                
-                // Add click listener for each icon
-                imageView.setOnClickListener(v -> handleIconClick(position));
+
+                imageView.setOnClickListener(v -> {
+                    android.util.Log.d("NAV_DEBUG", "Clicked position = " + position + ", iconResId = " + iconResId);
+                    android.widget.Toast.makeText(
+                            MainActivity.this,
+                            "Clicked position = " + position,
+                            android.widget.Toast.LENGTH_SHORT
+                    ).show();
+
+                    handleIconClick(position);
+                });
             }
 
             @Override
