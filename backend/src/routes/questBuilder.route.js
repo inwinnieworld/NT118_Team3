@@ -11,7 +11,6 @@ router.use(authMiddleware);
 router.get('/engines', controller.getEngineCatalog);
 router.post('/media', staffOrAdminMiddleware, questMediaUpload.single('media'), controller.uploadQuestMedia);
 router.get('/problems', controller.getQuestProblems);
-router.get('/recommendations', controller.recommendQuests);
 router.get('/catalog', controller.listApprovedQuestCatalog);
 
 router.get('/quests', staffOrAdminMiddleware, controller.listQuests);

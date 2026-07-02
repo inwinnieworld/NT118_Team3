@@ -414,36 +414,6 @@ const listApprovedQuestCatalog = async (req, res) => {
     }
 };
 
-const recommendQuests = async (req, res) => {
-    try {
-        const errorTypeId = Number(req.query.error_type_id);
-        if (!Number.isInteger(errorTypeId) || errorTypeId <= 0) {
-            return fail(res, 'error_type_id is required', 400);
-        }
-
-        const limit = clampNumber(req.query.limit, 1, 20, 5);
-
-        const [rows] = await db.query(
-            `SELECT q.quest_id, q.quest_title, q.quest_description, q.quest_level,
-                    q.error_type_id, et.error_name
-             FROM quests q
-             JOIN error_types et ON et.error_type_id = q.error_type_id
-             JOIN quest_versions qv ON qv.version_id = (
-                SELECT approved.version_id FROM quest_versions approved
-                WHERE approved.quest_id = q.quest_id AND approved.status = 'approved'
-                ORDER BY approved.version_number DESC LIMIT 1
-             )
-             WHERE q.is_active = 1
-               AND q.error_type_id = ?`,
-            [errorTypeId]
-        );
-
-        return ok(res, rows.slice(0, limit));
-    } catch (err) {
-        return fail(res, 'Server error', 500, err.message);
-    }
-};
-
 const saveQuestDraft = async (req, res) => {
     const conn = await db.getConnection();
     try {
@@ -1093,7 +1063,6 @@ module.exports = {
     getQuestProblems,
     listQuests,
     listApprovedQuestCatalog,
-    recommendQuests,
     saveQuestDraft,
     submitQuestForReview,
     reviewQuest,
