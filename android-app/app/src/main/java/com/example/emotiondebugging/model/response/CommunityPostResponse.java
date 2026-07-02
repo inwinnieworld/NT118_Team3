@@ -1,6 +1,7 @@
 package com.example.emotiondebugging.model.response;
 
 import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class CommunityPostResponse {
@@ -22,7 +23,6 @@ public class CommunityPostResponse {
         @SerializedName("post_id")
         public int postId;
 
-        // Thêm dòng này để mở profile người đăng
         @SerializedName("student_id")
         public int studentId;
 
@@ -31,6 +31,8 @@ public class CommunityPostResponse {
 
         @SerializedName("content")
         public String content;
+        @SerializedName("image_url")
+        public String imageUrl;
 
         // 0 = công khai, 1 = ẩn danh
         @SerializedName("is_anonymous")
@@ -39,7 +41,11 @@ public class CommunityPostResponse {
         @SerializedName("created_at")
         public String createdAt;
 
-        // Phần cũ liên quan error type, tạm giữ để không lỗi adapter cũ
+        /*
+         * Phần cũ liên quan error type.
+         * Tạm giữ lại để không lỗi các API/code cũ.
+         * Adapter mới cũng có fallback: nếu chưa có hashtags thì dùng errorName như hashtag tạm.
+         */
         @SerializedName("error_type_id")
         public int errorTypeId;
 
@@ -73,5 +79,8 @@ public class CommunityPostResponse {
 
         @SerializedName("is_reposted")
         public int isReposted;
+
+        @SerializedName(value = "hashtags", alternate = {"topics"})
+        public List<String> hashtags;
     }
 }

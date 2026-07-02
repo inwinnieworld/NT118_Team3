@@ -13,8 +13,6 @@ const {
     toggleSavePost,
     muteAuthor,
     getSavedPosts,
-
-    // Topics
     getPostTopics,
 
     // Community Profile
@@ -41,7 +39,7 @@ router.use(authMiddleware);
 // POSTS
 // =========================
 
-// GET /api/community/posts?filter=new&page=1&search=abc
+// GET /api/community/posts?filter=new&page=1&search=abc&hashtag=Backend
 router.get('/posts', getPosts);
 
 // POST /api/community/posts
@@ -58,6 +56,8 @@ router.post('/posts/:postId/save', toggleSavePost);
 
 // POST /api/community/posts/:postId/mute
 router.post('/posts/:postId/mute', muteAuthor);
+
+// POST /api/community/posts/:postId/repost
 router.post('/posts/:postId/repost', toggleRepostPost);
 
 // =========================
@@ -78,14 +78,14 @@ router.post('/posts/:postId/comments/:commentId/vote', voteComment);
 router.get('/saved', getSavedPosts);
 
 // =========================
-// TOPICS
+// TOPICS / HASHTAGS
 // =========================
 
 // GET /api/community/topics
 router.get('/topics', getPostTopics);
 
 // =========================
-// COMMUNITY PROFILE
+// COMMUNITY PROFILE - ME
 // =========================
 
 // GET /api/community/profile/me
@@ -94,15 +94,36 @@ router.get('/profile/me', getMyCommunityProfile);
 // PUT /api/community/profile/me
 router.put('/profile/me', updateMyCommunityProfile);
 
-// Lưu ý: route /profile/:studentId/posts phải đặt TRƯỚC /profile/:studentId
+// =========================
+// COMMUNITY PROFILE - TABS
+// Các route này phải đặt trước /profile/:studentId
+// =========================
+
 // GET /api/community/profile/:studentId/posts
 router.get('/profile/:studentId/posts', getCommunityProfilePosts);
 
+// GET /api/community/profile/:studentId/replies
+router.get('/profile/:studentId/replies', getCommunityProfileReplies);
+
+// GET /api/community/profile/:studentId/media
+router.get('/profile/:studentId/media', getCommunityProfileMedia);
+
+// GET /api/community/profile/:studentId/reposts
+router.get('/profile/:studentId/reposts', getCommunityProfileReposts);
+
+// GET /api/community/profile/:studentId/followers
+router.get('/profile/:studentId/followers', getProfileFollowers);
+
+// GET /api/community/profile/:studentId/following
+router.get('/profile/:studentId/following', getProfileFollowing);
+
+// =========================
+// COMMUNITY PROFILE - DETAIL
+// Route tổng quát này nên đặt sau các route tab ở trên
+// =========================
+
 // GET /api/community/profile/:studentId
 router.get('/profile/:studentId', getCommunityProfile);
-
-router.get('/profile/:studentId/followers', getProfileFollowers);
-router.get('/profile/:studentId/following', getProfileFollowing);
 
 // =========================
 // FOLLOW
@@ -113,11 +134,5 @@ router.post('/users/:studentId/follow', followUser);
 
 // DELETE /api/community/users/:studentId/follow
 router.delete('/users/:studentId/follow', unfollowUser);
-
-router.get('/profile/:studentId/posts', getCommunityProfilePosts);
-router.get('/profile/:studentId/replies', getCommunityProfileReplies);
-router.get('/profile/:studentId/media', getCommunityProfileMedia);
-router.get('/profile/:studentId/reposts', getCommunityProfileReposts);
-
 
 module.exports = router;

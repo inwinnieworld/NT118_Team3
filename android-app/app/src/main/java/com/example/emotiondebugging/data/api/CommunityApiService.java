@@ -156,6 +156,13 @@ public interface CommunityApiService {
             @Header("Authorization") String token,
             @Path("studentId") int studentId
     );
+    @GET("community/posts")
+    Call<ApiResponse<CommunityPostResponse>> getPostsByHashtag(
+            @Header("Authorization") String token,
+            @Query("filter") String filter,
+            @Query("page") int page,
+            @Query("hashtag") String hashtag
+    );
 
     @GET("/api/chat/with/{studentId}")
     Call<ApiResponse<ChatHistoryResponse>> getMessagesWithUser(

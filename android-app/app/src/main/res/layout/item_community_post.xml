@@ -141,15 +141,36 @@
             android:textColor="#6B7280"
             android:textSize="12sp" />
 
-        <!-- Tag -->
+        <ImageView
+            android:id="@+id/iv_post_image"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="8dp"
+            android:background="#E5E7EB"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <!-- Hashtags -->
         <TextView
             android:id="@+id/tv_tag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="#Học tập"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:minHeight="24dp"
+            android:paddingStart="2dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:text="#stress  #deadline"
             android:textColor="#12B2C1"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="visible" />
 
         <!-- Stats row -->
         <LinearLayout

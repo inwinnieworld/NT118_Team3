@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.data.api.RetrofitClient;
@@ -20,6 +21,7 @@ import com.example.emotiondebugging.model.response.ApiResponse;
 import com.example.emotiondebugging.model.response.CommunityPostResponse;
 import com.example.emotiondebugging.ui.community.adapter.CommunityPostAdapter;
 import com.example.emotiondebugging.utils.SharedPrefsHelper;
+import com.example.emotiondebugging.ui.community.adapter.CommunityMediaAdapter;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,7 +32,7 @@ import java.util.Map;
 
 public class CommunityProfileActivity extends AppCompatActivity {
 
-    private int studentId;
+    private int studentId = -1;
     private String authToken;
     private String currentTab = "posts";
     private boolean isMeFromIntent = false;
@@ -51,7 +53,9 @@ public class CommunityProfileActivity extends AppCompatActivity {
     private Button btnFollow;
     private Button btnMessage;
     private RecyclerView rvProfilePosts;
+
     private CommunityPostAdapter adapter;
+    private CommunityMediaAdapter mediaAdapter;
 
     private CommunityProfile currentProfile;
     private boolean usingMyProfileLayout = false;
@@ -224,9 +228,16 @@ public class CommunityProfileActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onTagClick(int errorTypeId, String errorName) {
-                Toast.makeText(CommunityProfileActivity.this, "#" + errorName, Toast.LENGTH_SHORT).show();
+            public void onTagClick(String hashtag) {
+                if (hashtag == null || hashtag.trim().isEmpty()) return;
+
+                Toast.makeText(
+                        CommunityProfileActivity.this,
+                        "#" + hashtag,
+                        Toast.LENGTH_SHORT
+                ).show();
             }
+
             @Override
             public void onRepost(CommunityPostResponse.PostItem post) {
                 if (post == null) return;
@@ -235,6 +246,14 @@ public class CommunityProfileActivity extends AppCompatActivity {
                         .toggleRepostPost(authToken, post.postId)
                         .enqueue(new SimpleActionCallback(() -> loadTab(currentTab)));
             }
+        });
+
+        mediaAdapter = new CommunityMediaAdapter(post -> {
+            if (post == null) return;
+
+            Intent intent = new Intent(CommunityProfileActivity.this, PostDetailActivity.class);
+            intent.putExtra("post_id", post.postId);
+            startActivity(intent);
         });
 
         rvProfilePosts.setAdapter(adapter);
@@ -517,6 +536,11 @@ public class CommunityProfileActivity extends AppCompatActivity {
     private void loadTab(String tab) {
         currentTab = tab;
         setSelectedTab(tab);
+        if ("media".equals(tab)) {
+            switchToMediaGrid();
+        } else {
+            switchToPostList();
+        }
 
         if (studentId <= 0) {
             showEmpty("Không tìm thấy người dùng");
@@ -554,12 +578,27 @@ public class CommunityProfileActivity extends AppCompatActivity {
                     CommunityPostResponse data = response.body().getData();
 
                     if (data.posts == null || data.posts.isEmpty()) {
-                        adapter.setPosts(null);
+                        if ("media".equals(tab)) {
+                            mediaAdapter.setPosts(null);
+                        } else {
+                            adapter.setPosts(null);
+                        }
+
                         showEmpty(getEmptyText(tab));
                     } else {
-                        tvEmpty.setVisibility(View.GONE);
-                        rvProfilePosts.setVisibility(View.VISIBLE);
-                        adapter.setPosts(data.posts);
+                        if (tvEmpty != null) {
+                            tvEmpty.setVisibility(View.GONE);
+                        }
+
+                        if (rvProfilePosts != null) {
+                            rvProfilePosts.setVisibility(View.VISIBLE);
+                        }
+
+                        if ("media".equals(tab)) {
+                            mediaAdapter.setPosts(data.posts);
+                        } else {
+                            adapter.setPosts(data.posts);
+                        }
                     }
                 } else {
                     adapter.setPosts(null);
@@ -732,4 +771,19 @@ public class CommunityProfileActivity extends AppCompatActivity {
             Toast.makeText(this, "Không mở được màn Messages: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
+
+    private void switchToPostList() {
+        if (rvProfilePosts == null) return;
+
+        rvProfilePosts.setLayoutManager(new LinearLayoutManager(this));
+        rvProfilePosts.setAdapter(adapter);
+    }
+
+    private void switchToMediaGrid() {
+        if (rvProfilePosts == null) return;
+
+        rvProfilePosts.setLayoutManager(new GridLayoutManager(this, 3));
+        rvProfilePosts.setAdapter(mediaAdapter);
+    }
+
 }

@@ -63,8 +63,8 @@ public class CommunityActivity extends AppCompatActivity {
     private boolean isFilterMenuVisible = false;
     private boolean isFirstLoad = true;
 
-    private boolean isTagFiltering = false;
-    private Integer currentErrorTypeId = null;
+    private boolean isHashtagFiltering = false;
+    private String currentHashtag = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,15 +138,16 @@ public class CommunityActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onTagClick(int errorTypeId, String errorName) {
-                currentErrorTypeId = errorTypeId;
-                isTagFiltering = true;
+            public void onTagClick(String hashtag) {
+                currentHashtag = hashtag;
+                isHashtagFiltering = true;
 
                 if (etSearch != null) {
                     etSearch.setText("");
+                    etSearch.setHint("#" + hashtag);
                 }
 
-                viewModel.loadPosts(authToken, currentFilter, 1, "", errorTypeId);
+                viewModel.loadPostsByHashtag(authToken, currentFilter, 1, hashtag);
             }
         });
 
@@ -208,9 +209,9 @@ public class CommunityActivity extends AppCompatActivity {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (isTagFiltering) return;
+                    if (isHashtagFiltering) return;
 
-                    currentErrorTypeId = null;
+                    currentHashtag = null;
                     viewModel.loadPosts(
                             authToken,
                             currentFilter,
@@ -254,8 +255,12 @@ public class CommunityActivity extends AppCompatActivity {
 
         tv.setOnClickListener(v -> {
             currentFilter = filter;
-            currentErrorTypeId = null;
-            isTagFiltering = false;
+            currentHashtag = null;
+            isHashtagFiltering = false;
+
+            if (etSearch != null) {
+                etSearch.setHint("Tìm kiếm bài viết...");
+            }
             isFilterMenuVisible = false;
 
             if (layoutFilterMenu != null) {
@@ -467,8 +472,8 @@ public class CommunityActivity extends AppCompatActivity {
                 ? etSearch.getText().toString().trim()
                 : "";
 
-        if (currentErrorTypeId != null) {
-            viewModel.loadPosts(authToken, currentFilter, 1, searchText, currentErrorTypeId);
+        if (currentHashtag != null && !currentHashtag.isEmpty()) {
+            viewModel.loadPostsByHashtag(authToken, currentFilter, 1, currentHashtag);
         } else {
             viewModel.loadPosts(authToken, currentFilter, 1, searchText);
         }

@@ -1,6 +1,17 @@
 const db = require('../config/db');
 const { ok, fail } = require('../utils/response');
 
+const normalizePostRows = (rows) => {
+    return rows.map(row => ({
+        ...row,
+        is_saved: row.is_saved ? 1 : 0,
+        is_reposted: row.is_reposted ? 1 : 0,
+        hashtags: row.hashtag_csv
+            ? row.hashtag_csv.split(',').map(tag => tag.trim()).filter(Boolean)
+            : []
+    }));
+};
+
 // GET /api/community/profile/me
 const getMyCommunityProfile = async (req, res) => {
     try {
@@ -157,7 +168,6 @@ const updateMyCommunityProfile = async (req, res) => {
     }
 };
 
-// GET /api/community/profile/:studentId/posts
 const getCommunityProfilePosts = async (req, res) => {
     try {
         const userId = req.user.user_id;
@@ -179,6 +189,7 @@ const getCommunityProfilePosts = async (req, res) => {
                 COUNT(DISTINCT CASE WHEN v.vote_type = 'upvote' THEN v.vote_id END) AS upvote_count,
                 COUNT(DISTINCT CASE WHEN v.vote_type = 'downvote' THEN v.vote_id END) AS downvote_count,
                 COUNT(DISTINCT c.comment_id) AS comment_count,
+                COUNT(DISTINCT rp.repost_id) AS repost_count,
 
                 EXISTS(
                     SELECT 1 
@@ -190,20 +201,40 @@ const getCommunityProfilePosts = async (req, res) => {
                         WHERE user_id = ? 
                         LIMIT 1
                     )
-                ) AS is_saved
+                ) AS is_saved,
+
+                EXISTS(
+                    SELECT 1
+                    FROM post_reposts rp2
+                    WHERE rp2.post_id = cp.post_id
+                    AND rp2.student_id = (
+                        SELECT student_id
+                        FROM students
+                        WHERE user_id = ?
+                        LIMIT 1
+                    )
+                ) AS is_reposted,
+
+                GROUP_CONCAT(DISTINCT pt.topic_name ORDER BY pt.topic_name SEPARATOR ',') AS hashtag_csv
 
             FROM community_posts cp
             LEFT JOIN students s ON cp.student_id = s.student_id
             LEFT JOIN users u ON s.user_id = u.user_id
             LEFT JOIN post_votes v ON cp.post_id = v.post_id
             LEFT JOIN comments c ON cp.post_id = c.post_id
+            LEFT JOIN post_reposts rp ON cp.post_id = rp.post_id
+            LEFT JOIN post_topic_mapping ptm ON cp.post_id = ptm.post_id
+            LEFT JOIN post_topics pt ON ptm.topic_id = pt.topic_id
+
             WHERE cp.student_id = ?
               AND cp.is_anonymous = 0
             GROUP BY cp.post_id
             ORDER BY cp.created_at DESC
-        `, [userId, studentId]);
+        `, [userId, userId, studentId]);
 
-        return ok(res, { posts: rows, total: rows.length });
+        const posts = normalizePostRows(rows);
+
+        return ok(res, { posts, total: posts.length });
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }
@@ -251,7 +282,85 @@ const getCommunityProfileReplies = async (req, res) => {
 
 const getCommunityProfileMedia = async (req, res) => {
     try {
-        return ok(res, { posts: [], total: 0 });
+        const userId = req.user.user_id;
+        const { studentId } = req.params;
+
+        const currentStudent = await getCurrentStudent(userId);
+
+        if (!currentStudent) {
+            return fail(res, 'Không tìm thấy sinh viên', 404);
+        }
+
+        const [rows] = await db.query(`
+            SELECT 
+                cp.post_id,
+                cp.student_id,
+                cp.title,
+                cp.content,
+                cp.image_url,
+                cp.is_anonymous,
+                cp.created_at,
+                cp.view_count,
+
+                CASE 
+                    WHEN cp.is_anonymous = 1 THEN 'Ẩn danh' 
+                    ELSE u.name 
+                END AS author_name,
+
+                CASE 
+                    WHEN cp.is_anonymous = 1 THEN NULL 
+                    ELSE u.avatar_url 
+                END AS author_avatar,
+
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'upvote' THEN v.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'downvote' THEN v.vote_id END) AS downvote_count,
+                COUNT(DISTINCT c.comment_id) AS comment_count,
+                COUNT(DISTINCT rp.repost_id) AS repost_count,
+
+                EXISTS(
+                    SELECT 1 
+                    FROM saved_posts sp2 
+                    WHERE sp2.post_id = cp.post_id 
+                      AND sp2.student_id = ?
+                ) AS is_saved,
+
+                EXISTS(
+                    SELECT 1
+                    FROM post_reposts rp2
+                    WHERE rp2.post_id = cp.post_id
+                      AND rp2.student_id = ?
+                ) AS is_reposted,
+
+                GROUP_CONCAT(DISTINCT pt.topic_name ORDER BY pt.topic_name SEPARATOR ',') AS hashtag_csv
+
+            FROM community_posts cp
+            LEFT JOIN students s ON cp.student_id = s.student_id
+            LEFT JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN post_votes v ON cp.post_id = v.post_id
+            LEFT JOIN comments c ON cp.post_id = c.post_id
+            LEFT JOIN post_reposts rp ON cp.post_id = rp.post_id
+            LEFT JOIN post_topic_mapping ptm ON cp.post_id = ptm.post_id
+            LEFT JOIN post_topics pt ON ptm.topic_id = pt.topic_id
+
+            WHERE cp.student_id = ?
+              AND cp.is_anonymous = 0
+              AND cp.image_url IS NOT NULL
+              AND cp.image_url <> ''
+
+            GROUP BY cp.post_id
+            ORDER BY cp.created_at DESC
+        `, [
+            currentStudent.student_id,
+            currentStudent.student_id,
+            studentId
+        ]);
+
+        const posts = normalizePostRows(rows);
+
+        return ok(res, {
+            posts,
+            total: posts.length
+        });
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }
@@ -259,7 +368,87 @@ const getCommunityProfileMedia = async (req, res) => {
 
 const getCommunityProfileReposts = async (req, res) => {
     try {
-        return ok(res, { posts: [], total: 0 });
+        const userId = req.user.user_id;
+        const { studentId } = req.params;
+
+        const currentStudent = await getCurrentStudent(userId);
+
+        if (!currentStudent) {
+            return fail(res, 'Không tìm thấy sinh viên', 404);
+        }
+
+        const [rows] = await db.query(`
+            SELECT 
+                cp.post_id,
+                cp.student_id,
+                cp.title,
+                cp.content,
+                cp.is_anonymous,
+                cp.created_at,
+                cp.view_count,
+
+                pr.created_at AS reposted_at,
+
+                CASE 
+                    WHEN cp.is_anonymous = 1 THEN 'Ẩn danh' 
+                    ELSE u.name 
+                END AS author_name,
+
+                CASE 
+                    WHEN cp.is_anonymous = 1 THEN NULL 
+                    ELSE u.avatar_url 
+                END AS author_avatar,
+
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'upvote' THEN v.vote_id END) AS upvote_count,
+                COUNT(DISTINCT CASE WHEN v.vote_type = 'downvote' THEN v.vote_id END) AS downvote_count,
+                COUNT(DISTINCT c.comment_id) AS comment_count,
+                COUNT(DISTINCT rp_all.repost_id) AS repost_count,
+
+                EXISTS(
+                    SELECT 1 
+                    FROM saved_posts sp2 
+                    WHERE sp2.post_id = cp.post_id 
+                      AND sp2.student_id = ?
+                ) AS is_saved,
+
+                EXISTS(
+                    SELECT 1
+                    FROM post_reposts rp2
+                    WHERE rp2.post_id = cp.post_id
+                      AND rp2.student_id = ?
+                ) AS is_reposted,
+
+                GROUP_CONCAT(DISTINCT pt.topic_name ORDER BY pt.topic_name SEPARATOR ',') AS hashtag_csv
+
+            FROM post_reposts pr
+            JOIN community_posts cp ON pr.post_id = cp.post_id
+
+            LEFT JOIN students s ON cp.student_id = s.student_id
+            LEFT JOIN users u ON s.user_id = u.user_id
+
+            LEFT JOIN post_votes v ON cp.post_id = v.post_id
+            LEFT JOIN comments c ON cp.post_id = c.post_id
+            LEFT JOIN post_reposts rp_all ON cp.post_id = rp_all.post_id
+
+            LEFT JOIN post_topic_mapping ptm ON cp.post_id = ptm.post_id
+            LEFT JOIN post_topics pt ON ptm.topic_id = pt.topic_id
+
+            WHERE pr.student_id = ?
+
+            GROUP BY cp.post_id, pr.created_at
+            ORDER BY pr.created_at DESC
+        `, [
+            currentStudent.student_id,
+            currentStudent.student_id,
+            studentId
+        ]);
+
+        const posts = normalizePostRows(rows);
+
+        return ok(res, {
+            posts,
+            total: posts.length
+        });
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }
@@ -386,26 +575,55 @@ const getPostTopics = async (req, res) => {
 };
 
 
-// GET /api/community/posts?filter=new&page=1
+/// GET /api/community/posts?filter=new&page=1&search=&hashtag=
 const getPosts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 20;
         const offset = (page - 1) * limit;
+
         const filter = req.query.filter || 'new'; // new | trending | best | my_logs
         const search = req.query.search ? `%${req.query.search}%` : '%';
+        const hashtag = req.query.hashtag ? req.query.hashtag.trim() : null;
+
         const userId = req.user.user_id;
+        const currentStudent = await getCurrentStudent(userId);
+
+        if (!currentStudent) {
+            return fail(res, 'Không tìm thấy sinh viên', 404);
+        }
 
         let orderBy = 'cp.created_at DESC';
         let extraWhere = '';
+        const params = [userId, userId, search, search, currentStudent.student_id];
 
         if (filter === 'trending') {
             orderBy = 'upvote_count DESC, cp.created_at DESC';
         } else if (filter === 'best') {
             orderBy = 'comment_count DESC, upvote_count DESC';
         } else if (filter === 'my_logs') {
-            extraWhere += ` AND s.user_id = ${userId}`;
+            extraWhere += ' AND s.user_id = ?';
+            params.push(userId);
         }
+
+        if (hashtag) {
+            extraWhere += `
+                AND EXISTS (
+                    SELECT 1
+                    FROM post_topic_mapping ptm_filter
+                    JOIN post_topics pt_filter 
+                        ON ptm_filter.topic_id = pt_filter.topic_id
+                    WHERE ptm_filter.post_id = cp.post_id
+                      AND (
+                          pt_filter.topic_name = ?
+                          OR REPLACE(LOWER(pt_filter.topic_name), ' ', '-') = REPLACE(LOWER(?), ' ', '-')
+                      )
+                )
+            `;
+            params.push(hashtag, hashtag);
+        }
+
+        params.push(limit, offset);
 
         const [rows] = await db.query(`
             SELECT 
@@ -448,7 +666,9 @@ const getPosts = async (req, res) => {
                         WHERE user_id = ?
                         LIMIT 1
                     )
-                ) AS is_reposted
+                ) AS is_reposted,
+
+                GROUP_CONCAT(DISTINCT pt.topic_name ORDER BY pt.topic_name SEPARATOR ',') AS hashtag_csv
 
             FROM community_posts cp
             LEFT JOIN students s ON cp.student_id = s.student_id
@@ -457,20 +677,70 @@ const getPosts = async (req, res) => {
             LEFT JOIN comments c ON cp.post_id = c.post_id
             LEFT JOIN post_reposts rp ON cp.post_id = rp.post_id
 
-            WHERE (cp.title LIKE ? OR cp.content LIKE ?) ${extraWhere}
+            LEFT JOIN post_topic_mapping ptm ON cp.post_id = ptm.post_id
+            LEFT JOIN post_topics pt ON ptm.topic_id = pt.topic_id
+
+            WHERE (cp.title LIKE ? OR cp.content LIKE ?)
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM muted_authors ma
+                    WHERE ma.student_id = ?
+                        AND ma.muted_student_id = cp.student_id
+                )
+                ${extraWhere}
             GROUP BY cp.post_id
             ORDER BY ${orderBy}
             LIMIT ? OFFSET ?
-        `, [userId, userId, search, search, limit, offset]);
+        `, params);
+
+        const countParams = [search, search, currentStudent.student_id];
+
+        let countExtraWhere = '';
+
+        if (filter === 'my_logs') {
+            countExtraWhere += ' AND s.user_id = ?';
+            countParams.push(userId);
+        }
+
+        if (hashtag) {
+            countExtraWhere += `
+                AND EXISTS (
+                    SELECT 1
+                    FROM post_topic_mapping ptm_filter
+                    JOIN post_topics pt_filter 
+                        ON ptm_filter.topic_id = pt_filter.topic_id
+                    WHERE ptm_filter.post_id = cp.post_id
+                      AND (
+                          pt_filter.topic_name = ?
+                          OR REPLACE(LOWER(pt_filter.topic_name), ' ', '-') = REPLACE(LOWER(?), ' ', '-')
+                      )
+                )
+            `;
+            countParams.push(hashtag, hashtag);
+        }
 
         const [[{ total }]] = await db.query(`
             SELECT COUNT(DISTINCT cp.post_id) as total
             FROM community_posts cp
             LEFT JOIN students s ON cp.student_id = s.student_id
-            WHERE (cp.title LIKE ? OR cp.content LIKE ?) ${extraWhere}
-        `, [search, search]);
+            WHERE (cp.title LIKE ? OR cp.content LIKE ?)
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM muted_authors ma
+                    WHERE ma.student_id = ?
+                        AND ma.muted_student_id = cp.student_id
+                )
+                ${countExtraWhere}
+        `, countParams);
 
-        return ok(res, { posts: rows, total, page, totalPages: Math.ceil(total / limit) });
+        const posts = normalizePostRows(rows);
+
+        return ok(res, {
+            posts,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }
@@ -482,7 +752,7 @@ const getPosts = async (req, res) => {
 const createPost = async (req, res) => {
     try {
         const userId = req.user.user_id;
-        const { title, content, is_anonymous } = req.body;
+        const { title, content, is_anonymous, hashtags } = req.body;
 
         // Validate
         if (!title || title.trim().length < 10)
@@ -506,6 +776,34 @@ const createPost = async (req, res) => {
         `, [student.student_id, title.trim(), content.trim(), is_anonymous ? 1 : 0]);
 
         const postId = result.insertId;
+        if (Array.isArray(hashtags) && hashtags.length > 0) {
+            for (const rawTag of hashtags) {
+                const tagName = String(rawTag || '')
+                    .trim()
+                    .replace(/^#/, '');
+
+                if (!tagName) continue;
+
+                await db.query(`
+                    INSERT IGNORE INTO post_topics (topic_name)
+                    VALUES (?)
+                `, [tagName]);
+
+                const [[topic]] = await db.query(`
+                    SELECT topic_id 
+                    FROM post_topics 
+                    WHERE topic_name = ? 
+                    LIMIT 1
+                `, [tagName]);
+
+                if (topic) {
+                    await db.query(`
+                        INSERT IGNORE INTO post_topic_mapping (post_id, topic_id)
+                        VALUES (?, ?)
+                    `, [postId, topic.topic_id]);
+                }
+            }
+        }
 
         return ok(res, { post_id: postId },
             'Bài viết đã được đăng thành công!', 201);
@@ -599,6 +897,15 @@ const getPostDetail = async (req, res) => {
         `, [postId]);
 
         if (!post) return fail(res, 'Không tìm thấy bài viết', 404);
+        const [tagRows] = await db.query(`
+            SELECT pt.topic_name
+            FROM post_topic_mapping ptm
+            JOIN post_topics pt ON ptm.topic_id = pt.topic_id
+            WHERE ptm.post_id = ?
+            ORDER BY pt.topic_name ASC
+        `, [postId]);
+
+        post.hashtags = tagRows.map(row => row.topic_name);
 
         // Lấy comments kèm vote count (chỉ lấy top-level comments)
         const [comments] = await db.query(`
@@ -794,19 +1101,41 @@ const muteAuthor = async (req, res) => {
     try {
         const userId = req.user.user_id;
         const { postId } = req.params;
-        const [[student]] = await db.query('SELECT student_id FROM students WHERE user_id = ?', [userId]);
-        if (!student) return fail(res, 'Không tìm thấy sinh viên', 404);
 
-        // Lấy student_id của tác giả bài viết
-        const [[post]] = await db.query('SELECT student_id FROM community_posts WHERE post_id = ?', [postId]);
-        if (!post) return fail(res, 'Không tìm thấy bài viết', 404);
-        if (post.student_id === student.student_id) return fail(res, 'Không thể mute chính mình', 400);
+        const [[student]] = await db.query(
+            'SELECT student_id FROM students WHERE user_id = ? LIMIT 1',
+            [userId]
+        );
+
+        if (!student) {
+            return fail(res, 'Không tìm thấy sinh viên', 404);
+        }
+
+        const [[post]] = await db.query(
+            'SELECT student_id FROM community_posts WHERE post_id = ? LIMIT 1',
+            [postId]
+        );
+
+        if (!post) {
+            return fail(res, 'Không tìm thấy bài viết', 404);
+        }
+
+        if (post.student_id === student.student_id) {
+            return fail(res, 'Không thể mute chính mình', 400);
+        }
 
         await db.query(
-            'INSERT IGNORE INTO MUTED_AUTHORS (student_id, muted_student_id) VALUES (?, ?)',
+            'INSERT IGNORE INTO muted_authors (student_id, muted_student_id) VALUES (?, ?)',
             [student.student_id, post.student_id]
         );
-        return ok(res, null, 'Đã ẩn bài viết từ tác giả này');
+
+        return ok(
+            res,
+            {
+                muted_student_id: post.student_id
+            },
+            'Đã ẩn bài viết từ tác giả này'
+        );
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }
@@ -815,8 +1144,20 @@ const muteAuthor = async (req, res) => {
 const getSavedPosts = async (req, res) => {
     try {
         const userId = req.user.user_id;
-        const [[student]] = await db.query('SELECT student_id FROM students WHERE user_id = ?', [userId]);
-        if (!student) return fail(res, 'Không tìm thấy sinh viên', 404);
+        const currentStudent = await getCurrentStudent(userId);
+
+        if (!currentStudent) {
+            return fail(res, 'Không tìm thấy sinh viên', 404);
+        }
+
+        const [[student]] = await db.query(
+            'SELECT student_id FROM students WHERE user_id = ?',
+            [userId]
+        );
+
+        if (!student) {
+            return fail(res, 'Không tìm thấy sinh viên', 404);
+        }
 
         const [rows] = await db.query(`
             SELECT 
@@ -827,6 +1168,7 @@ const getSavedPosts = async (req, res) => {
                 cp.is_anonymous,
                 cp.created_at,
                 cp.view_count,
+
                 CASE WHEN cp.is_anonymous = 1 THEN 'Ẩn danh' ELSE u.name END AS author_name,
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE u.avatar_url END AS author_avatar,
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE u.email END AS author_email,
@@ -834,21 +1176,41 @@ const getSavedPosts = async (req, res) => {
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE s.major END AS author_major,
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE s.faculty END AS author_faculty,
                 CASE WHEN cp.is_anonymous = 1 THEN NULL ELSE s.year_of_study END AS author_year_of_study,
+
                 COUNT(DISTINCT CASE WHEN v.vote_type = 'upvote' THEN v.vote_id END) AS upvote_count,
                 COUNT(DISTINCT CASE WHEN v.vote_type = 'downvote' THEN v.vote_id END) AS downvote_count,
-                COUNT(DISTINCT c.comment_id) AS comment_count
+                COUNT(DISTINCT c.comment_id) AS comment_count,
+                COUNT(DISTINCT rp.repost_id) AS repost_count,
+
+                1 AS is_saved,
+
+                EXISTS(
+                    SELECT 1
+                    FROM post_reposts rp2
+                    WHERE rp2.post_id = cp.post_id
+                    AND rp2.student_id = ?
+                ) AS is_reposted,
+
+                GROUP_CONCAT(DISTINCT pt.topic_name ORDER BY pt.topic_name SEPARATOR ',') AS hashtag_csv
+
             FROM saved_posts sp
             JOIN community_posts cp ON sp.post_id = cp.post_id
             LEFT JOIN students s ON cp.student_id = s.student_id
             LEFT JOIN users u ON s.user_id = u.user_id
             LEFT JOIN post_votes v ON cp.post_id = v.post_id
             LEFT JOIN comments c ON cp.post_id = c.post_id
+            LEFT JOIN post_reposts rp ON cp.post_id = rp.post_id
+            LEFT JOIN post_topic_mapping ptm ON cp.post_id = ptm.post_id
+            LEFT JOIN post_topics pt ON ptm.topic_id = pt.topic_id
+
             WHERE sp.student_id = ?
             GROUP BY cp.post_id
             ORDER BY sp.saved_at DESC
-        `, [student.student_id]);
+        `, [student.student_id, student.student_id]);
 
-        return ok(res, { posts: rows, total: rows.length });
+        const posts = normalizePostRows(rows);
+
+        return ok(res, { posts, total: posts.length });
     } catch (err) {
         return fail(res, 'Server error', 500, err.message);
     }

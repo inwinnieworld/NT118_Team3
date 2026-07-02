@@ -1,15 +1,18 @@
 package com.example.emotiondebugging.ui.community.adapter;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.model.response.CommunityPostResponse;
 import com.example.emotiondebugging.utils.AvatarHelper;
@@ -21,13 +24,20 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
 
     public interface OnPostClickListener {
         void onUpvote(CommunityPostResponse.PostItem post);
-        void onAuthorClick(CommunityPostResponse.PostItem post);
+
         void onDownvote(CommunityPostResponse.PostItem post);
+
         void onPostClick(CommunityPostResponse.PostItem post);
+
+        void onAuthorClick(CommunityPostResponse.PostItem post);
+
         void onSave(CommunityPostResponse.PostItem post);
+
         void onMute(CommunityPostResponse.PostItem post);
-        void onTagClick(int errorTypeId, String errorName);
+
         void onRepost(CommunityPostResponse.PostItem post);
+
+        void onTagClick(String hashtag);
     }
 
     private List<CommunityPostResponse.PostItem> posts = new ArrayList<>();
@@ -39,7 +49,18 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
 
     public void setPosts(List<CommunityPostResponse.PostItem> newPosts) {
         this.posts = newPosts != null ? newPosts : new ArrayList<>();
+
         android.util.Log.d("CommunityAdapter", "setPosts: " + this.posts.size() + " items");
+
+        for (CommunityPostResponse.PostItem post : this.posts) {
+            android.util.Log.d(
+                    "POST_IMAGE_CHECK",
+                    "postId=" + post.postId
+                            + ", title=" + post.title
+                            + ", imageUrl=" + post.imageUrl
+            );
+        }
+
         notifyDataSetChanged();
     }
 
@@ -54,7 +75,7 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         CommunityPostResponse.PostItem post = posts.get(position);
-        holder.bind(post);
+        holder.bind(post, listener);
     }
 
     @Override
@@ -80,12 +101,15 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
         ImageButton btnRepost;
         ImageButton btnMore;
 
-        android.widget.ImageView ivAvatar;
+        ImageView ivAvatar;
+        ImageView ivPostImage;
 
         PostViewHolder(@NonNull View itemView) {
             super(itemView);
 
             ivAvatar = itemView.findViewById(R.id.iv_avatar);
+            ivPostImage = itemView.findViewById(R.id.iv_post_image);
+
             tvAuthorName = itemView.findViewById(R.id.tv_author_name);
             tvTitle = itemView.findViewById(R.id.tv_title);
             tvPreview = itemView.findViewById(R.id.tv_preview);
@@ -103,18 +127,27 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             btnMore = itemView.findViewById(R.id.btn_more);
         }
 
-        void bind(CommunityPostResponse.PostItem post) {
+        public void bind(
+                CommunityPostResponse.PostItem post,
+                OnPostClickListener listener
+        ) {
             if (post == null) return;
 
+            bindAuthor(post, listener);
+            bindContent(post);
+            bindPostImage(post);
+            bindStats(post);
+            bindActions(post, listener);
+            bindHashtags(post, listener);
+        }
+
+        private void bindAuthor(
+                CommunityPostResponse.PostItem post,
+                OnPostClickListener listener
+        ) {
             String authorName = post.authorName != null && !post.authorName.trim().isEmpty()
                     ? post.authorName
                     : "Ẩn danh";
-
-            String title = post.title != null ? post.title : "";
-            String content = post.content != null ? post.content : "";
-            String preview = content.length() > 60
-                    ? content.substring(0, 60) + "..."
-                    : content;
 
             if (tvAuthorName != null) {
                 tvAuthorName.setText(authorName);
@@ -133,6 +166,15 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
                     }
                 });
             }
+        }
+
+        private void bindContent(CommunityPostResponse.PostItem post) {
+            String title = post.title != null ? post.title : "";
+            String content = post.content != null ? post.content : "";
+
+            String preview = content.length() > 60
+                    ? content.substring(0, 60) + "..."
+                    : content;
 
             if (tvTitle != null) {
                 tvTitle.setText(title);
@@ -141,22 +183,39 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             if (tvPreview != null) {
                 tvPreview.setText(preview);
             }
+        }
 
-            if (tvTag != null) {
-                if (post.errorName != null && !post.errorName.trim().isEmpty()) {
-                    tvTag.setText("#" + post.errorName);
-                    tvTag.setVisibility(View.VISIBLE);
-                    tvTag.setOnClickListener(v -> {
-                        if (listener != null) {
-                            listener.onTagClick(post.errorTypeId, post.errorName);
-                        }
-                    });
-                } else {
-                    tvTag.setText("");
-                    tvTag.setVisibility(View.GONE);
-                }
+        private void bindPostImage(CommunityPostResponse.PostItem post) {
+            if (ivPostImage == null) return;
+
+            android.util.Log.d(
+                    "POST_IMAGE",
+                    "postId=" + post.postId
+                            + ", title=" + post.title
+                            + ", imageUrl=" + post.imageUrl
+            );
+
+            if (post.imageUrl == null || post.imageUrl.trim().isEmpty()) {
+                ivPostImage.setVisibility(View.GONE);
+                ivPostImage.setImageDrawable(null);
+                return;
             }
 
+            String imageUrl = post.imageUrl.trim();
+
+            if (imageUrl.startsWith("/")) {
+                imageUrl = "http://10.0.2.2:3000" + imageUrl;
+            }
+
+            ivPostImage.setVisibility(View.VISIBLE);
+
+            Glide.with(itemView.getContext())
+                    .load(imageUrl)
+                    .centerCrop()
+                    .into(ivPostImage);
+        }
+
+        private void bindStats(CommunityPostResponse.PostItem post) {
             if (tvVoteCount != null) {
                 tvVoteCount.setText(String.valueOf(post.upvoteCount));
             }
@@ -180,7 +239,12 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             if (tvRepostCount != null) {
                 tvRepostCount.setText(String.valueOf(post.repostCount));
             }
+        }
 
+        private void bindActions(
+                CommunityPostResponse.PostItem post,
+                OnPostClickListener listener
+        ) {
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onPostClick(post);
@@ -205,8 +269,8 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
 
             if (btnRepost != null) {
                 btnRepost.setColorFilter(post.isReposted == 1
-                        ? android.graphics.Color.parseColor("#12B2C1")
-                        : android.graphics.Color.parseColor("#6B7280"));
+                        ? Color.parseColor("#12B2C1")
+                        : Color.parseColor("#6B7280"));
 
                 btnRepost.setOnClickListener(v -> {
                     if (listener != null) {
@@ -218,8 +282,20 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             if (btnMore != null) {
                 btnMore.setOnClickListener(v -> {
                     PopupMenu popup = new PopupMenu(v.getContext(), v);
-                    popup.getMenu().add(0, 1, 0, post.isSaved == 1 ? "Bỏ lưu bài viết" : "Lưu bài viết");
-                    popup.getMenu().add(0, 2, 1, "Không quan tâm tác giả này");
+
+                    popup.getMenu().add(
+                            0,
+                            1,
+                            0,
+                            post.isSaved == 1 ? "Bỏ lưu bài viết" : "Lưu bài viết"
+                    );
+
+                    popup.getMenu().add(
+                            0,
+                            2,
+                            1,
+                            "Không quan tâm tác giả này"
+                    );
 
                     popup.setOnMenuItemClickListener(item -> {
                         if (listener == null) return false;
@@ -242,6 +318,99 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             }
         }
 
+        private void bindHashtags(
+                CommunityPostResponse.PostItem post,
+                OnPostClickListener listener
+        ) {
+            if (tvTag == null) return;
+
+            List<String> hashtags = getHashtagsFromPost(post);
+
+            if (hashtags.isEmpty()) {
+                tvTag.setText("");
+                tvTag.setVisibility(View.GONE);
+                tvTag.setOnClickListener(null);
+                return;
+            }
+
+            tvTag.setVisibility(View.VISIBLE);
+            tvTag.setTextColor(Color.parseColor("#12B2C1"));
+            tvTag.setText(buildHashtagText(hashtags));
+
+            tvTag.setOnClickListener(v -> {
+                if (listener == null) return;
+
+                if (hashtags.size() == 1) {
+                    listener.onTagClick(hashtags.get(0));
+                    return;
+                }
+
+                PopupMenu popup = new PopupMenu(v.getContext(), v);
+
+                for (int i = 0; i < hashtags.size(); i++) {
+                    popup.getMenu().add(0, i, i, "#" + hashtags.get(i));
+                }
+
+                popup.setOnMenuItemClickListener(item -> {
+                    int index = item.getItemId();
+
+                    if (index >= 0 && index < hashtags.size()) {
+                        listener.onTagClick(hashtags.get(index));
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                popup.show();
+            });
+        }
+
+        private List<String> getHashtagsFromPost(CommunityPostResponse.PostItem post) {
+            List<String> result = new ArrayList<>();
+
+            if (post.hashtags != null && !post.hashtags.isEmpty()) {
+                for (String tag : post.hashtags) {
+                    String cleaned = cleanHashtag(tag);
+
+                    if (!cleaned.isEmpty() && !result.contains(cleaned)) {
+                        result.add(cleaned);
+                    }
+                }
+            }
+
+            if (result.isEmpty()
+                    && post.errorName != null
+                    && !post.errorName.trim().isEmpty()) {
+                result.add(cleanHashtag(post.errorName));
+            }
+
+            return result;
+        }
+
+        private String buildHashtagText(List<String> hashtags) {
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < hashtags.size(); i++) {
+                if (i > 0) {
+                    builder.append("  ");
+                }
+
+                builder.append("#").append(hashtags.get(i));
+            }
+
+            return builder.toString();
+        }
+
+        private String cleanHashtag(String value) {
+            if (value == null) return "";
+
+            return value
+                    .trim()
+                    .replace("#", "")
+                    .replace(" ", "-");
+        }
+
         private String formatTime(String createdAt) {
             if (createdAt == null || createdAt.trim().isEmpty()) {
                 return "";
@@ -252,6 +421,7 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
                         "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
                         java.util.Locale.getDefault()
                 );
+
                 sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 
                 java.util.Date date = sdf.parse(createdAt);
