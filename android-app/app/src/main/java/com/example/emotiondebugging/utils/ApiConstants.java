@@ -1,5 +1,7 @@
 package com.example.emotiondebugging.utils;
 
+import android.os.Build;
+
 /**
  * API Configuration - Quản lý BASE_URL tập trung
  *
@@ -29,13 +31,31 @@ public class ApiConstants {
     // ==================== BASE URL ====================
 
     /**
-     * BASE_URL: cả emulator lẫn máy thật đều dùng IP LAN của máy chạy backend.
-     * (Trước đây emulator dùng 10.0.2.2 nhưng trên Windows hay bị Firewall chặn
-     *  loopback ảo → "Failed to connect". IP LAN thì emulator gọi được qua NAT,
-     *  giống hệt máy thật, nên ổn định hơn.)
+     * BASE_URL tự động: emulator dùng 10.0.2.2, máy thật dùng IP LAN.
      * Có dấu "/" cuối để Retrofit ghép path đúng chuẩn.
      */
-    public static final String BASE_URL = "http://" + IP_ADDRESS + ":" + PORT + "/";
+    public static final String BASE_URL = isEmulator()
+            ? "http://10.0.2.2:" + PORT + "/"
+            : "http://" + IP_ADDRESS + ":" + PORT + "/";
+
+    /**
+     * Nhận diện đang chạy trên Android Emulator hay máy thật (dựa trên Build fingerprint).
+     * Bao trùm các emulator phổ biến: AVD chính chủ, Genymotion, BlueStacks...
+     */
+    private static boolean isEmulator() {
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.FINGERPRINT.contains("emulator")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.BRAND.startsWith("generic")
+                || Build.DEVICE.startsWith("generic")
+                || Build.PRODUCT.contains("sdk")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu");
+    }
 
     /**
      * Get full URL for avatar/uploads
