@@ -190,3 +190,67 @@ CALL community_add_fk_if_missing(
 
 DROP PROCEDURE community_add_column_if_missing;
 DROP PROCEDURE community_add_fk_if_missing;
+
+-- ----------------------------------------------------------------------------
+-- Follow counters: đồng bộ tuyệt đối với community_follows.
+-- Nguồn sự thật là bảng community_follows; 2 cột count trong community_profiles
+-- chỉ là bản cache đọc nhanh. Trigger dưới đây giữ cache luôn khớp, bất kể ai
+-- ghi vào community_follows (code app, thao tác tay, hay cascade khi xoá).
+-- ----------------------------------------------------------------------------
+
+-- 1) Re-sync một lần: dọn sạch mọi giá trị count lệch (seed rác, lần chạy cũ...).
+UPDATE community_profiles cp SET
+    follower_count = (
+        SELECT COUNT(*) FROM community_follows cf
+        WHERE cf.following_student_id = cp.student_id
+    ),
+    following_count = (
+        SELECT COUNT(*) FROM community_follows cf
+        WHERE cf.follower_student_id = cp.student_id
+    );
+
+-- 2) Trigger tự chữa lành: mỗi lần bảng follows đổi, đếm lại (COUNT) đúng 2
+--    profile bị ảnh hưởng — không dùng +1/-1 nên không bao giờ trôi lệch.
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_follows_after_insert$$
+CREATE TRIGGER trg_follows_after_insert
+AFTER INSERT ON community_follows
+FOR EACH ROW
+BEGIN
+    UPDATE community_profiles
+    SET following_count = (
+        SELECT COUNT(*) FROM community_follows
+        WHERE follower_student_id = NEW.follower_student_id
+    )
+    WHERE student_id = NEW.follower_student_id;
+
+    UPDATE community_profiles
+    SET follower_count = (
+        SELECT COUNT(*) FROM community_follows
+        WHERE following_student_id = NEW.following_student_id
+    )
+    WHERE student_id = NEW.following_student_id;
+END$$
+
+DROP TRIGGER IF EXISTS trg_follows_after_delete$$
+CREATE TRIGGER trg_follows_after_delete
+AFTER DELETE ON community_follows
+FOR EACH ROW
+BEGIN
+    UPDATE community_profiles
+    SET following_count = (
+        SELECT COUNT(*) FROM community_follows
+        WHERE follower_student_id = OLD.follower_student_id
+    )
+    WHERE student_id = OLD.follower_student_id;
+
+    UPDATE community_profiles
+    SET follower_count = (
+        SELECT COUNT(*) FROM community_follows
+        WHERE following_student_id = OLD.following_student_id
+    )
+    WHERE student_id = OLD.following_student_id;
+END$$
+
+DELIMITER ;

@@ -435,31 +435,12 @@ const followUser = async (req, res) => {
             return fail(res, 'Không tìm thấy người dùng cần theo dõi', 404);
         }
 
+        // Trigger trg_follows_after_insert tự đồng bộ follower_count/following_count.
         await db.query(`
-            INSERT IGNORE INTO community_follows 
+            INSERT IGNORE INTO community_follows
             (follower_student_id, following_student_id)
             VALUES (?, ?)
         `, [currentStudent.student_id, studentId]);
-
-        await db.query(`
-            UPDATE community_profiles 
-            SET following_count = (
-                SELECT COUNT(*) 
-                FROM community_follows 
-                WHERE follower_student_id = ?
-            )
-            WHERE student_id = ?
-        `, [currentStudent.student_id, currentStudent.student_id]);
-
-        await db.query(`
-            UPDATE community_profiles 
-            SET follower_count = (
-                SELECT COUNT(*) 
-                FROM community_follows 
-                WHERE following_student_id = ?
-            )
-            WHERE student_id = ?
-        `, [studentId, studentId]);
 
         return ok(res, { followed: true }, 'Đã theo dõi');
     } catch (err) {
@@ -478,31 +459,12 @@ const unfollowUser = async (req, res) => {
             return fail(res, 'Không tìm thấy sinh viên', 404);
         }
 
+        // Trigger trg_follows_after_delete tự đồng bộ follower_count/following_count.
         await db.query(`
             DELETE FROM community_follows
             WHERE follower_student_id = ?
               AND following_student_id = ?
         `, [currentStudent.student_id, studentId]);
-
-        await db.query(`
-            UPDATE community_profiles 
-            SET following_count = (
-                SELECT COUNT(*) 
-                FROM community_follows 
-                WHERE follower_student_id = ?
-            )
-            WHERE student_id = ?
-        `, [currentStudent.student_id, currentStudent.student_id]);
-
-        await db.query(`
-            UPDATE community_profiles 
-            SET follower_count = (
-                SELECT COUNT(*) 
-                FROM community_follows 
-                WHERE following_student_id = ?
-            )
-            WHERE student_id = ?
-        `, [studentId, studentId]);
 
         return ok(res, { followed: false }, 'Đã bỏ theo dõi');
     } catch (err) {
