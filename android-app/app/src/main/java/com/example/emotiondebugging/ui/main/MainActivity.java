@@ -45,8 +45,20 @@ public class MainActivity extends AppCompatActivity {
         if (ivUserInfo != null) {
             ivUserInfo.setOnClickListener(v -> {
                 android.content.Intent intent = new android.content.Intent(
-                    MainActivity.this, 
+                    MainActivity.this,
                     com.example.emotiondebugging.ui.profile.ProfileActivity.class
+                );
+                startActivity(intent);
+            });
+        }
+
+        // Icon chuông thông báo → mở màn hình thông báo cộng đồng
+        ImageView ivNotification = findViewById(R.id.ivNotification);
+        if (ivNotification != null) {
+            ivNotification.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(
+                    MainActivity.this,
+                    com.example.emotiondebugging.ui.community.NotificationActivity.class
                 );
                 startActivity(intent);
             });

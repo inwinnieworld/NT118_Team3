@@ -15,12 +15,18 @@ import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import okhttp3.MultipartBody;
 import com.example.emotiondebugging.model.chat.ChatHistoryResponse;
 import com.example.emotiondebugging.model.community.FollowListResponse;
+import com.example.emotiondebugging.model.community.NotificationListResponse;
+import com.example.emotiondebugging.model.community.TopicListResponse;
+import com.example.emotiondebugging.model.community.UnreadCountResponse;
 import com.example.emotiondebugging.model.response.ChatConversationResponse;
 public interface CommunityApiService {
 
@@ -30,7 +36,7 @@ public interface CommunityApiService {
             @Query("filter") String filter,
             @Query("page") int page,
             @Query("search") String search,
-            @Query("error_type_id") Integer errorTypeId
+            @Query("topic_id") Integer topicId
     );
 
     @GET("api/community/error-types")
@@ -42,6 +48,26 @@ public interface CommunityApiService {
     Call<ApiResponse<Map<String, Object>>> createPost(
             @Header("Authorization") String token,
             @Body CreatePostRequest request
+    );
+
+    @PUT("api/community/posts/{postId}")
+    Call<ApiResponse<Map<String, Object>>> updatePost(
+            @Header("Authorization") String token,
+            @Path("postId") int postId,
+            @Body CreatePostRequest request
+    );
+
+    @DELETE("api/community/posts/{postId}")
+    Call<ApiResponse<Object>> deletePost(
+            @Header("Authorization") String token,
+            @Path("postId") int postId
+    );
+
+    @Multipart
+    @POST("api/community/profile/me/music")
+    Call<ApiResponse<Map<String, Object>>> uploadProfileMusic(
+            @Header("Authorization") String token,
+            @Part MultipartBody.Part music
     );
 
     @POST("api/community/posts/{postId}/vote")
@@ -135,7 +161,7 @@ public interface CommunityApiService {
     // =========================
 
     @GET("api/community/topics")
-    Call<ApiResponse<List<Map<String, Object>>>> getPostTopics(
+    Call<ApiResponse<TopicListResponse>> getPostTopics(
             @Header("Authorization") String token
     );
 
@@ -153,6 +179,12 @@ public interface CommunityApiService {
 
     @GET("api/community/profile/{studentId}/reposts")
     Call<ApiResponse<CommunityPostResponse>> getCommunityProfileReposts(
+            @Header("Authorization") String token,
+            @Path("studentId") int studentId
+    );
+
+    @GET("api/community/profile/{studentId}/upvoted")
+    Call<ApiResponse<CommunityPostResponse>> getCommunityProfileUpvoted(
             @Header("Authorization") String token,
             @Path("studentId") int studentId
     );
@@ -183,6 +215,109 @@ public interface CommunityApiService {
 
     @GET("api/chat/conversations")
     Call<ApiResponse<ChatConversationResponse>> getChatConversations(
+            @Header("Authorization") String token
+    );
+
+    // =========================
+    // TOPIC POSTS
+    // =========================
+
+    @GET("api/community/topics/{topicId}/posts")
+    Call<ApiResponse<CommunityPostResponse>> getTopicPosts(
+            @Header("Authorization") String token,
+            @Path("topicId") int topicId
+    );
+
+    // =========================
+    // NOTIFICATIONS
+    // =========================
+
+    @GET("api/community/notifications")
+    Call<ApiResponse<NotificationListResponse>> getNotifications(
+            @Header("Authorization") String token
+    );
+
+    @GET("api/community/notifications/unread-count")
+    Call<ApiResponse<UnreadCountResponse>> getUnreadNotificationCount(
+            @Header("Authorization") String token
+    );
+
+    @POST("api/community/notifications/{id}/read")
+    Call<ApiResponse<Object>> markNotificationRead(
+            @Header("Authorization") String token,
+            @Path("id") int id
+    );
+
+    @POST("api/community/notifications/read-all")
+    Call<ApiResponse<Object>> markAllNotificationsRead(
+            @Header("Authorization") String token
+    );
+
+    // =========================
+    // REPORT / REVIEW REQUEST
+    // =========================
+
+    @POST("api/community/posts/{postId}/report")
+    Call<ApiResponse<Object>> reportPost(
+            @Header("Authorization") String token,
+            @Path("postId") int postId,
+            @Body Map<String, String> body
+    );
+
+    @POST("api/community/posts/{postId}/comments/{commentId}/report")
+    Call<ApiResponse<Object>> reportComment(
+            @Header("Authorization") String token,
+            @Path("postId") int postId,
+            @Path("commentId") int commentId,
+            @Body Map<String, String> body
+    );
+
+    @POST("api/community/posts/{postId}/review-request")
+    Call<ApiResponse<Object>> createReviewRequest(
+            @Header("Authorization") String token,
+            @Path("postId") int postId,
+            @Body Map<String, String> body
+    );
+
+    // =========================
+    // BLOCK / MUTE (author-based)
+    // =========================
+
+    @POST("api/community/users/{studentId}/block")
+    Call<ApiResponse<Object>> blockUser(
+            @Header("Authorization") String token,
+            @Path("studentId") int studentId
+    );
+
+    @DELETE("api/community/users/{studentId}/block")
+    Call<ApiResponse<Object>> unblockUser(
+            @Header("Authorization") String token,
+            @Path("studentId") int studentId
+    );
+
+    @GET("api/community/profile/me/blocked")
+    Call<ApiResponse<FollowListResponse>> getBlockedAuthors(
+            @Header("Authorization") String token
+    );
+
+    @POST("api/community/users/{studentId}/mute")
+    Call<ApiResponse<Object>> muteAuthorById(
+            @Header("Authorization") String token,
+            @Path("studentId") int studentId
+    );
+
+    @DELETE("api/community/users/{studentId}/mute")
+    Call<ApiResponse<Object>> unmuteAuthorById(
+            @Header("Authorization") String token,
+            @Path("studentId") int studentId
+    );
+
+    // =========================
+    // SAVED (profile tab)
+    // =========================
+
+    @GET("api/community/profile/me/saved")
+    Call<ApiResponse<CommunityPostResponse>> getMySavedPosts(
             @Header("Authorization") String token
     );
 }

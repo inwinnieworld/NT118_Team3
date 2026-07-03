@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:quest-upgrade": "node scripts/run-quest-migration.js"
+    "db:quest-upgrade": "node scripts/run-quest-migration.js",
+    "db:community-upgrade": "node scripts/run-community-migration.js"
   },
   "keywords": [],
   "author": "",

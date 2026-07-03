@@ -49,7 +49,29 @@ public class CommunityProfile {
     @SerializedName("followed_by_me")
     private boolean followedByMe;
 
+    @SerializedName("music_url")
+    private String musicUrl;
+
+    @SerializedName("music_name")
+    private String musicName;
+
     public CommunityProfile() {
+    }
+
+    public String getMusicUrl() {
+        return musicUrl;
+    }
+
+    public void setMusicUrl(String musicUrl) {
+        this.musicUrl = musicUrl;
+    }
+
+    public String getMusicName() {
+        return musicName;
+    }
+
+    public void setMusicName(String musicName) {
+        this.musicName = musicName;
     }
 
     public int getProfileId() {

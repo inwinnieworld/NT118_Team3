@@ -46,6 +46,7 @@ public class QuestBuilderViewModel extends ViewModel {
     private String backgroundSoundUrl = "";
     private int backgroundSoundVolume = 35;
     private String problemId;
+    private boolean isGeneralQuest = false;
     private String problemTitle = "";
     private List<String> aiTags = new ArrayList<>();
     private int intensityMin = 1;
@@ -148,6 +149,7 @@ public class QuestBuilderViewModel extends ViewModel {
             message.setValue("Hãy chọn một vấn đề cụ thể ở cấp 3");
             return;
         }
+        isGeneralQuest = false;
         problemId = problem.getId();
         problemTitle = problem.getTitle();
         aiTags = tags == null ? new ArrayList<>() : new ArrayList<>(tags);
@@ -160,6 +162,17 @@ public class QuestBuilderViewModel extends ViewModel {
         aiMetadataSummary.setValue("Vấn đề: " + shortProblem);
         message.setValue("Đã chọn vấn đề cho AI mapping");
     }
+
+    /** Đánh dấu quest TỔNG QUAN — không gán vấn đề nào (problem_id sẽ gửi null). */
+    public void setGeneralQuest() {
+        isGeneralQuest = true;
+        problemId = null;
+        problemTitle = "";
+        aiMetadataSummary.setValue("Quest tổng quan (không gán vấn đề)");
+        message.setValue("Đã đặt là quest tổng quan");
+    }
+
+    public boolean isGeneralQuest() { return isGeneralQuest; }
 
     public void loadDrafts(String token) {
         loading.setValue(true);
@@ -205,6 +218,7 @@ public class QuestBuilderViewModel extends ViewModel {
     private void restoreDraft(QuestDraftDetail data) {
         savedQuestId.postValue(data.quest_id);
         problemId = data.problem_id;
+        isGeneralQuest = data.problem_id == null || data.problem_id.trim().isEmpty();
         problemTitle = data.problem_title == null ? "" : data.problem_title;
         aiTags = data.ai_tags == null ? new ArrayList<>() : new ArrayList<>(data.ai_tags);
         intensityMin = data.intensity_min <= 0 ? 1 : data.intensity_min;
@@ -215,7 +229,9 @@ public class QuestBuilderViewModel extends ViewModel {
                 ? 120 : data.estimated_duration_seconds;
         String shortProblem = problemTitle.length() > 18
                 ? problemTitle.substring(0, 18) + "..." : problemTitle;
-        aiMetadataSummary.postValue(problemTitle.isEmpty() ? "Chọn vấn đề" : "Vấn đề: " + shortProblem);
+        aiMetadataSummary.postValue(isGeneralQuest
+                ? "Quest tổng quan (không gán vấn đề)"
+                : (problemTitle.isEmpty() ? "Chọn vấn đề" : "Vấn đề: " + shortProblem));
 
         Map<String, Object> canvas = data.canvas_config;
         backgroundUrl = mapString(canvas, "background_url", "");
@@ -651,8 +667,8 @@ public class QuestBuilderViewModel extends ViewModel {
             message.setValue("Drag at least one engine onto the white canvas");
             return;
         }
-        if (problemId == null || problemId.trim().isEmpty()) {
-            message.setValue("Hãy chọn đủ 3 cấp vấn đề trước khi lưu");
+        if (!isGeneralQuest && (problemId == null || problemId.trim().isEmpty())) {
+            message.setValue("Hãy chọn đủ 3 cấp vấn đề, hoặc đánh dấu Quest tổng quan trước khi lưu");
             return;
         }
 
@@ -661,7 +677,7 @@ public class QuestBuilderViewModel extends ViewModel {
         request.quest_title = title.trim();
         request.quest_description = description == null ? "" : description.trim();
         request.quest_level = Math.max(1, Math.min(level, 5));
-        request.problem_id = problemId;
+        request.problem_id = isGeneralQuest ? null : problemId;
         request.canvas_config = buildCanvasConfig();
         request.flow = new QuestDraftRequest.QuestFlow();
         request.flow.nodes = currentNodes;

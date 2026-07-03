@@ -53,7 +53,10 @@ public class ChatActivity extends AppCompatActivity {
     private int targetFollowerCount;
     private boolean targetFollowedByMe;
 
-    private final String BASE_SOCKET_URL = "http://10.0.2.2:3000";
+    // Dùng chung base URL với Retrofit (ApiConstants tự detect emulator/máy thật).
+    // Bỏ "/" cuối vì Socket.IO URL không cần trailing slash.
+    private final String BASE_SOCKET_URL =
+            com.example.emotiondebugging.utils.ApiConstants.BASE_URL.replaceAll("/+$", "");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

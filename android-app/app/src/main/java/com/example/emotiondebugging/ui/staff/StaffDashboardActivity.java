@@ -23,7 +23,6 @@ public class StaffDashboardActivity extends AppCompatActivity {
     private TextView btnManageQuest;
     private TextView btnQuestBuilder;
     private TextView btnQuestReport;
-    private TextView btnTraceQuestion;
     private ImageView ivProfile;
     private ImageView ivMessage;
     private ImageView ivSettings;
@@ -48,7 +47,6 @@ public class StaffDashboardActivity extends AppCompatActivity {
         btnManageQuest = findViewById(R.id.btnManageQuest);
         btnQuestBuilder = findViewById(R.id.btnQuestBuilder);
         btnQuestReport = findViewById(R.id.btnQuestReport);
-        btnTraceQuestion = findViewById(R.id.btnTraceQuestion);
         ivProfile = findViewById(R.id.ivProfile);
         ivMessage = findViewById(R.id.ivMessage);
         ivSettings = findViewById(R.id.ivSettings);
@@ -79,11 +77,6 @@ public class StaffDashboardActivity extends AppCompatActivity {
 
         btnQuestReport.setOnClickListener(v -> {
             Intent intent = new Intent(StaffDashboardActivity.this, QuestReportActivity.class);
-            startActivity(intent);
-        });
-
-        btnTraceQuestion.setOnClickListener(v -> {
-            Intent intent = new Intent(StaffDashboardActivity.this, ManageTraceQuestionActivity.class);
             startActivity(intent);
         });
 

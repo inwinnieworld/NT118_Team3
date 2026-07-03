@@ -25,6 +25,7 @@
             android:contentDescription="@string/cd_back" />
 
         <TextView
+            android:id="@+id/tv_screen_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -48,6 +49,7 @@
             android:focusable="true">
 
             <TextView
+                android:id="@+id/tv_post_button_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Đăng bài"

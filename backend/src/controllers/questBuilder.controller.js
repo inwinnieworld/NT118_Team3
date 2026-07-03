@@ -375,8 +375,10 @@ const listQuests = async (req, res) => {
 
 const listApprovedQuestCatalog = async (req, res) => {
     try {
+        const studentId = await getStudentId(req.user.user_id);
         const problemId = String(req.query.problem_id || '').trim();
-        const params = [];
+        // Param đầu tiên phục vụ subquery is_completed (theo student hiện tại).
+        const params = [studentId];
         let categoryFilter = '';
         if (problemId) {
             categoryFilter = `AND (q.problem_id = ? OR problem.parent_id = ?
@@ -390,7 +392,13 @@ const listApprovedQuestCatalog = async (req, res) => {
                     CONCAT_WS(' > ', root_problem.title, parent_problem.title, problem.title) AS problem_path,
                     qv.status AS approval_status,
                     qv.version_id AS latest_version_id,
-                    qv.version_number AS latest_version_number
+                    qv.version_number AS latest_version_number,
+                    EXISTS(
+                        SELECT 1 FROM quest_run_sessions r
+                        WHERE r.quest_id = q.quest_id
+                          AND r.student_id = ?
+                          AND r.status = 'completed'
+                    ) AS is_completed
              FROM quests q
              LEFT JOIN problems problem ON problem.id = q.problem_id
              LEFT JOIN problems parent_problem ON parent_problem.id = problem.parent_id
@@ -407,6 +415,9 @@ const listApprovedQuestCatalog = async (req, res) => {
              ORDER BY qv.reviewed_at DESC, q.created_at DESC`,
             params
         );
+
+        // EXISTS trả 0/1 (NUMBER); model Android là boolean → ép kiểu để Gson parse đúng.
+        rows.forEach(r => { r.is_completed = r.is_completed === 1 || r.is_completed === true; });
 
         return ok(res, rows);
     } catch (err) {
@@ -431,23 +442,23 @@ const saveQuestDraft = async (req, res) => {
             return fail(res, 'Thiếu quest_title hoặc quest_level', 400);
         }
 
-        if (!problem_id || typeof problem_id !== 'string') {
-            return fail(res, 'Quest must have a level-3 problem', 400);
-        }
-
         const validationError = validateFlow(flow);
         if (validationError) return fail(res, validationError, 400);
 
         const staffId = await getStaffId(req.user.user_id);
         if (!staffId) return fail(res, 'Staff account not found', 403);
 
-        const normalizedProblemId = problem_id.trim();
-        const [[problem]] = await conn.query(
-            `SELECT id FROM problems
-             WHERE id = ? AND tree_level = 3 AND is_leaf_node = 1`,
-            [normalizedProblemId]
-        );
-        if (!problem) return fail(res, 'problem_id must reference a level-3 leaf problem', 400);
+        // problem_id rỗng/null → QUEST TỔNG QUAN (không gán vấn đề). Nếu có → phải là lá Tầng 3.
+        let normalizedProblemId = null;
+        if (problem_id && typeof problem_id === 'string' && problem_id.trim()) {
+            normalizedProblemId = problem_id.trim();
+            const [[problem]] = await conn.query(
+                `SELECT id FROM problems
+                 WHERE id = ? AND tree_level = 3 AND is_leaf_node = 1`,
+                [normalizedProblemId]
+            );
+            if (!problem) return fail(res, 'problem_id must reference a level-3 leaf problem', 400);
+        }
 
         await conn.beginTransaction();
 
@@ -926,7 +937,7 @@ const getApprovedQuestFlow = async (req, res) => {
 
 const startQuestRun = async (req, res) => {
     try {
-        const { quest_id, user_quest_id } = req.body;
+        const { quest_id } = req.body;
         if (!quest_id) return fail(res, 'Thiếu quest_id', 400);
 
         const studentId = await getStudentId(req.user.user_id);
@@ -942,29 +953,11 @@ const startQuestRun = async (req, res) => {
         );
         if (!version) return fail(res, 'Quest chưa được duyệt', 404);
 
-        let resolvedUserQuestId = user_quest_id || null;
-        if (resolvedUserQuestId) {
-            const [[assignment]] = await db.query(
-                `SELECT user_quest_id FROM user_quests
-                 WHERE user_quest_id = ? AND student_id = ? AND quest_id = ?`,
-                [resolvedUserQuestId, studentId, quest_id]
-            );
-            if (!assignment) return fail(res, 'Quest assignment không hợp lệ', 403);
-        } else {
-            const [[assignment]] = await db.query(
-                `SELECT user_quest_id FROM user_quests
-                 WHERE student_id = ? AND quest_id = ? AND status <> 'completed'
-                 ORDER BY assigned_at DESC, user_quest_id DESC LIMIT 1`,
-                [studentId, quest_id]
-            );
-            resolvedUserQuestId = assignment ? assignment.user_quest_id : null;
-        }
-
         const [result] = await db.query(
             `INSERT INTO quest_run_sessions
-                (user_quest_id, quest_id, version_id, student_id, status)
-             VALUES (?, ?, ?, ?, 'in_progress')`,
-            [resolvedUserQuestId, quest_id, version.version_id, studentId]
+                (quest_id, version_id, student_id, status)
+             VALUES (?, ?, ?, 'in_progress')`,
+            [quest_id, version.version_id, studentId]
         );
 
         return ok(res, { run_id: result.insertId, version_id: version.version_id }, 'Đã bắt đầu quest', 201);
@@ -1025,7 +1018,7 @@ const finishQuestRun = async (req, res) => {
         if (!studentId) return fail(res, 'Không tìm thấy sinh viên', 404);
 
         const [[run]] = await db.query(
-            'SELECT user_quest_id, status FROM quest_run_sessions WHERE run_id = ? AND student_id = ?',
+            'SELECT status FROM quest_run_sessions WHERE run_id = ? AND student_id = ?',
             [runId, studentId]
         );
         if (!run) return fail(res, 'Không tìm thấy quest run của sinh viên hiện tại', 404);
@@ -1035,21 +1028,13 @@ const finishQuestRun = async (req, res) => {
 
         await db.query(
             `UPDATE quest_run_sessions
-             SET status = ?, completed_at = CURRENT_TIMESTAMP, result_summary = ?
+             SET status = ?, completed_at = CURRENT_TIMESTAMP, result_summary = ?,
+                 effectiveness_rating = COALESCE(?, effectiveness_rating),
+                 student_feedback = COALESCE(?, student_feedback)
              WHERE run_id = ?`,
-            [finalStatus, normalizeJson(result_summary, {}), runId]
+            [finalStatus, normalizeJson(result_summary, {}),
+                effectiveness_rating || null, student_feedback || null, runId]
         );
-
-        if (run.user_quest_id && finalStatus === 'completed') {
-            await db.query(
-                `UPDATE user_quests
-                 SET status = 'completed', completed_at = CURRENT_TIMESTAMP,
-                     effectiveness_rating = COALESCE(?, effectiveness_rating),
-                     student_feedback = COALESCE(?, student_feedback)
-                 WHERE user_quest_id = ?`,
-                [effectiveness_rating || null, student_feedback || null, run.user_quest_id]
-            );
-        }
 
         return ok(res, null, 'Đã kết thúc quest run');
     } catch (err) {

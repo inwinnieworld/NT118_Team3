@@ -28,13 +28,22 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
         void onMute(CommunityPostResponse.PostItem post);
         void onTagClick(int errorTypeId, String errorName);
         void onRepost(CommunityPostResponse.PostItem post);
+        void onReport(CommunityPostResponse.PostItem post);
+        void onEdit(CommunityPostResponse.PostItem post);
+        void onDelete(CommunityPostResponse.PostItem post);
     }
 
     private List<CommunityPostResponse.PostItem> posts = new ArrayList<>();
     private final OnPostClickListener listener;
+    private int currentStudentId = -1;
 
     public CommunityPostAdapter(OnPostClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setCurrentStudentId(int studentId) {
+        this.currentStudentId = studentId;
+        notifyDataSetChanged();
     }
 
     public void setPosts(List<CommunityPostResponse.PostItem> newPosts) {
@@ -80,6 +89,10 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
         ImageButton btnRepost;
         ImageButton btnMore;
 
+        View layoutOwnerActions;
+        TextView tvEditPost;
+        TextView tvDeletePost;
+
         android.widget.ImageView ivAvatar;
 
         PostViewHolder(@NonNull View itemView) {
@@ -101,6 +114,10 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             btnDownvote = itemView.findViewById(R.id.btn_downvote);
             btnRepost = itemView.findViewById(R.id.btn_repost);
             btnMore = itemView.findViewById(R.id.btn_more);
+
+            layoutOwnerActions = itemView.findViewById(R.id.layout_owner_actions);
+            tvEditPost = itemView.findViewById(R.id.tv_edit_post);
+            tvDeletePost = itemView.findViewById(R.id.tv_delete_post);
         }
 
         void bind(CommunityPostResponse.PostItem post) {
@@ -143,12 +160,18 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
             }
 
             if (tvTag != null) {
-                if (post.errorName != null && !post.errorName.trim().isEmpty()) {
-                    tvTag.setText("#" + post.errorName);
+                String tagName = post.topicName != null && !post.topicName.trim().isEmpty()
+                        ? post.topicName
+                        : post.errorName;
+                int tagId = post.topicId > 0 ? post.topicId : post.errorTypeId;
+
+                if (tagName != null && !tagName.trim().isEmpty()) {
+                    final String finalTagName = tagName;
+                    tvTag.setText("#" + finalTagName);
                     tvTag.setVisibility(View.VISIBLE);
                     tvTag.setOnClickListener(v -> {
                         if (listener != null) {
-                            listener.onTagClick(post.errorTypeId, post.errorName);
+                            listener.onTagClick(tagId, finalTagName);
                         }
                     });
                 } else {
@@ -220,6 +243,7 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
                     PopupMenu popup = new PopupMenu(v.getContext(), v);
                     popup.getMenu().add(0, 1, 0, post.isSaved == 1 ? "Bỏ lưu bài viết" : "Lưu bài viết");
                     popup.getMenu().add(0, 2, 1, "Không quan tâm tác giả này");
+                    popup.getMenu().add(0, 3, 2, "Báo cáo bài viết");
 
                     popup.setOnMenuItemClickListener(item -> {
                         if (listener == null) return false;
@@ -234,11 +258,36 @@ public class CommunityPostAdapter extends RecyclerView.Adapter<CommunityPostAdap
                             return true;
                         }
 
+                        if (item.getItemId() == 3) {
+                            listener.onReport(post);
+                            return true;
+                        }
+
                         return false;
                     });
 
                     popup.show();
                 });
+            }
+
+            if (layoutOwnerActions != null) {
+                boolean isOwner = currentStudentId > 0
+                        && post.studentId == currentStudentId
+                        && post.isAnonymous == 0;
+                layoutOwnerActions.setVisibility(isOwner ? View.VISIBLE : View.GONE);
+
+                if (isOwner) {
+                    if (tvEditPost != null) {
+                        tvEditPost.setOnClickListener(v -> {
+                            if (listener != null) listener.onEdit(post);
+                        });
+                    }
+                    if (tvDeletePost != null) {
+                        tvDeletePost.setOnClickListener(v -> {
+                            if (listener != null) listener.onDelete(post);
+                        });
+                    }
+                }
             }
         }
 

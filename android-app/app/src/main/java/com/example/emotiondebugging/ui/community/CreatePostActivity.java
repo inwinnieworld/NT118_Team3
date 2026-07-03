@@ -26,7 +26,8 @@ public class CreatePostActivity extends AppCompatActivity {
     private TextView tvContentCounter, tvSelectedErrorType, tvAuthorPreview;
     private LinearLayout layoutWarning, toggleAnonymous;
     private boolean isAnonymous = true;
-    private int selectedErrorTypeId = -1;
+    private int selectedTopicId = -1;
+    private java.util.List<com.example.emotiondebugging.model.community.TopicItem> topics = new java.util.ArrayList<>();
     private String authToken;
 
     private static final String[] SENSITIVE_KEYWORDS = {
@@ -82,11 +83,34 @@ public class CreatePostActivity extends AppCompatActivity {
             }
         });
 
-        // Load danh sách error types
-        viewModel.loadErrorTypes(authToken);
-        viewModel.getErrorTypes().observe(this, errorTypes -> {
-            // TODO: hiển thị dialog chọn error type từ list này
-        });
+        // Load danh sách topic (loại vấn đề)
+        loadTopics();
+    }
+
+    private void loadTopics() {
+        com.example.emotiondebugging.data.api.RetrofitClient.getCommunityApi()
+                .getPostTopics(authToken)
+                .enqueue(new retrofit2.Callback<com.example.emotiondebugging.model.response.ApiResponse<com.example.emotiondebugging.model.community.TopicListResponse>>() {
+                    @Override
+                    public void onResponse(
+                            retrofit2.Call<com.example.emotiondebugging.model.response.ApiResponse<com.example.emotiondebugging.model.community.TopicListResponse>> call,
+                            retrofit2.Response<com.example.emotiondebugging.model.response.ApiResponse<com.example.emotiondebugging.model.community.TopicListResponse>> response
+                    ) {
+                        if (response.isSuccessful() && response.body() != null
+                                && response.body().getData() != null
+                                && response.body().getData().topics != null) {
+                            topics = response.body().getData().topics;
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(
+                            retrofit2.Call<com.example.emotiondebugging.model.response.ApiResponse<com.example.emotiondebugging.model.community.TopicListResponse>> call,
+                            Throwable t
+                    ) {
+                        android.util.Log.e("CREATE_POST", "Load topics failed", t);
+                    }
+                });
     }
 
     private void setupListeners() {
@@ -121,22 +145,21 @@ public class CreatePostActivity extends AppCompatActivity {
     }
 
     private void showErrorTypeDialog() {
-        List<Map<String, Object>> errorTypes = viewModel.getErrorTypes().getValue();
-        if (errorTypes == null || errorTypes.isEmpty()) {
+        if (topics == null || topics.isEmpty()) {
             Toast.makeText(this, "Đang tải danh sách...", Toast.LENGTH_SHORT).show();
+            loadTopics();
             return;
         }
 
-        String[] names = new String[errorTypes.size()];
-        for (int i = 0; i < errorTypes.size(); i++) {
-            names[i] = (String) errorTypes.get(i).get("error_name");
+        String[] names = new String[topics.size()];
+        for (int i = 0; i < topics.size(); i++) {
+            names[i] = topics.get(i).topicName;
         }
 
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Chọn loại vấn đề")
                 .setItems(names, (dialog, which) -> {
-                    Map<String, Object> selected = errorTypes.get(which);
-                    selectedErrorTypeId = ((Double) selected.get("error_type_id")).intValue();
+                    selectedTopicId = topics.get(which).topicId;
                     tvSelectedErrorType.setText(names[which]);
                     tvSelectedErrorType.setTextColor(getColor(R.color.text_primary));
                     tvErrorTypeError.setVisibility(View.GONE);
@@ -185,7 +208,7 @@ public class CreatePostActivity extends AppCompatActivity {
             tvTitleError.setVisibility(View.GONE);
         }
 
-        if (selectedErrorTypeId == -1) {
+        if (selectedTopicId == -1) {
             tvErrorTypeError.setText("Vui lòng chọn loại vấn đề");
             tvErrorTypeError.setVisibility(View.VISIBLE);
             hasError = true;
@@ -207,6 +230,6 @@ public class CreatePostActivity extends AppCompatActivity {
 
         if (hasError) return;
 
-        viewModel.createPost(authToken, title, content, selectedErrorTypeId, isAnonymous);
+        viewModel.createPost(authToken, title, content, selectedTopicId, isAnonymous);
     }
 }

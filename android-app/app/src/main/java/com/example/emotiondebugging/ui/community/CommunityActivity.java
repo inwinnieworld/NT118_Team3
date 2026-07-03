@@ -50,14 +50,8 @@ public class CommunityActivity extends AppCompatActivity {
     private LinearLayout layoutFilterMenu;
     private LinearLayout btnCreatePost;
     private EditText etSearch;
-    private ImageView ivMyAvatar;
-    private View layoutComposer;
-    private TextView tvWhatsNew;
-    private Button btnComposerPost;
     private CommunityProfile myProfile;
     private ImageView ivHeaderAvatar;
-    private LinearLayout layoutComposerHeader;
-    private ImageView ivCurrentUserAvatar;
     private String authToken;
     private String currentFilter = "new";
     private boolean isFilterMenuVisible = false;
@@ -65,6 +59,11 @@ public class CommunityActivity extends AppCompatActivity {
 
     private boolean isTagFiltering = false;
     private Integer currentErrorTypeId = null;
+
+    private Integer currentTopicId = null;
+    private TextView tvNotifBadge;
+    private static final int REQ_NOTIFICATION = 3;
+    private static final int REQ_TOPIC = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +78,6 @@ public class CommunityActivity extends AppCompatActivity {
         initViewModel();
         setupListeners();
         loadMyCommunityProfile();
-        loadCurrentUserAvatar();
     }
 
     private void initViews() {
@@ -87,15 +85,11 @@ public class CommunityActivity extends AppCompatActivity {
         layoutFilterMenu = findViewById(R.id.layout_filter_menu);
         btnCreatePost = findViewById(R.id.btn_create_post);
         etSearch = findViewById(R.id.et_search);
-        layoutComposer = findViewById(R.id.layout_composer);
-        ivMyAvatar = findViewById(R.id.iv_my_avatar);
-        tvWhatsNew = findViewById(R.id.tv_whats_new);
-        btnComposerPost = findViewById(R.id.btn_composer_post);
 
         ivHeaderAvatar = findViewById(R.id.iv_header_avatar);
+        tvNotifBadge = findViewById(R.id.tv_notif_badge);
 
         rvPosts.setLayoutManager(new LinearLayoutManager(this));
-        addComposerHeader();
 
         adapter = new CommunityPostAdapter(new CommunityPostAdapter.OnPostClickListener() {
             @Override
@@ -138,15 +132,32 @@ public class CommunityActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onReport(CommunityPostResponse.PostItem post) {
+                reportPost(post);
+            }
+
+            @Override
+            public void onEdit(CommunityPostResponse.PostItem post) {
+                // Feed không cho sửa inline; chỉ dùng ở trang cá nhân.
+            }
+
+            @Override
+            public void onDelete(CommunityPostResponse.PostItem post) {
+                // Feed không cho xóa inline; chỉ dùng ở trang cá nhân.
+            }
+
+            @Override
             public void onTagClick(int errorTypeId, String errorName) {
-                currentErrorTypeId = errorTypeId;
-                isTagFiltering = true;
+                if (errorTypeId <= 0) return;
+                currentFilter = "topic";
+                currentTopicId = errorTypeId;
+                isTagFiltering = false;
 
                 if (etSearch != null) {
                     etSearch.setText("");
                 }
 
-                viewModel.loadPosts(authToken, currentFilter, 1, "", errorTypeId);
+                viewModel.loadPosts(authToken, "topic", 1, "", errorTypeId);
             }
         });
 
@@ -190,16 +201,18 @@ public class CommunityActivity extends AppCompatActivity {
             });
         }
 
-        View btnSaved = findViewById(R.id.btn_saved);
-        if (btnSaved != null) {
-            btnSaved.setOnClickListener(v -> loadSavedPosts());
+        View btnNotifications = findViewById(R.id.btn_notifications);
+        if (btnNotifications != null) {
+            btnNotifications.setOnClickListener(v -> {
+                Intent intent = new Intent(this, NotificationActivity.class);
+                startActivity(intent);
+            });
         }
 
         setupFilterOption(R.id.filter_new, "new");
         setupFilterOption(R.id.filter_trending, "trending");
         setupFilterOption(R.id.filter_best, "best");
-        setupFilterOption(R.id.filter_unfixed, "unfixed");
-        setupFilterOption(R.id.filter_my_logs, "my_logs");
+        setupTopicFilterOption(R.id.filter_topic);
 
         if (etSearch != null) {
             etSearch.addTextChangedListener(new TextWatcher() {
@@ -211,37 +224,12 @@ public class CommunityActivity extends AppCompatActivity {
                     if (isTagFiltering) return;
 
                     currentErrorTypeId = null;
-                    viewModel.loadPosts(
-                            authToken,
-                            currentFilter,
-                            1,
-                            s.toString().trim()
-                    );
+                    reloadPosts();
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {}
             });
-        }
-        View.OnClickListener openCreatePostListener = v -> {
-            Intent intent = new Intent(this, CreatePostActivity.class);
-            startActivityForResult(intent, 1);
-        };
-
-        if (layoutComposer != null) {
-            layoutComposer.setOnClickListener(openCreatePostListener);
-        }
-
-        if (tvWhatsNew != null) {
-            tvWhatsNew.setOnClickListener(openCreatePostListener);
-        }
-
-        if (btnComposerPost != null) {
-            btnComposerPost.setOnClickListener(openCreatePostListener);
-        }
-
-        if (ivMyAvatar != null) {
-            ivMyAvatar.setOnClickListener(v -> openMyProfile());
         }
         if (ivHeaderAvatar != null) {
             ivHeaderAvatar.setOnClickListener(v -> openMyProfile());
@@ -254,6 +242,7 @@ public class CommunityActivity extends AppCompatActivity {
 
         tv.setOnClickListener(v -> {
             currentFilter = filter;
+            currentTopicId = null;
             currentErrorTypeId = null;
             isTagFiltering = false;
             isFilterMenuVisible = false;
@@ -263,6 +252,20 @@ public class CommunityActivity extends AppCompatActivity {
             }
 
             reloadPosts();
+        });
+    }
+
+    private void setupTopicFilterOption(int viewId) {
+        TextView tv = findViewById(viewId);
+        if (tv == null) return;
+
+        tv.setOnClickListener(v -> {
+            isFilterMenuVisible = false;
+            if (layoutFilterMenu != null) {
+                layoutFilterMenu.setVisibility(View.GONE);
+            }
+            Intent intent = new Intent(this, TopicListActivity.class);
+            startActivityForResult(intent, REQ_TOPIC);
         });
     }
 
@@ -401,41 +404,68 @@ public class CommunityActivity extends AppCompatActivity {
                 });
     }
 
-    private void loadSavedPosts() {
+    private void reportPost(CommunityPostResponse.PostItem post) {
+        if (post == null) return;
+
+        final EditText input = new EditText(this);
+        input.setHint("Lý do báo cáo (không bắt buộc)");
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Báo cáo bài viết")
+                .setView(input)
+                .setPositiveButton("Gửi", (dialog, which) -> {
+                    Map<String, String> body = new HashMap<>();
+                    body.put("reason", input.getText().toString().trim());
+
+                    RetrofitClient.getCommunityApi()
+                            .reportPost(authToken, post.postId, body)
+                            .enqueue(new Callback<ApiResponse<Object>>() {
+                                @Override
+                                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                                    Toast.makeText(CommunityActivity.this,
+                                            response.isSuccessful() ? "Đã gửi báo cáo" : "Không gửi được báo cáo",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+
+                                @Override
+                                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                                    Toast.makeText(CommunityActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                })
+                .setNegativeButton("Huỷ", null)
+                .show();
+    }
+
+    private void refreshNotificationBadge() {
+        if (tvNotifBadge == null) return;
+
         RetrofitClient.getCommunityApi()
-                .getSavedPosts(authToken)
-                .enqueue(new Callback<ApiResponse<CommunityPostResponse>>() {
+                .getUnreadNotificationCount(authToken)
+                .enqueue(new Callback<ApiResponse<com.example.emotiondebugging.model.community.UnreadCountResponse>>() {
                     @Override
                     public void onResponse(
-                            Call<ApiResponse<CommunityPostResponse>> call,
-                            Response<ApiResponse<CommunityPostResponse>> response
+                            Call<ApiResponse<com.example.emotiondebugging.model.community.UnreadCountResponse>> call,
+                            Response<ApiResponse<com.example.emotiondebugging.model.community.UnreadCountResponse>> response
                     ) {
-                        if (
-                                response.isSuccessful()
-                                        && response.body() != null
-                                        && response.body().isSuccess()
-                                        && response.body().getData() != null
-                        ) {
-                            renderPosts(response.body().getData().posts);
+                        int count = 0;
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            count = response.body().getData().count;
+                        }
+                        if (count > 0) {
+                            tvNotifBadge.setText(count > 99 ? "99+" : String.valueOf(count));
+                            tvNotifBadge.setVisibility(View.VISIBLE);
                         } else {
-                            Toast.makeText(
-                                    CommunityActivity.this,
-                                    "Không tải được bài viết đã lưu",
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                            tvNotifBadge.setVisibility(View.GONE);
                         }
                     }
 
                     @Override
                     public void onFailure(
-                            Call<ApiResponse<CommunityPostResponse>> call,
+                            Call<ApiResponse<com.example.emotiondebugging.model.community.UnreadCountResponse>> call,
                             Throwable t
                     ) {
-                        Toast.makeText(
-                                CommunityActivity.this,
-                                "Lỗi kết nối khi tải bài đã lưu: " + t.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
+                        tvNotifBadge.setVisibility(View.GONE);
                     }
                 });
     }
@@ -467,8 +497,8 @@ public class CommunityActivity extends AppCompatActivity {
                 ? etSearch.getText().toString().trim()
                 : "";
 
-        if (currentErrorTypeId != null) {
-            viewModel.loadPosts(authToken, currentFilter, 1, searchText, currentErrorTypeId);
+        if ("topic".equals(currentFilter) && currentTopicId != null) {
+            viewModel.loadPosts(authToken, "topic", 1, searchText, currentTopicId);
         } else {
             viewModel.loadPosts(authToken, currentFilter, 1, searchText);
         }
@@ -487,144 +517,36 @@ public class CommunityActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        // Reload mỗi lần quay lại (kể cả back từ profile) để bài mới/sửa được cập nhật ngay.
         if (isFirstLoad) {
             isFirstLoad = false;
             viewModel.loadPosts(authToken, currentFilter, 1, "");
+        } else {
+            reloadPosts();
         }
+
+        refreshNotificationBadge();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == REQ_TOPIC && resultCode == RESULT_OK && data != null) {
+            int topicId = data.getIntExtra("topic_id", -1);
+            if (topicId > 0) {
+                currentFilter = "topic";
+                currentTopicId = topicId;
+                if (etSearch != null) etSearch.setText("");
+                viewModel.loadPosts(authToken, "topic", 1, "", topicId);
+            }
+            return;
+        }
+
         if (requestCode == 1 || requestCode == 0) {
             reloadPosts();
         }
     }
-    private void addComposerHeader() {
-        if (rvPosts == null || rvPosts.getParent() == null) return;
-
-        ViewGroup parent = (ViewGroup) rvPosts.getParent();
-
-        if (layoutComposerHeader != null) return;
-
-        layoutComposerHeader = new LinearLayout(this);
-        layoutComposerHeader.setOrientation(LinearLayout.VERTICAL);
-        layoutComposerHeader.setPadding(dp(14), dp(14), dp(14), dp(14));
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.parseColor("#F8FAFC"));
-        bg.setCornerRadius(dp(14));
-        layoutComposerHeader.setBackground(bg);
-
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
-
-        ivCurrentUserAvatar = new ImageView(this);
-        ivCurrentUserAvatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-        GradientDrawable avatarBg = new GradientDrawable();
-        avatarBg.setShape(GradientDrawable.OVAL);
-        avatarBg.setColor(Color.parseColor("#12B2C1"));
-        ivCurrentUserAvatar.setBackground(avatarBg);
-
-        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(42), dp(42));
-        avatarParams.setMargins(0, 0, dp(12), 0);
-        row.addView(ivCurrentUserAvatar, avatarParams);
-
-        TextView tvHint = new TextView(this);
-        tvHint.setText("What's new?");
-        tvHint.setTextColor(Color.parseColor("#9CA3AF"));
-        tvHint.setTextSize(16);
-        tvHint.setGravity(android.view.Gravity.CENTER_VERTICAL);
-
-        row.addView(tvHint, new LinearLayout.LayoutParams(
-                0,
-                dp(44),
-                1
-        ));
-
-        Button btnPost = new Button(this);
-        btnPost.setText("Post");
-        btnPost.setAllCaps(false);
-        btnPost.setTextColor(Color.BLACK);
-        btnPost.setTextSize(14);
-        btnPost.setTypeface(Typeface.DEFAULT_BOLD);
-        btnPost.setBackground(makeComposerButtonBg());
-
-        LinearLayout.LayoutParams postParams = new LinearLayout.LayoutParams(dp(78), dp(44));
-        row.addView(btnPost, postParams);
-
-        layoutComposerHeader.addView(row);
-
-        View.OnClickListener openCreatePostListener = v -> {
-            Intent intent = new Intent(CommunityActivity.this, CreatePostActivity.class);
-            startActivityForResult(intent, 1);
-        };
-
-        layoutComposerHeader.setOnClickListener(openCreatePostListener);
-        tvHint.setOnClickListener(openCreatePostListener);
-        ivCurrentUserAvatar.setOnClickListener(openCreatePostListener);
-        btnPost.setOnClickListener(openCreatePostListener);
-
-        int rvIndex = parent.indexOfChild(rvPosts);
-
-        ViewGroup.MarginLayoutParams params = new ViewGroup.MarginLayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(dp(32), dp(12), dp(32), dp(10));
-
-        layoutComposerHeader.setLayoutParams(params);
-        parent.addView(layoutComposerHeader, rvIndex);
-    }
-
-    private GradientDrawable makeComposerButtonBg() {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.WHITE);
-        drawable.setCornerRadius(dp(14));
-        drawable.setStroke(dp(1), Color.parseColor("#D1D5DB"));
-        return drawable;
-    }
-
-    private void loadCurrentUserAvatar() {
-        if (ivCurrentUserAvatar == null) return;
-
-        RetrofitClient.getCommunityApi()
-                .getMyCommunityProfile(authToken)
-                .enqueue(new Callback<ApiResponse<CommunityProfile>>() {
-                    @Override
-                    public void onResponse(
-                            Call<ApiResponse<CommunityProfile>> call,
-                            Response<ApiResponse<CommunityProfile>> response
-                    ) {
-                        if (
-                                response.isSuccessful()
-                                        && response.body() != null
-                                        && response.body().getData() != null
-                        ) {
-                            CommunityProfile profile = response.body().getData();
-
-                            String name = profile.getDisplayName() != null
-                                    ? profile.getDisplayName()
-                                    : profile.getUsername();
-
-                            AvatarHelper.loadAvatar(
-                                    ivCurrentUserAvatar,
-                                    profile.getAvatarUrl(),
-                                    name
-                            );
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ApiResponse<CommunityProfile>> call, Throwable t) {
-                        android.util.Log.e("COMMUNITY_AVATAR", "Load avatar failed", t);
-                    }
-                });
-    }
-
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
@@ -649,9 +571,9 @@ public class CommunityActivity extends AppCompatActivity {
                                     ? myProfile.getDisplayName()
                                     : myProfile.getUsername();
 
-                            if (ivMyAvatar != null) {
+                            if (ivHeaderAvatar != null) {
                                 AvatarHelper.loadAvatar(
-                                        ivMyAvatar,
+                                        ivHeaderAvatar,
                                         myProfile.getAvatarUrl(),
                                         name
                                 );

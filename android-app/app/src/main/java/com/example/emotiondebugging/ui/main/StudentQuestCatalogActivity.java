@@ -65,6 +65,12 @@ public class StudentQuestCatalogActivity extends AppCompatActivity implements St
         viewModel.loadCatalog(token, null);
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        // Quay lại từ runner: reload để cập nhật trạng thái "Đã hoàn thành".
+        viewModel.loadCatalog(token, selectedProblemId);
+    }
+
     @Override public void onStart(QuestDraftSummary quest) { viewModel.startQuest(token, quest.quest_id); }
 
     private void renderProblems(List<QuestProblem> problems) {

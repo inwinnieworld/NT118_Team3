@@ -394,9 +394,20 @@ public class QuestBuilderRepository {
     public void finishQuestRun(String token, int runId, String status,
                                Map<String, Object> resultSummary,
                                RepositoryCallback<Object> callback) {
+        finishQuestRun(token, runId, status, resultSummary, null, null, callback);
+    }
+
+    public void finishQuestRun(String token, int runId, String status,
+                               Map<String, Object> resultSummary,
+                               Integer effectivenessRating, String studentFeedback,
+                               RepositoryCallback<Object> callback) {
         Map<String, Object> body = new java.util.HashMap<>();
         body.put("status", status);
         body.put("result_summary", resultSummary == null ? new java.util.HashMap<>() : resultSummary);
+        if (effectivenessRating != null) body.put("effectiveness_rating", effectivenessRating);
+        if (studentFeedback != null && !studentFeedback.trim().isEmpty()) {
+            body.put("student_feedback", studentFeedback.trim());
+        }
         api.finishQuestRun(token, runId, body).enqueue(new Callback<ApiResponse<Object>>() {
             @Override
             public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {

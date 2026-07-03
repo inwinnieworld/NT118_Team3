@@ -230,6 +230,47 @@
 
         </LinearLayout>
 
+        <!-- Owner actions (chỉ hiện với bài không ẩn danh của chính mình) -->
+        <LinearLayout
+            android:id="@+id/layout_owner_actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_delete_post"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
+                android:text="Xóa"
+                android:textColor="#E53935"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tv_edit_post"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
+                android:text="Chỉnh sửa"
+                android:textColor="#12B2C1"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

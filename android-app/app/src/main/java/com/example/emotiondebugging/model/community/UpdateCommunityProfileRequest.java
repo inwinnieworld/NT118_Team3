@@ -19,6 +19,12 @@ public class UpdateCommunityProfileRequest {
     @SerializedName("bio")
     private String bio;
 
+    @SerializedName("music_url")
+    private String musicUrl;
+
+    @SerializedName("music_name")
+    private String musicName;
+
     public UpdateCommunityProfileRequest() {
     }
 
@@ -74,5 +80,21 @@ public class UpdateCommunityProfileRequest {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public String getMusicUrl() {
+        return musicUrl;
+    }
+
+    public void setMusicUrl(String musicUrl) {
+        this.musicUrl = musicUrl;
+    }
+
+    public String getMusicName() {
+        return musicName;
+    }
+
+    public void setMusicName(String musicName) {
+        this.musicName = musicName;
     }
 }

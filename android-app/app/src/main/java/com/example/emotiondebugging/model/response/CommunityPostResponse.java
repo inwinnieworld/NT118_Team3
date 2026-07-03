@@ -46,6 +46,15 @@ public class CommunityPostResponse {
         @SerializedName("error_name")
         public String errorName;
 
+        @SerializedName("topic_id")
+        public int topicId;
+
+        @SerializedName("topic_name")
+        public String topicName;
+
+        @SerializedName("is_hidden")
+        public int isHidden;
+
         @SerializedName("author_name")
         public String authorName;
 

@@ -62,8 +62,10 @@ public class QuestCardAdapter extends RecyclerView.Adapter<QuestCardAdapter.Ques
         }
 
         void bind(Quest quest) {
-            tvQuestTitle.setText(quest.title);
-            tvQuestRating.setText(String.format(Locale.getDefault(), "★ %.1f", quest.rating));
+            tvQuestTitle.setText(quest.isCompleted ? "✓ " + quest.title : quest.title);
+            tvQuestRating.setText(quest.isCompleted
+                    ? String.format(Locale.getDefault(), "★ %.1f  •  Đã hoàn thành", quest.rating)
+                    : String.format(Locale.getDefault(), "★ %.1f", quest.rating));
             itemView.setOnClickListener(v -> {
                 if (listener != null) listener.onQuestClick(quest);
             });

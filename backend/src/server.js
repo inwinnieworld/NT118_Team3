@@ -8,7 +8,6 @@ const profileRoutes = require("./routes/profile.route");
 const adminRoutes = require("./routes/admin.route");
 const gitJournalRoutes = require("./routes/gitjournal.routes");
 const emergencyRoutes = require("./routes/emergency.routes");
-const staffRoutes = require("./routes/staff.routes");
 const communityRoutes = require("./routes/community.route");
 const aichatRoutes = require("./routes/aichat.routes");
 const chatRoutes = require('./routes/chat.routes');
@@ -39,9 +38,8 @@ app.use("/api/admin", adminRoutes);
 // Git Journal routes (commits, merges, graph)
 app.use("/api/gitjournal", gitJournalRoutes);
 
-// Emergency and Staff routes
+// Emergency routes
 app.use("/api/emergency", emergencyRoutes);
-app.use("/api/staff", staffRoutes);
 
 // Community routes
 app.use("/api/community", communityRoutes);

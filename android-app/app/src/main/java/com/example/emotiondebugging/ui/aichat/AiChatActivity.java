@@ -7,6 +7,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.emotiondebugging.R;
 import com.example.emotiondebugging.data.api.RetrofitClient;
+import com.example.emotiondebugging.data.repository.QuestBuilderRepository;
 import com.example.emotiondebugging.model.response.AiChatModels;
 import com.example.emotiondebugging.model.response.AiChatModels.ChatAction;
 import com.example.emotiondebugging.model.response.AiChatModels.MessageData;
@@ -22,11 +25,15 @@ import com.example.emotiondebugging.model.response.AiChatModels.Quest;
 import com.example.emotiondebugging.model.response.AiChatModels.StartSessionData;
 import com.example.emotiondebugging.model.response.ApiResponse;
 import com.example.emotiondebugging.model.response.ProfileResponse;
+import com.example.emotiondebugging.model.response.QuestDraftDetail;
 import com.example.emotiondebugging.ui.community.CommunityActivity;
 import com.example.emotiondebugging.ui.journal.GitJournalActivity;
+import com.example.emotiondebugging.ui.staff.QuestPreviewActivity;
+import com.example.emotiondebugging.ui.staff.QuestPreviewStore;
 import com.example.emotiondebugging.utils.SharedPrefsHelper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +75,11 @@ public class AiChatActivity extends AppCompatActivity {
     // Map nội dung gợi ý (title) → problem_id Tầng 2 để gửi picked_problem_id khi user bấm.
     private final Map<String, String> suggestionIdByTitle = new HashMap<>();
 
+    private final QuestBuilderRepository questRepository = new QuestBuilderRepository();
+    // Quest đang chờ kết quả từ runner (để đánh dấu ✓ khi user hoàn thành + đánh giá xong).
+    private Quest pendingQuest;
+    private ActivityResultLauncher<Intent> questRunLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +89,17 @@ public class AiChatActivity extends AppCompatActivity {
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
         btnVoice = findViewById(R.id.btnVoice);
+
+        questRunLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    // Runner trả RESULT_OK khi user hoàn thành + đánh giá quest → đánh dấu ✓.
+                    if (result.getResultCode() == RESULT_OK && pendingQuest != null) {
+                        pendingQuest.isCompleted = true;
+                        adapter.notifyDataSetChanged();
+                    }
+                    pendingQuest = null;
+                });
 
         SharedPrefsHelper prefs = new SharedPrefsHelper(this);
         String token = prefs.getToken();
@@ -101,9 +124,7 @@ public class AiChatActivity extends AppCompatActivity {
         adapter.setUserInfo(null, prefs.getName());
         adapter.setOnActionListener(new ChatAdapter.OnActionListener() {
             @Override public void onQuestClick(Quest quest) {
-                // TODO(quest): Intent sang Quest Engine bằng quest.questId khi module sẵn sàng.
-                Toast.makeText(AiChatActivity.this,
-                        "Quest: " + quest.title + " (sắp có)", Toast.LENGTH_SHORT).show();
+                launchQuest(quest);
             }
             @Override public void onRedirectClick(String targetScreen) {
                 handleRedirect(targetScreen);
@@ -481,6 +502,73 @@ public class AiChatActivity extends AppCompatActivity {
         } else if ("community".equals(targetScreen)) {
             startActivity(new Intent(this, CommunityActivity.class));
         }
+    }
+
+    /**
+     * Mở Quest Engine từ card gợi ý: lấy flow đã duyệt → tạo run → launch runner.
+     * Khi runner trả RESULT_OK (user hoàn thành + đánh giá), launcher đánh dấu ✓ cho card.
+     */
+    private void launchQuest(Quest quest) {
+        if (quest == null || authToken == null) return;
+        pendingQuest = quest;
+        questRepository.getApprovedFlow(authToken, quest.questId,
+                new QuestBuilderRepository.RepositoryCallback<QuestDraftDetail>() {
+            @Override public void onSuccess(QuestDraftDetail detail, String text) {
+                if (detail == null || detail.flow == null) {
+                    Toast.makeText(AiChatActivity.this, "Quest chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+                    pendingQuest = null;
+                    return;
+                }
+                questRepository.startQuestRun(authToken, quest.questId,
+                        new QuestBuilderRepository.RepositoryCallback<Map<String, Object>>() {
+                    @Override public void onSuccess(Map<String, Object> data, String runMessage) {
+                        Object value = data == null ? null : data.get("run_id");
+                        int runId = value instanceof Number ? ((Number) value).intValue() : 0;
+                        if (runId <= 0) {
+                            Toast.makeText(AiChatActivity.this, "Không tạo được lượt chơi", Toast.LENGTH_SHORT).show();
+                            pendingQuest = null;
+                            return;
+                        }
+                        launchRunner(detail, runId);
+                    }
+                    @Override public void onError(String runError) {
+                        Toast.makeText(AiChatActivity.this, runError, Toast.LENGTH_SHORT).show();
+                        pendingQuest = null;
+                    }
+                });
+            }
+            @Override public void onError(String text) {
+                Toast.makeText(AiChatActivity.this, text, Toast.LENGTH_SHORT).show();
+                pendingQuest = null;
+            }
+        });
+    }
+
+    private void launchRunner(QuestDraftDetail detail, int runId) {
+        Map<String, Object> canvas = detail.canvas_config == null
+                ? Collections.emptyMap() : detail.canvas_config;
+        QuestPreviewStore.set(detail.quest_title,
+                canvasValue(canvas, "background_url", ""),
+                canvasValue(canvas, "background_color", "#FFFFFF"),
+                canvasValue(canvas, "background_sound_url", ""),
+                canvasInt(canvas, "background_sound_volume", 35),
+                detail.flow.nodes, detail.flow.edges);
+        Intent intent = new Intent(this, QuestPreviewActivity.class);
+        intent.putExtra(QuestPreviewActivity.EXTRA_RUN_ID, runId);
+        intent.putExtra(QuestPreviewActivity.EXTRA_RUN_TOKEN, authToken);
+        questRunLauncher.launch(intent);
+    }
+
+    private String canvasValue(Map<String, Object> map, String key, String fallback) {
+        Object value = map.get(key);
+        return value == null ? fallback : String.valueOf(value);
+    }
+
+    private int canvasInt(Map<String, Object> map, String key, int fallback) {
+        Object value = map.get(key);
+        if (value instanceof Number) return ((Number) value).intValue();
+        try { return Integer.parseInt(String.valueOf(value)); }
+        catch (Exception ignored) { return fallback; }
     }
 
     private void scrollToBottom() {

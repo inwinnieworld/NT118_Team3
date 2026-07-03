@@ -121,6 +121,18 @@
             android:name=".ui.community.CommunityProfileActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.community.NotificationActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.community.TopicListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.community.BlockedAuthorsActivity"
+            android:exported="false" />
+
         <!-- ========== ADMIN SCREENS (Code của Chính) ========== -->
         <activity
             android:name=".ui.admin.ManageStudentActivity"
@@ -133,6 +145,9 @@
             android:exported="false" />
         <activity
             android:name=".ui.admin.AddStaffActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.admin.ManageCommunityActivity"
             android:exported="false" />
 
         <!-- ========== GIT JOURNAL SCREENS (Code của Thắng) ========== -->
@@ -156,18 +171,11 @@
             android:name=".ui.staff.QuestReportActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.staff.ManageTraceQuestionActivity"
-            android:exported="false"/>
-        <activity
-            android:name=".ui.staff.CreateTraceQuestionActivity"
-            android:exported="false"/>
-        <activity
-            android:name=".ui.staff.TraceQuestionDetailActivity"
-            android:exported="false"/>
-        <activity
             android:name=".ui.community.ChatActivity"
             android:exported="false" />
         <activity android:name=".ui.community.EditProfileActivity" />
+        <activity android:name=".ui.community.EditPostActivity" />
+        <activity android:name=".ui.community.FollowListActivity" />
         <activity
             android:name=".ui.community.ConversationListActivity"
             android:exported="false" />
