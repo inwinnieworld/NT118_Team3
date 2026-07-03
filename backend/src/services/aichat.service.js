@@ -150,29 +150,113 @@ async function createSession(studentId) {
 // ===================== QUEST =====================
 
 /**
- * Lấy Top-3 quest ĐÃ DUYỆT gắn vào đúng 1 lá Tầng 3 (problemId).
+ * Lấy Top-3 quest ĐÃ DUYỆT gắn vào đúng 1 lá Tầng 3 (problemId), theo chiến lược explore/exploit.
  *  - Chỉ approved: JOIN quest_versions với version approved MỚI NHẤT (draft/pending/rejected bị loại).
  *  - Đúng lá: q.problem_id = ? (KHÔNG nới lên parent như catalog của Quest Builder).
- *  - Rank: base_priority DESC (cột ưu tiên của Quest Builder), reviewed_at DESC làm tie-break.
+ *  - rating = AVG(effectiveness_rating) của các run 'completed' (thang 1-5); NULL nếu chưa ai đánh giá.
+ *  - Chọn 3 slot:
+ *      · Chưa quest nào có đánh giá → ưu tiên "duyệt trước hiện trước" (reviewed_at ASC).
+ *      · Đã có đánh giá → 2 slot EXPLOIT (rating cao nhất) + 1 slot EXPLORE (quest chưa đánh giá,
+ *        mới duyệt nhất); nếu hết quest chưa đánh giá thì lấp bằng quest rating cao kế tiếp.
  *  - Fallback: lá chưa có quest approved → rows rỗng → placeholder=true (UI hiện "đang cập nhật").
  */
-async function getTopQuests(problemId) {
+async function getTopQuests(problemId, studentId = null) {
     if (!problemId) return { quests: [], placeholder: true };
+    const rows = await queryApprovedQuests('q.problem_id = ?', [studentId, problemId]);
+    return rankQuests(rows);
+}
+
+/**
+ * Quest TỔNG QUAN — không gán vấn đề nào (problem_id IS NULL). Dùng làm fallback khi:
+ *  - success nhưng lá Tầng 3 chưa có quest approved;
+ *  - user mơ hồ tới lượt cuối (popup 4.2) chọn nhánh "quest tổng quan";
+ *  - không xác định được vấn đề Tầng 3.
+ * Cùng chiến lược explore/exploit như getTopQuests.
+ */
+async function getGeneralQuests(studentId = null) {
+    const rows = await queryApprovedQuests('q.problem_id IS NULL', [studentId]);
+    return rankQuests(rows);
+}
+
+/**
+ * Query quest ĐÃ DUYỆT (version approved mới nhất) theo điều kiện WHERE tuỳ biến, kèm rating
+ * trung bình và cờ is_completed theo student. Param đầu luôn là studentId (cho subquery EXISTS).
+ * @param {string} whereClause - phần lọc thêm sau "q.is_active = 1 AND"
+ * @param {Array} params - [studentId, ...tham số của whereClause]
+ */
+async function queryApprovedQuests(whereClause, params) {
     const [rows] = await db.query(
-        `SELECT q.quest_id, q.quest_title, q.quest_description,
-                q.quest_level, q.base_priority, qv.version_id
+        `SELECT q.quest_id, q.quest_title AS title, q.quest_description,
+                q.quest_level, qv.version_id, qv.reviewed_at,
+                AVG(r.effectiveness_rating) AS rating,
+                COUNT(r.effectiveness_rating) AS rating_count,
+                EXISTS(
+                    SELECT 1 FROM quest_run_sessions rc
+                    WHERE rc.quest_id = q.quest_id
+                      AND rc.status = 'completed'
+                      AND rc.student_id = ?
+                ) AS is_completed
          FROM quests q
          JOIN quest_versions qv ON qv.version_id = (
             SELECT qv2.version_id FROM quest_versions qv2
             WHERE qv2.quest_id = q.quest_id AND qv2.status = 'approved'
             ORDER BY qv2.version_number DESC LIMIT 1
          )
-         WHERE q.is_active = 1 AND q.problem_id = ?
-         ORDER BY q.base_priority DESC, qv.reviewed_at DESC
-         LIMIT 3`,
-        [problemId]
+         LEFT JOIN quest_run_sessions r
+                ON r.quest_id = q.quest_id AND r.status = 'completed'
+         WHERE q.is_active = 1 AND ${whereClause}
+         GROUP BY q.quest_id, qv.version_id, qv.reviewed_at`,
+        params
     );
-    return { quests: rows, placeholder: rows.length === 0 };
+    return rows;
+}
+
+/**
+ * Chọn tối đa 3 quest theo explore/exploit từ danh sách rows (đã có rating/is_completed thô).
+ *  - Chưa quest nào có đánh giá → "duyệt trước hiện trước" (reviewed_at ASC).
+ *  - Đã có đánh giá → 2 slot EXPLOIT (rating cao nhất) + 1 slot EXPLORE (quest chưa đánh giá,
+ *    mới duyệt nhất); hết quest explore thì lấp bằng quest rating cao kế tiếp.
+ *  - rows rỗng → placeholder=true.
+ */
+function rankQuests(rows) {
+    if (rows.length === 0) return { quests: [], placeholder: true };
+
+    // Chuẩn hoá: rating về number (hoặc null nếu chưa đánh giá); is_completed về boolean.
+    rows.forEach(q => {
+        q.rating = q.rating_count > 0 ? Number(q.rating) : null;
+        q.is_completed = q.is_completed === 1 || q.is_completed === true;
+    });
+
+    const rated = rows.filter(q => q.rating != null);
+    const unrated = rows.filter(q => q.rating == null);
+
+    let picked;
+    if (rated.length === 0) {
+        // Chưa quest nào được đánh giá → duyệt trước hiện trước.
+        picked = [...rows].sort((a, b) => new Date(a.reviewed_at) - new Date(b.reviewed_at)).slice(0, 3);
+    } else {
+        // 2 slot EXPLOIT: rating cao nhất (tie-break: duyệt gần nhất).
+        const byRating = [...rated].sort(
+            (a, b) => b.rating - a.rating || new Date(b.reviewed_at) - new Date(a.reviewed_at)
+        );
+        // 1 slot EXPLORE: quest chưa đánh giá, mới duyệt nhất.
+        const byNewest = [...unrated].sort((a, b) => new Date(b.reviewed_at) - new Date(a.reviewed_at));
+
+        picked = [];
+        const seen = new Set();
+        const take = q => { if (q && !seen.has(q.quest_id)) { seen.add(q.quest_id); picked.push(q); } };
+
+        take(byRating[0]);
+        take(byRating[1]);
+        take(byNewest[0]);
+        // Lấp cho đủ 3 nếu còn thiếu (hết quest explore → thêm quest rating cao kế tiếp).
+        for (const q of [...byRating, ...byNewest]) {
+            if (picked.length >= 3) break;
+            take(q);
+        }
+    }
+
+    return { quests: picked, placeholder: false };
 }
 
 // ===================== SUGGESTIONS (waterfall, không dùng LLM) =====================
@@ -567,7 +651,7 @@ async function produceAiTurn({ session, chatHistory, currentTurn, studentId, dec
                 action_type: 'select_route',
                 data: {
                     options: [
-                        { key: 'quest', label: 'Gợi ý cho mình vài quest thư giãn' },
+                        { key: 'quest', label: 'Gợi ý cho mình vài quest tổng quan' },
                         { key: 'community', label: 'Chia sẻ lên Cộng đồng để nhận lời khuyên' }
                     ]
                 }
@@ -587,10 +671,21 @@ async function produceAiTurn({ session, chatHistory, currentTurn, studentId, dec
         // Chốt được lỗi Tầng 3 → trigger_quest (mọi lượt, kể cả lượt cuối 4.1).
         variant = 'success';
         resolvedProblemId = decision.problem.id;
-        const top = await getTopQuests(decision.problem.id);
+        let top = await getTopQuests(decision.problem.id, studentId);
+        // Lá chưa có quest approved → lấp bằng quest TỔNG QUAN thay vì hiện "đang cập nhật".
+        let generalFallback = false;
+        if (top.placeholder) {
+            const general = await getGeneralQuests(studentId);
+            if (!general.placeholder) { top = general; generalFallback = true; }
+        }
         action = {
             action_type: 'show_quests',
-            data: { problem_id: decision.problem.id, quests: top.quests, placeholder: top.placeholder }
+            data: {
+                problem_id: decision.problem.id,
+                quests: top.quests,
+                placeholder: top.placeholder,
+                ...(generalFallback ? { general: true } : {})
+            }
         };
         endStatus = 'pending_feedback'; // chờ user làm quest rồi đánh giá
     } else if (isFinalTurn) {
@@ -732,12 +827,18 @@ async function pickRoute({ userId, sessionId, routeKey }) {
 
     let variant, action, endStatus;
     if (routeKey === 'quest') {
-        // 4.2a — quest thư giãn tức thời. Quest Engine chưa build → placeholder (2A).
-        // TODO(quest): thay bằng nhóm quest thư giãn thật khi Quest Engine sẵn sàng.
+        // 4.2a — quest TỔNG QUAN (problem_id IS NULL). Nếu chưa có quest tổng quan nào approved
+        // thì rows rỗng → placeholder=true (UI hiện "đang cập nhật").
         variant = 'turn4_quest';
+        const general = await getGeneralQuests(studentId);
         action = {
             action_type: 'show_quests',
-            data: { problem_id: null, quests: [], placeholder: true, fallback: true }
+            data: {
+                problem_id: null,
+                quests: general.quests,
+                placeholder: general.placeholder,
+                general: true
+            }
         };
         endStatus = 'pending_feedback';
     } else {
@@ -792,6 +893,50 @@ async function getSessions(userId) {
     return rows;
 }
 
+/**
+ * Quest card lưu ĐÓNG BĂNG trong chat_history lúc tạo (rating=null, is_completed=false).
+ * Khi load lại session, refresh rating + is_completed theo trạng thái MỚI NHẤT (student đã
+ * làm/đánh giá quest sau đó). Chỉ đụng metadata quest, không sửa text.
+ */
+async function enrichHistoryQuests(chatHistory, studentId) {
+    const questIds = new Set();
+    for (const m of chatHistory) {
+        const quests = m.metadata && m.metadata.data && m.metadata.data.quests;
+        if (Array.isArray(quests)) quests.forEach(q => { if (q && q.quest_id) questIds.add(q.quest_id); });
+    }
+    if (questIds.size === 0) return chatHistory;
+
+    const ids = [...questIds];
+    const [rows] = await db.query(
+        `SELECT quest_id,
+                AVG(effectiveness_rating) AS rating,
+                COUNT(effectiveness_rating) AS rating_count,
+                SUM(student_id = ?) AS completed_by_student
+         FROM quest_run_sessions
+         WHERE status = 'completed' AND quest_id IN (?)
+         GROUP BY quest_id`,
+        [studentId, ids]
+    );
+    const stat = new Map();
+    for (const r of rows) {
+        stat.set(r.quest_id, {
+            rating: r.rating_count > 0 ? Number(r.rating) : null,
+            is_completed: Number(r.completed_by_student) > 0
+        });
+    }
+
+    for (const m of chatHistory) {
+        const quests = m.metadata && m.metadata.data && m.metadata.data.quests;
+        if (!Array.isArray(quests)) continue;
+        for (const q of quests) {
+            const s = stat.get(q.quest_id);
+            q.rating = s ? s.rating : null;
+            q.is_completed = s ? s.is_completed : false;
+        }
+    }
+    return chatHistory;
+}
+
 /** Load 1 session: trả nguyên chat_history để UI render lại. */
 async function getSession(userId, sessionId) {
     const studentId = await getStudentId(userId);
@@ -807,7 +952,7 @@ async function getSession(userId, sessionId) {
         status: s.status,
         turn_count: s.turn_count,
         resolved_problem_id: s.resolved_problem_id,
-        chat_history: parseHistory(s.chat_history)
+        chat_history: await enrichHistoryQuests(parseHistory(s.chat_history), studentId)
     };
 }
 

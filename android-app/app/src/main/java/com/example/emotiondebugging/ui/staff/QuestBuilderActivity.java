@@ -20,6 +20,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -462,6 +463,7 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
 
     private void showProblemDialog(List<QuestProblem> problems) {
         View content = getLayoutInflater().inflate(R.layout.dialog_quest_ai_metadata, null);
+        CheckBox generalCheck = content.findViewById(R.id.checkGeneralQuest);
         Spinner level1Spinner = content.findViewById(R.id.spinnerProblemLevel1);
         Spinner level2Spinner = content.findViewById(R.id.spinnerProblemLevel2);
         Spinner level3Spinner = content.findViewById(R.id.spinnerProblemLevel3);
@@ -482,6 +484,17 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
         setProblemSpinner(level3Spinner,
                 problemsAtLevel(problems, 3, activeGroup == null ? null : activeGroup.getId()),
                 selectedLeaf == null ? null : selectedLeaf.getId());
+
+        generalCheck.setChecked(viewModel.isGeneralQuest());
+        boolean initialGeneral = viewModel.isGeneralQuest();
+        level1Spinner.setEnabled(!initialGeneral);
+        level2Spinner.setEnabled(!initialGeneral);
+        level3Spinner.setEnabled(!initialGeneral);
+        generalCheck.setOnCheckedChangeListener((btn, checked) -> {
+            level1Spinner.setEnabled(!checked);
+            level2Spinner.setEnabled(!checked);
+            level3Spinner.setEnabled(!checked);
+        });
 
         final boolean[] initializingSelection = { true };
         level1Spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -519,6 +532,11 @@ public class QuestBuilderActivity extends AppCompatActivity implements QuestCanv
         dialog.setOnShowListener(ignored -> {
             level1Spinner.post(() -> initializingSelection[0] = false);
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                    if (generalCheck.isChecked()) {
+                        viewModel.setGeneralQuest();
+                        dialog.dismiss();
+                        return;
+                    }
                     QuestProblem problem = selectedProblem(level3Spinner);
                     if (problem == null || !problem.isLeafNode()) {
                         Toast.makeText(this, "Hãy chọn vấn đề cụ thể ở cấp 3", Toast.LENGTH_SHORT).show();

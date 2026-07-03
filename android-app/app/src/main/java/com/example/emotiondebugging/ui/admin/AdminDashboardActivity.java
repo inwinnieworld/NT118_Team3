@@ -98,8 +98,8 @@ public class AdminDashboardActivity extends AppCompatActivity {
         btnSystemReport.setOnClickListener(v ->
                 Toast.makeText(this, "Mở Báo cáo hệ thống", Toast.LENGTH_SHORT).show());
 
-        btnManageCommunity.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Quản lý cộng đồng", Toast.LENGTH_SHORT).show());
+        btnManageCommunity.setOnClickListener(v -> startActivity(
+                new android.content.Intent(this, ManageCommunityActivity.class)));
 
         btnManageErrorCode.setOnClickListener(v ->
                 Toast.makeText(this, "Mở Quản lý mã lỗi", Toast.LENGTH_SHORT).show());

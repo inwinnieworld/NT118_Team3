@@ -5,13 +5,13 @@ import com.google.gson.annotations.SerializedName;
 public class CreatePostRequest {
     @SerializedName("title") public String title;
     @SerializedName("content") public String content;
-    @SerializedName("error_type_id") public int errorTypeId;
+    @SerializedName("topic_id") public int topicId;
     @SerializedName("is_anonymous") public boolean isAnonymous;
 
-    public CreatePostRequest(String title, String content, int errorTypeId, boolean isAnonymous) {
+    public CreatePostRequest(String title, String content, int topicId, boolean isAnonymous) {
         this.title = title;
         this.content = content;
-        this.errorTypeId = errorTypeId;
+        this.topicId = topicId;
         this.isAnonymous = isAnonymous;
     }
 }

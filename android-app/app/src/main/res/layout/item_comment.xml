@@ -105,6 +105,21 @@
                     android:src="@drawable/ic_comment"
                     android:tint="#6B7280"
                     android:contentDescription="Reply" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btn_comment_more"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_more"
+                    android:tint="#6B7280"
+                    android:contentDescription="Thêm" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

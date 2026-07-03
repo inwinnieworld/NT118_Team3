@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -18,32 +19,43 @@
 
         <!-- Title row -->
         <LinearLayout
+            android:id="@+id/layout_header"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="72dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
 
             <ImageButton
                 android:id="@+id/btn_back"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_back"
-                android:tint="@color/white"
-                android:contentDescription="@string/cd_back" />
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_back"
+                android:tint="@color/white" />
 
             <TextView
+                android:id="@+id/tv_header_title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="DEBUGGING COMMUNITY"
                 android:textColor="#12B2C1"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.05" />
+                android:letterSpacing="0.08" />
 
-            <View android:layout_width="36dp" android:layout_height="36dp" />
+            <ImageView
+                android:id="@+id/iv_header_avatar"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_avatar_circle"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:padding="0dp" />
+
         </LinearLayout>
 
         <!-- Search + filter row -->
@@ -85,16 +97,34 @@
                     android:singleLine="true" />
             </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/btn_saved"
+            <FrameLayout
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:layout_marginStart="10dp"
-                android:background="@drawable/bg_search_community"
-                android:src="@drawable/ic_heart"
-                android:tint="@color/white"
-                android:padding="8dp"
-                android:contentDescription="Saved posts" />
+                android:layout_marginStart="10dp">
+
+                <ImageButton
+                    android:id="@+id/btn_notifications"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_search_community"
+                    android:src="@drawable/ic_heart"
+                    android:tint="@color/white"
+                    android:padding="8dp"
+                    android:contentDescription="Thông báo" />
+
+                <TextView
+                    android:id="@+id/tv_notif_badge"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="top|end"
+                    android:background="@drawable/bg_avatar_circle"
+                    android:gravity="center"
+                    android:text="0"
+                    android:textColor="@color/white"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
 
             <ImageButton
                 android:id="@+id/btn_filter"
@@ -114,7 +144,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_posts"
             android:layout_width="match_parent"
@@ -140,8 +169,7 @@
             <TextView android:id="@+id/filter_new" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center" android:text="NEW" android:textColor="@color/white" android:textSize="15sp" android:textStyle="bold" android:background="?attr/selectableItemBackground" />
             <TextView android:id="@+id/filter_trending" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center" android:text="TRENDING" android:textColor="@color/white" android:textSize="15sp" android:textStyle="bold" android:background="?attr/selectableItemBackground" />
             <TextView android:id="@+id/filter_best" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center" android:text="BEST" android:textColor="@color/white" android:textSize="15sp" android:textStyle="bold" android:background="?attr/selectableItemBackground" />
-            <TextView android:id="@+id/filter_unfixed" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center" android:text="UNFIXED" android:textColor="@color/white" android:textSize="15sp" android:textStyle="bold" android:background="?attr/selectableItemBackground" />
-            <TextView android:id="@+id/filter_my_logs" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center" android:text="MY LOGS" android:textColor="@color/white" android:textSize="15sp" android:textStyle="bold" android:background="?attr/selectableItemBackground" />
+            <TextView android:id="@+id/filter_topic" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center" android:text="TOPIC" android:textColor="@color/white" android:textSize="15sp" android:textStyle="bold" android:background="?attr/selectableItemBackground" />
         </LinearLayout>
 
         <!-- FAB -->

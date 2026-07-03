@@ -125,6 +125,15 @@ public class SharedPrefsHelper {
         return true;
     }
 
+    // Cờ đã hoàn thành hết nhiệm vụ "Finish your profile" (theo từng student, lưu vĩnh viễn)
+    public boolean isOnboardingDone(int studentId) {
+        return prefs.getBoolean("onboarding_done_" + studentId, false);
+    }
+
+    public void setOnboardingDone(int studentId) {
+        prefs.edit().putBoolean("onboarding_done_" + studentId, true).apply();
+    }
+
     // Xóa tất cả dữ liệu
     public void clearAll() {
         prefs.edit().clear().apply();

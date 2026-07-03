@@ -20,8 +20,9 @@ public class ApiConstants {
      * Địa chỉ IP LAN của máy tính chạy backend (chỉ dùng khi chạy trên máy thật).
      * Kiểm tra bằng: ipconfig (Windows) hoặc ifconfig (Mac/Linux) → dòng IPv4 Address.
      */
-    private static final String IP_ADDRESS = "192.168.1.197";
-
+    private static final String IP_ADDRESS = "192.168.31.192";
+    //private static final String IP_ADDRESS = "192.168.1.197";
+    //private static final String IP_ADDRESS = "192.168.1.65";
     /**
      * Port của backend server
      */
@@ -55,7 +56,7 @@ public class ApiConstants {
                 || Build.HARDWARE.contains("goldfish")
                 || Build.HARDWARE.contains("ranchu");
     }
-    
+
     /**
      * Get full URL for avatar/uploads
      * @param relativePath: /uploads/avatar-xxx.jpg

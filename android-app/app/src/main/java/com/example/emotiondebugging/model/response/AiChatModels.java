@@ -33,6 +33,7 @@ public class AiChatModels {
         @SerializedName("title") public String title;
         @SerializedName("rating") public double rating;
         @SerializedName("thumbnail_url") public String thumbnailUrl;
+        @SerializedName("is_completed") public boolean isCompleted;
     }
 
     /** Dữ liệu kèm theo 1 action — các field chỉ có giá trị tùy action_type. */

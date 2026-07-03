@@ -27,13 +27,22 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         void onReply(PostDetailResponse.CommentItem comment);
     }
 
+    public interface OnReportClickListener {
+        void onReport(PostDetailResponse.CommentItem comment);
+    }
+
     private List<PostDetailResponse.CommentItem> comments = new ArrayList<>();
     private OnCommentVoteListener voteListener;
     private OnReplyClickListener replyListener;
+    private OnReportClickListener reportListener;
 
     public CommentAdapter(OnCommentVoteListener voteListener, OnReplyClickListener replyListener) {
         this.voteListener = voteListener;
         this.replyListener = replyListener;
+    }
+
+    public void setOnReportClickListener(OnReportClickListener reportListener) {
+        this.reportListener = reportListener;
     }
     public void setComments(List<PostDetailResponse.CommentItem> newComments) {
         this.comments = newComments != null ? newComments : new ArrayList<>();
@@ -76,7 +85,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
     class CommentViewHolder extends RecyclerView.ViewHolder {
         TextView tvAuthorName, tvContent, tvTime, tvUpvote, tvDownvote;
-        ImageButton btnUpvote, btnDownvote, btnReply;
+        ImageButton btnUpvote, btnDownvote, btnReply, btnMore;
         LinearLayout layoutReplies;
 
         CommentViewHolder(@NonNull View itemView) {
@@ -89,6 +98,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             btnUpvote = itemView.findViewById(R.id.btn_upvote);
             btnDownvote = itemView.findViewById(R.id.btn_downvote);
             btnReply = itemView.findViewById(R.id.btn_reply);
+            btnMore = itemView.findViewById(R.id.btn_comment_more);
             layoutReplies = itemView.findViewById(R.id.layout_replies);
         }
 
@@ -104,6 +114,19 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             btnUpvote.setOnClickListener(v -> { if (voteListener != null) voteListener.onUpvote(comment); });
             btnDownvote.setOnClickListener(v -> { if (voteListener != null) voteListener.onDownvote(comment); });
             btnReply.setOnClickListener(v -> { if (replyListener != null) replyListener.onReply(comment); });
+
+            btnMore.setOnClickListener(v -> {
+                android.widget.PopupMenu popup = new android.widget.PopupMenu(v.getContext(), v);
+                popup.getMenu().add(0, 1, 0, "Báo cáo bình luận");
+                popup.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == 1 && reportListener != null) {
+                        reportListener.onReport(comment);
+                        return true;
+                    }
+                    return false;
+                });
+                popup.show();
+            });
 
             // Render replies
             layoutReplies.removeAllViews();

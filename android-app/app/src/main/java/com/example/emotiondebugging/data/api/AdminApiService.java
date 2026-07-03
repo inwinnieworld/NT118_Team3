@@ -3,9 +3,14 @@ package com.example.emotiondebugging.data.api;
 import com.example.emotiondebugging.model.request.CreateStaffRequest;
 import com.example.emotiondebugging.model.request.UpdateStudentRequest;
 import com.example.emotiondebugging.model.request.UpdateStaffRequest;
+import com.example.emotiondebugging.model.response.ApiResponse;
 import com.example.emotiondebugging.model.response.BaseResponse;
 import com.example.emotiondebugging.model.response.StudentListResponse;
 import com.example.emotiondebugging.model.response.StaffListResponse;
+import com.example.emotiondebugging.model.community.AdminReportResponse;
+import com.example.emotiondebugging.model.community.AdminReviewRequestResponse;
+
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -64,5 +69,41 @@ public interface AdminApiService {
     Call<BaseResponse> toggleStaffLock(
             @Header("Authorization") String token,
             @Path("staffId") int staffId
+    );
+
+    // ==================== QUẢN LÝ CỘNG ĐỒNG ====================
+
+    @GET("api/admin/community/reports")
+    Call<ApiResponse<AdminReportResponse>> getCommunityReports(
+            @Header("Authorization") String token,
+            @Query("type") String type,
+            @Query("status") String status
+    );
+
+    @POST("api/admin/community/reports/post/{postId}/resolve")
+    Call<ApiResponse<Object>> resolvePostReport(
+            @Header("Authorization") String token,
+            @Path("postId") int postId,
+            @Body Map<String, String> body
+    );
+
+    @POST("api/admin/community/reports/comment/{commentId}/resolve")
+    Call<ApiResponse<Object>> resolveCommentReport(
+            @Header("Authorization") String token,
+            @Path("commentId") int commentId,
+            @Body Map<String, String> body
+    );
+
+    @GET("api/admin/community/review-requests")
+    Call<ApiResponse<AdminReviewRequestResponse>> getReviewRequests(
+            @Header("Authorization") String token,
+            @Query("status") String status
+    );
+
+    @POST("api/admin/community/review-requests/{requestId}/resolve")
+    Call<ApiResponse<Object>> resolveReviewRequest(
+            @Header("Authorization") String token,
+            @Path("requestId") int requestId,
+            @Body Map<String, String> body
     );
 }

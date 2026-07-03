@@ -18,6 +18,7 @@ public class QuestDraftSummary {
     public String review_note;
     public Integer latest_version_id;
     public Integer latest_version_number;
+    public boolean is_completed;
 
     @Override
     public String toString() {

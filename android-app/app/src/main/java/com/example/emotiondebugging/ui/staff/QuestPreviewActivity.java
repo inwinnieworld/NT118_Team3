@@ -26,6 +26,8 @@ import android.view.HapticFeedbackConstants;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.view.ViewGroup;
@@ -189,6 +191,10 @@ public class QuestPreviewActivity extends AppCompatActivity {
     private void initViews() {
         previewRoot = findViewById(R.id.previewRoot);
         parallelLayer = findViewById(R.id.parallelLayer);
+        // Scene-positioned view (setX theo toạ độ designer) có thể rơi vào dải padding 72dp;
+        // tắt clip để không cắt text/ảnh nằm ở mép hộp parallel.
+        parallelLayer.setClipToPadding(false);
+        parallelLayer.setClipChildren(false);
         previewContent = findViewById(R.id.previewContent);
         tvPreviewTitle = findViewById(R.id.tvPreviewTitle);
         tvMain = findViewById(R.id.tvMain);
@@ -998,8 +1004,17 @@ public class QuestPreviewActivity extends AppCompatActivity {
             float scaleY = parallelLayer.getHeight() / QuestSceneCanvasView.SCENE_HEIGHT;
             if (scaleX <= 0 || scaleY <= 0) return;
             ViewGroup.LayoutParams params = target.getLayoutParams();
-            params.width = Math.max(dp(40), Math.round(floatValue(config, "scene_width", 280f) * scaleX));
-            params.height = Math.max(dp(32), Math.round(floatValue(config, "scene_height", 72f) * scaleY));
+            int sceneWidth = Math.max(dp(40), Math.round(floatValue(config, "scene_width", 280f) * scaleX));
+            int sceneHeight = Math.max(dp(32), Math.round(floatValue(config, "scene_height", 72f) * scaleY));
+            params.width = sceneWidth;
+            // TextView: giữ width cố định (wrap đúng bề ngang thiết kế) nhưng để height co giãn
+            // theo nội dung để không cắt text nhiều dòng; scene_height chỉ làm chiều cao tối thiểu.
+            if (target instanceof TextView) {
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                ((TextView) target).setMinHeight(sceneHeight);
+            } else {
+                params.height = sceneHeight;
+            }
             target.setLayoutParams(params);
             target.setX(floatValue(config, "scene_x", 40f) * scaleX);
             target.setY(floatValue(config, "scene_y", 284f) * scaleY);
@@ -1552,10 +1567,60 @@ public class QuestPreviewActivity extends AppCompatActivity {
             return;
         }
         if (runFinished) return;
+        showRatingDialog();
+    }
+
+    /** Hỏi đánh giá (1-5 sao) + feedback trước khi chốt run completed. */
+    private void showRatingDialog() {
+        int pad = dp(20);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(pad, dp(12), pad, 0);
+
+        TextView tvPrompt = new TextView(this);
+        tvPrompt.setText("Bài tập nhỏ vừa rồi có giúp bạn thấy nhẹ nhõm hơn không?");
+        tvPrompt.setTextSize(15f);
+        layout.addView(tvPrompt);
+
+        final RatingBar ratingBar = new RatingBar(this);
+        ratingBar.setNumStars(5);
+        ratingBar.setStepSize(1f);
+        ratingBar.setRating(5f);
+        LinearLayout.LayoutParams rbParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rbParams.topMargin = dp(12);
+        ratingBar.setLayoutParams(rbParams);
+        layout.addView(ratingBar);
+
+        final EditText etFeedback = new EditText(this);
+        etFeedback.setHint("Chia sẻ cảm nhận của bạn (không bắt buộc)");
+        etFeedback.setMinLines(2);
+        etFeedback.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        etParams.topMargin = dp(12);
+        etFeedback.setLayoutParams(etParams);
+        layout.addView(etFeedback);
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Đánh giá quest")
+                .setView(layout)
+                .setCancelable(false)
+                .setPositiveButton("Gửi", (dialog, which) -> {
+                    int rating = Math.max(1, Math.round(ratingBar.getRating()));
+                    submitCompletion(rating, etFeedback.getText().toString());
+                })
+                .show();
+    }
+
+    private void submitCompletion(Integer rating, String feedback) {
+        if (runFinished) return;
         runFinished = true;
-        runRepository.finishQuestRun(runToken, runId, "completed", buildRunSummary(), new QuestBuilderRepository.RepositoryCallback<Object>() {
+        runRepository.finishQuestRun(runToken, runId, "completed", buildRunSummary(), rating, feedback,
+                new QuestBuilderRepository.RepositoryCallback<Object>() {
             @Override public void onSuccess(Object data, String message) {
                 Toast.makeText(QuestPreviewActivity.this, "Quest completed", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
                 finish();
             }
             @Override public void onError(String message) {

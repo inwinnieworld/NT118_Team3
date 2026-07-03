@@ -10,6 +10,15 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <CheckBox
+            android:id="@+id/checkGeneralQuest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Quest tổng quan (không gán vấn đề cụ thể)"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

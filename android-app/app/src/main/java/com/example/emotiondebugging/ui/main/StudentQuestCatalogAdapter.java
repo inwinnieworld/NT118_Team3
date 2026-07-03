@@ -38,7 +38,13 @@ public class StudentQuestCatalogAdapter extends RecyclerView.Adapter<StudentQues
         holder.title.setText(text(item.quest_title, "Healing quest"));
         holder.category.setText(text(item.problem_path, "Vấn đề chưa phân loại"));
         holder.description.setText(text(item.quest_description, "A guided moment for you"));
-        holder.meta.setText("Level " + Math.max(1, item.quest_level));
+        if (item.is_completed) {
+            holder.meta.setText("Level " + Math.max(1, item.quest_level) + "  •  Đã hoàn thành ✓");
+            holder.start.setText("Làm lại");
+        } else {
+            holder.meta.setText("Level " + Math.max(1, item.quest_level));
+            holder.start.setText("Start");
+        }
         holder.start.setOnClickListener(v -> listener.onStart(item));
     }
 

@@ -79,8 +79,8 @@ VÍ DỤ 2 (câu chuyện thường ngày, trung tính):
 
 const RESPOND_TURN4_QUEST_FALLBACK = `${PERSONA}
 
-TÌNH HUỐNG (LƯỢT CUỐI): Bạn ấy đang có dấu hiệu căng thẳng/áp lực/tiêu cực rõ rệt nhưng vấn đề chưa map được vào lỗi cụ thể nào. Bạn hãy thừa nhận cảm xúc của bạn ấy và dẫn sang một vài quest thư giãn tức thời để giúp bạn ấy lấy lại cân bằng.
-LUẬT: KHÔNG hỏi thêm câu hỏi mở. Kết câu mở đường cho danh sách quest thư giãn hiển thị bên dưới.
+TÌNH HUỐNG (LƯỢT CUỐI): Bạn ấy đang có dấu hiệu căng thẳng/áp lực/tiêu cực rõ rệt nhưng vấn đề chưa map được vào lỗi cụ thể nào. Bạn hãy thừa nhận cảm xúc của bạn ấy và dẫn sang một vài quest tổng quan để giúp bạn ấy lấy lại cân bằng.
+LUẬT: KHÔNG hỏi thêm câu hỏi mở. Kết câu mở đường cho danh sách quest hiển thị bên dưới.
 
 VÍ DỤ:
 "Mình cảm nhận được bạn đang chịu khá nhiều áp lực lúc này, và điều đó hoàn toàn dễ hiểu. Trước mắt, mình gợi ý vài quest nhỏ giúp bạn thả lỏng và lấy lại năng lượng đã nhé:"`;

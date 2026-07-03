@@ -90,6 +90,7 @@ public class PostDetailActivity extends AppCompatActivity {
             },
             comment -> showCommentInput(comment.commentId, comment.authorName)
         );
+        commentAdapter.setOnReportClickListener(this::showCommentReportDialog);
         rvComments.setAdapter(commentAdapter);
 
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
@@ -173,6 +174,39 @@ public class PostDetailActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {}
         });
+    }
+
+    private void showCommentReportDialog(PostDetailResponse.CommentItem comment) {
+        if (comment == null) return;
+        final String[] reasons = {
+                "Nội dung spam hoặc quảng cáo",
+                "Ngôn từ thù ghét, quấy rối",
+                "Thông tin sai lệch",
+                "Nội dung nhạy cảm, không phù hợp",
+                "Lý do khác"
+        };
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Báo cáo bình luận")
+                .setItems(reasons, (dialog, which) -> {
+                    Map<String, String> body = new HashMap<>();
+                    body.put("reason", reasons[which]);
+                    api.reportComment(authToken, postId, comment.commentId, body)
+                            .enqueue(new Callback<ApiResponse<Object>>() {
+                                @Override
+                                public void onResponse(Call<ApiResponse<Object>> call, Response<ApiResponse<Object>> response) {
+                                    Toast.makeText(PostDetailActivity.this,
+                                            response.isSuccessful() ? "Đã gửi báo cáo" : "Không thể gửi báo cáo",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                                @Override
+                                public void onFailure(Call<ApiResponse<Object>> call, Throwable t) {
+                                    Toast.makeText(PostDetailActivity.this, "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                })
+                .setNegativeButton("Huỷ", null)
+                .show();
     }
 
     private void postComment() {
